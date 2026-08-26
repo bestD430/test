@@ -1,419 +1,129 @@
 <!DOCTYPE html>
-<html lang="zh-HK">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>香港巴士即時到站查詢</title>
+    <title>巴士到站時間微調系統 (30秒區隔)</title>
     <style>
-        * {
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        }
-
         body {
-            background-color: #f4f6f8;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
             padding: 20px;
-            margin: 0;
-            display: flex;
-            justify-content: center;
+            background-color: #f4f6f8;
+            color: #333;
         }
-
-        .container {
-            background-color: #ffffff;
+        .card {
+            background: #ffffff;
             border-radius: 12px;
             padding: 24px;
-            max-width: 480px;
-            width: 100%;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
-
-        h2 {
+        h1 {
+            font-size: 1.4rem;
             margin-top: 0;
-            color: #1a1a1a;
-            font-size: 22px;
-            text-align: center;
+            color: #1a202c;
+        }
+        .form-group {
             margin-bottom: 20px;
         }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
         label {
             display: block;
             font-weight: 600;
-            margin-bottom: 6px;
-            color: #444;
-            font-size: 14px;
+            margin-bottom: 8px;
         }
-
-        .input-group {
-            display: flex;
-            gap: 8px;
-        }
-
-        input[type="text"], select {
+        select, input {
             width: 100%;
             padding: 10px 12px;
-            font-size: 15px;
-            border: 1px solid #ccc;
+            font-size: 1rem;
+            border: 1px solid #cbd5e1;
             border-radius: 6px;
-            outline: none;
-            transition: border-color 0.2s;
-            background-color: #fff;
+            box-sizing: border-box;
         }
-
-        input[type="text"]:focus, select:focus {
-            border-color: #0056b3;
-        }
-
-        button {
-            padding: 10px 16px;
-            font-size: 15px;
-            font-weight: bold;
-            color: white;
-            background-color: #0056b3;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            white-space: nowrap;
-        }
-
-        button:hover {
-            background-color: #004085;
-        }
-
-        button:disabled, select:disabled {
-            background-color: #e9ecef;
-            cursor: not-allowed;
-            color: #6c757d;
-        }
-
-        .error-msg {
-            color: #d9534f;
-            font-size: 13px;
-            margin-top: 6px;
-            display: none;
-        }
-
-        /* ETA 顯示區域 */
-        .eta-container {
-            margin-top: 24px;
-            padding: 16px;
-            border: 1px solid #e1e4e8;
-            border-radius: 8px;
-            background-color: #fafbfc;
-        }
-
-        .eta-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #e1e4e8;
-        }
-
-        .eta-header h3 {
-            margin: 0;
-            font-size: 16px;
-            color: #24292e;
-        }
-
-        .refresh-btn {
-            padding: 4px 10px;
-            font-size: 12px;
-            background-color: #28a745;
-        }
-
-        .refresh-btn:hover {
-            background-color: #218838;
-        }
-
-        .eta-card {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px dashed #e1e4e8;
-        }
-
-        .eta-card:last-child {
-            border-bottom: none;
-        }
-
-        .eta-time-main {
-            font-size: 18px;
-            font-weight: bold;
-            color: #d9534f;
-        }
-
-        .eta-time-sub {
-            font-size: 13px;
-            color: #6a737d;
-            margin-left: 6px;
-        }
-
-        .eta-remark {
-            font-size: 12px;
-            color: #586069;
-            background-color: #f1f3f5;
-            padding: 2px 6px;
+        .result-box {
+            background-color: #f1f5f9;
+            border-left: 4px solid #2563eb;
+            padding: 12px 16px;
             border-radius: 4px;
+            margin-top: 20px;
         }
-
-        .status-msg {
-            font-size: 14px;
-            color: #666;
-            text-align: center;
-            padding: 10px 0;
+        .result-title {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        .result-value {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #0f172a;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h2>九巴即時到站查詢</h2>
-
-        <!-- 1. 輸入路線 -->
-        <div class="form-group">
-            <label for="routeInput">巴士路線</label>
-            <div class="input-group">
-                <input type="text" id="routeInput" placeholder="例如: 1A, 60X" value="1A">
-                <button onclick="loadRouteDetails()">搜尋</button>
-            </div>
-            <div id="errorMsg" class="error-msg"></div>
-        </div>
-
-        <!-- 2. 選擇方向（顯示目的地） -->
-        <div class="form-group">
-            <label for="boundSelect">目的地（方向）</label>
-            <select id="boundSelect" onchange="updateStopDropdown()" disabled>
-                <option value="">-- 請先搜尋路線 --</option>
-            </select>
-        </div>
-
-        <!-- 3. 車站位置選單 -->
-        <div class="form-group">
-            <label for="stopSelect">車站位置</label>
-            <select id="stopSelect" onchange="fetchETA()" disabled>
-                <option value="">-- 請先選擇目的地 --</option>
-            </select>
-        </div>
-
-        <!-- 4. 即時到站時間 (ETA) 顯示區塊 -->
-        <div id="etaResult" class="eta-container" style="display: none;">
-            <div class="eta-header">
-                <h3 id="etaStopTitle">即時到站時間</h3>
-                <button class="refresh-btn" onclick="fetchETA()">重新整理</button>
-            </div>
-            <div id="etaList"></div>
-        </div>
+<div class="card">
+    <h1>巴士到站時間微調設定</h1>
+    
+    <div class="form-group">
+        <label for="eta-input">系統預測到站時間 (原始 ETA)：</label>
+        <input type="time" id="eta-input" value="14:30">
     </div>
 
-    <script>
-        let allStopsMap = null; // 快取全港車站名稱
+    <div class="form-group">
+        <label for="offset-select">手動微調偏移量 (±3分鐘，區分30秒)：</label>
+        <select id="offset-select">
+            <option value="-180">早到 3 分 00 秒 (-3:00)</option>
+            <option value="-150">早到 2 分 30 秒 (-2:30)</option>
+            <option value="-120">早到 2 分 00 秒 (-2:00)</option>
+            <option value="-90">早到 1 分 30 秒 (-1:30)</option>
+            <option value="-60">早到 1 分 00 秒 (-1:00)</option>
+            <option value="-30">早到 0 分 30 秒 (-0:30)</option>
+            <option value="0" selected>無微調 (+0:00)</option>
+            <option value="30">延後 0 分 30 秒 (+0:30)</option>
+            <option value="60">延後 1 分 00 秒 (+1:00)</option>
+            <option value="90">延後 1 分 30 秒 (+1:30)</option>
+            <option value="120">延後 2 分 00 秒 (+2:00)</option>
+            <option value="150">延後 2 分 30 秒 (+2:30)</option>
+            <option value="180">延後 3 分 00 秒 (+3:00)</option>
+        </select>
+    </div>
 
-        // 通用 Fetch 封裝：帶有 CORS 代理與防阻擋處理
-        async function fetchWithProxy(url) {
-            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
-            try {
-                // 優先使用代理伺服器發送請求
-                const response = await fetch(proxyUrl);
-                if (response.ok) return await response.json();
-            } catch (e) {
-                console.warn("Proxy 請求失敗，嘗試直接發送:", e);
-            }
-            // 備用方案：直連九巴 API
-            const directRes = await fetch(url);
-            return await directRes.json();
-        }
+    <div class="result-box">
+        <div class="result-title">微調後預估到站時間：</div>
+        <div class="result-value" id="final-eta">14:30:00</div>
+    </div>
+</div>
 
-        // 顯示錯誤訊息
-        function showError(msg) {
-            const errDiv = document.getElementById('errorMsg');
-            if (msg) {
-                errDiv.textContent = msg;
-                errDiv.style.display = 'block';
-            } else {
-                errDiv.style.display = 'none';
-            }
-        }
+<script>
+    const etaInput = document.getElementById('eta-input');
+    const offsetSelect = document.getElementById('offset-select');
+    const finalEtaDisplay = document.getElementById('final-eta');
 
-        // 預先載入全港車站對照表
-        async function fetchAllStopsMap() {
-            if (allStopsMap) return allStopsMap;
-            try {
-                const result = await fetchWithProxy('https://data.etabus.gov.hk/v1/transport/kmb/stop');
-                allStopsMap = {};
-                if (result && result.data) {
-                    result.data.forEach(stop => {
-                        allStopsMap[stop.stop] = stop.name_tc;
-                    });
-                }
-                return allStopsMap;
-            } catch (e) {
-                console.error("無法取得車站名稱清單", e);
-                return {};
-            }
-        }
+    function calculateAdjustedETA() {
+        const timeVal = etaInput.value;
+        if (!timeVal) return;
 
-        // 1. 搜尋路線方向
-        async function loadRouteDetails() {
-            showError("");
-            const routeInput = document.getElementById('routeInput').value.trim().toUpperCase();
-            if (!routeInput) {
-                showError("請輸入路線號碼！");
-                return;
-            }
+        const [hours, minutes] = timeVal.split(':').map(Number);
+        const offsetSeconds = parseInt(offsetSelect.value, 10);
 
-            const boundSelect = document.getElementById('boundSelect');
-            const stopSelect = document.getElementById('stopSelect');
-            document.getElementById('etaResult').style.display = 'none';
+        // 建立 Today Date 物件計算時間 offset
+        let date = new Date();
+        date.setHours(hours, minutes, 0, 0);
+        date.setSeconds(date.getSeconds() + offsetSeconds);
 
-            boundSelect.innerHTML = '<option value="">載入方向中...</option>';
-            boundSelect.disabled = true;
-            stopSelect.innerHTML = '<option value="">-- 請先選擇目的地 --</option>';
-            stopSelect.disabled = true;
+        // 格式化輸出 HH:mm:ss
+        const resHours = String(date.getHours()).padStart(2, '0');
+        const resMinutes = String(date.getMinutes()).padStart(2, '0');
+        const resSeconds = String(date.getSeconds()).padStart(2, '0');
 
-            try {
-                const result = await fetchWithProxy(`https://data.etabus.gov.hk/v1/transport/kmb/route/${routeInput}`);
+        finalEtaDisplay.textContent = `${resHours}:${resMinutes}:${resSeconds}`;
+    }
 
-                if (!result || !result.data || result.data.length === 0) {
-                    boundSelect.innerHTML = '<option value="">找不到此路線</option>';
-                    showError(`找不到路線 "${routeInput}"，請確認輸入是否正確。`);
-                    return;
-                }
+    etaInput.addEventListener('change', calculateAdjustedETA);
+    offsetSelect.addEventListener('change', calculateAdjustedETA);
 
-                boundSelect.innerHTML = '<option value="">-- 請選擇目的地 --</option>';
-                result.data.forEach(item => {
-                    const option = document.createElement('option');
-                    // 'O' 代表 Outbound (去程), 'I' 代表 Inbound (回程)
-                    const boundValue = (item.bound === 'O') ? 'outbound' : 'inbound';
-                    option.value = boundValue;
-                    option.textContent = `往：${item.dest_tc}`;
-                    boundSelect.appendChild(option);
-                });
+    // 初始計算一次
+    calculateAdjustedETA();
+</script>
 
-                boundSelect.disabled = false;
-            } catch (error) {
-                console.error("載入路線失敗：", error);
-                boundSelect.innerHTML = '<option value="">載入失敗</option>';
-                showError("網路連線失敗，請檢查您的網路狀態。");
-            }
-        }
-
-        // 2. 載入路線對應車站
-        async function updateStopDropdown() {
-            showError("");
-            const route = document.getElementById('routeInput').value.trim().toUpperCase();
-            const bound = document.getElementById('boundSelect').value;
-            const stopSelect = document.getElementById('stopSelect');
-            document.getElementById('etaResult').style.display = 'none';
-
-            if (!bound) {
-                stopSelect.innerHTML = '<option value="">-- 請先選擇目的地 --</option>';
-                stopSelect.disabled = true;
-                return;
-            }
-
-            stopSelect.innerHTML = '<option value="">載入車站列表中...</option>';
-            stopSelect.disabled = true;
-
-            try {
-                const [result, stopsMap] = await Promise.all([
-                    fetchWithProxy(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${bound}/1`),
-                    fetchAllStopsMap()
-                ]);
-
-                if (!result || !result.data || result.data.length === 0) {
-                    stopSelect.innerHTML = '<option value="">未找到車站資料</option>';
-                    return;
-                }
-
-                stopSelect.innerHTML = '<option value="">-- 請選擇車站 --</option>';
-
-                result.data.forEach(stopData => {
-                    const stopId = stopData.stop;
-                    const stopName = stopsMap[stopId] || "未知車站";
-
-                    const option = document.createElement('option');
-                    option.value = stopId;
-                    option.dataset.stopName = stopName;
-                    option.textContent = `${stopData.seq}. ${stopName}`;
-                    stopSelect.appendChild(option);
-                });
-
-                stopSelect.disabled = false;
-            } catch (error) {
-                console.error("載入車站失敗：", error);
-                stopSelect.innerHTML = '<option value="">載入車站失敗</option>';
-                showError("載入車站列表失敗，請稍後重試。");
-            }
-        }
-
-        // 3. 取得即時到站時間 (ETA)
-        async function fetchETA() {
-            showError("");
-            const route = document.getElementById('routeInput').value.trim().toUpperCase();
-            const boundSelect = document.getElementById('boundSelect');
-            const stopSelect = document.getElementById('stopSelect');
-            const stopId = stopSelect.value;
-
-            if (!stopId) {
-                document.getElementById('etaResult').style.display = 'none';
-                return;
-            }
-
-            const selectedOption = stopSelect.options[stopSelect.selectedIndex];
-            const stopName = selectedOption.dataset.stopName;
-
-            const etaResult = document.getElementById('etaResult');
-            const etaList = document.getElementById('etaList');
-            const etaStopTitle = document.getElementById('etaStopTitle');
-
-            etaStopTitle.textContent = `${stopName}`;
-            etaList.innerHTML = '<div class="status-msg">查詢即時班次中...</div>';
-            etaResult.style.display = 'block';
-
-            try {
-                const result = await fetchWithProxy(`https://data.etabus.gov.hk/v1/transport/kmb/eta/${stopId}/${route}/1`);
-
-                const currentBoundCode = (boundSelect.value === 'outbound') ? 'O' : 'I';
-                const matchedEtas = (result && result.data ? result.data : []).filter(item => item.dir === currentBoundCode && item.eta !== null);
-
-                if (matchedEtas.length === 0) {
-                    etaList.innerHTML = '<div class="status-msg">目前沒有即時到站班次資料或已過尾班車。</div>';
-                    return;
-                }
-
-                etaList.innerHTML = '';
-
-                matchedEtas.forEach(etaData => {
-                    const etaTime = new Date(etaData.eta);
-                    const now = new Date();
-                    
-                    const diffMinutes = Math.max(0, Math.round((etaTime - now) / 60000));
-                    const timeString = etaTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-
-                    const card = document.createElement('div');
-                    card.className = 'eta-card';
-                    card.innerHTML = `
-                        <div>
-                            <span class="eta-time-main">${diffMinutes === 0 ? '即將到達' : diffMinutes + ' 分鐘'}</span>
-                            <span class="eta-time-sub">(${timeString})</span>
-                        </div>
-                        <div class="eta-remark">${etaData.rmk_tc || '即時班次'}</div>
-                    `;
-                    etaList.appendChild(card);
-                });
-
-            } catch (error) {
-                console.error("取得 ETA 失敗：", error);
-                etaList.innerHTML = '<div class="status-msg">取得即時時間失敗，請再試一次。</div>';
-            }
-        }
-    </script>
 </body>
 </html>
