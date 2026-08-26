@@ -17,11 +17,85 @@
             overflow: hidden;
         }
 
+        /* 頂部區域 */
         header {
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             padding-bottom: 10px;
             border-bottom: 1px solid #334155;
             margin-bottom: 12px;
+            gap: 8px;
+        }
+
+        /* 政府停課特別消息顯示欄 (位於時間正上方) */
+        .school-closure-box {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+            background: rgba(225, 29, 72, 0.2);
+            border: 2px solid #f43f5e;
+            border-radius: 10px;
+            padding: 8px 14px;
+            flex-direction: column;
+            gap: 4px;
+            box-shadow: 0 0 14px rgba(244, 63, 94, 0.3);
+            animation: pulse-red 2s infinite;
+        }
+        .school-closure-box.active { display: flex; }
+        .closure-title {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #fb7185;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .closure-content {
+            font-size: 0.85rem;
+            color: #ffe4e6;
+            line-height: 1.4;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+
+        /* 天氣警報顯示欄 */
+        .weather-warning-box {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+            background: rgba(225, 29, 72, 0.15);
+            border: 1px solid #f43f5e;
+            border-radius: 10px;
+            padding: 8px 12px;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .weather-warning-box.active { display: flex; }
+        .warning-title {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #fb7185;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .warning-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .warning-badge {
+            background: #9f1239;
+            color: #fff;
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .clock-container {
+            text-align: center;
         }
         #clock {
             font-size: 3.5rem;
@@ -40,7 +114,7 @@
             display: flex;
             flex: 1;
             gap: 16px;
-            height: calc(100% - 90px);
+            height: calc(100% - 110px);
         }
 
         .left-panel {
@@ -51,7 +125,7 @@
             overflow-y: auto;
         }
 
-        .weather-grid { display: flex; gap: 10px; flex: 1; }
+        .weather-grid { display: flex; gap: 10px; flex: 1; min-height: 220px; }
         .district-box {
             flex: 1;
             background: #1e293b;
@@ -136,40 +210,7 @@
         .weather-icon { width: 45px; height: 45px; object-fit: contain; }
         .weather-desc { font-size: 0.85rem; color: #cbd5e1; line-height: 1.3; }
 
-        .weather-warning-box {
-            display: none;
-            background: rgba(225, 29, 72, 0.15);
-            border: 1px solid #f43f5e;
-            border-radius: 10px;
-            padding: 8px 12px;
-            flex-direction: column;
-            gap: 6px;
-            animation: pulse-border 2s infinite;
-        }
-        .weather-warning-box.active { display: flex; }
-        .warning-title {
-            font-size: 0.8rem;
-            font-weight: bold;
-            color: #fb7185;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .warning-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-        .warning-badge {
-            background: #9f1239;
-            color: #fff;
-            font-size: 0.75rem;
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-weight: 600;
-        }
-
-        @keyframes pulse-border {
+        @keyframes pulse-red {
             0% { border-color: #f43f5e; box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4); }
             70% { border-color: #e11d48; box-shadow: 0 0 0 6px rgba(244, 63, 94, 0); }
             100% { border-color: #f43f5e; box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
@@ -217,23 +258,17 @@
         .bus-item.item-ctb { background: #eab308; color: #000000; }
         .bus-item.item-nlb { background: #15803d; color: #ffffff; }
 
-        .bus-header { display: flex; justify-content: space-between; align-items: center; }
+        .bus-header { display: flex; justify-content: space-between; align-items: baseline; }
         .bus-title-group { display: flex; align-items: center; gap: 8px; }
-        
-        /* 巴士公司 Logo 樣式 */
-        .bus-logo-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 3px 6px;
-            border-radius: 6px;
-            font-weight: 900;
+        .bus-company-tag {
             font-size: 0.75rem;
-            letter-spacing: 0.5px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
         }
-        .logo-kmb { background: #7f1d1d; color: #ffffff; border: 1px solid #ef4444; }
-        .logo-ctb { background: #002b49; color: #facc15; border: 1px solid #eab308; }
-        .logo-nlb { background: #064e3b; color: #ffffff; border: 1px solid #22c55e; }
+        .tag-kmb { background: #7f1d1d; color: #ffffff; }
+        .tag-ctb { background: #713f12; color: #ffffff; }
+        .tag-nlb { background: #166534; color: #bbf7d0; }
 
         .bus-name {
             font-size: 1.8rem;
@@ -300,7 +335,7 @@
             background: #1e293b;
             border-radius: 16px;
             width: 90%;
-            max-width: 680px;
+            max-width: 650px;
             max-height: 85vh;
             padding: 16px;
             border: 1px solid #475569;
@@ -362,13 +397,28 @@
 <body>
 
     <header>
-        <div id="clock">00:00:00</div>
-        <div id="date">--年--月--日 星期-</div>
+        <!-- 政府新聞網 停課特別消息 (位於時間正上方) -->
+        <div class="school-closure-box" id="school-closure-box">
+            <div class="closure-title">🚨 政府特別公告（停課消息）：</div>
+            <div class="closure-content" id="closure-content">加載中...</div>
+        </div>
+
+        <!-- 天氣警報顯示欄 -->
+        <div class="weather-warning-box" id="weather-warning-box">
+            <div class="warning-title">⚠️ 天文台現正生效警告：</div>
+            <div class="warning-list" id="warning-list"></div>
+        </div>
+
+        <div class="clock-container">
+            <div id="clock">00:00:00</div>
+            <div id="date">--年--月--日 星期-</div>
+        </div>
     </header>
 
     <main>
         <div class="left-panel">
             <div class="weather-grid">
+                <!-- 區域一 -->
                 <div class="district-box">
                     <div class="district-header">
                         <span class="district-title" id="d1-custom-title">📍 東涌</span>
@@ -401,6 +451,7 @@
                     </div>
                 </div>
 
+                <!-- 區域二 -->
                 <div class="district-box">
                     <div class="district-header">
                         <span class="district-title" id="d2-custom-title">📍 尖沙咀</span>
@@ -433,22 +484,18 @@
                     </div>
                 </div>
             </div>
-
-            <div class="weather-warning-box" id="weather-warning-box">
-                <div class="warning-title">⚠️ 天文台現正生效警告：</div>
-                <div class="warning-list" id="warning-list"></div>
-            </div>
         </div>
 
         <section class="bus-panel">
             <div class="panel-title">
-                <span>🚌 巴士到站動態 (每1分鐘更新)</span>
+                <span>🚌 巴士到站動態 (每30秒更新)</span>
                 <button class="settings-btn" onclick="openSettings()">⚙️ 路線設定</button>
             </div>
             <div class="bus-list" id="bus-list"></div>
         </section>
     </main>
 
+    <!-- 設定彈窗 Modal -->
     <div class="modal-overlay" id="settings-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -459,7 +506,7 @@
                 💡 <b>填寫指南</b>：<br>
                 • <b>九巴 (KMB)</b>：填 App 站代碼（如 <code>TC188</code>）或 Stop ID，並選擇正確方向。<br>
                 • <b>城巴/嶼巴</b>：直接填 App 內的中文/英文<b>站名</b>（如 <code>東涌纜車站</code>），並選擇去程/返程。<br>
-                • <b>時間微調</b>：可針對該路線選擇 -3 至 +3 分鐘（以 30 秒為單位微調）。
+                • <b>時間微調</b>：可手動正負調整到站預估時間（步長 30 秒）。
             </div>
             <div class="config-list" id="config-list"></div>
             <div class="modal-footer">
@@ -526,7 +573,7 @@
         let cachedRawEtas = {};
 
         function loadBusConfigs() {
-            const saved = localStorage.getItem('user_bus_configs_v3');
+            const saved = localStorage.getItem('user_bus_configs_v4');
             if (saved) {
                 try { currentBuses = JSON.parse(saved); } catch(e) { currentBuses = defaultBuses; }
             } else {
@@ -545,6 +592,37 @@
         }
         setInterval(updateClock, 1000);
         updateClock();
+
+        /* ------------------ info.gov.hk 停課消息監測 ------------------ */
+        async function fetchGovSchoolClosureNotice() {
+            const box = document.getElementById('school-closure-box');
+            const content = document.getElementById('closure-content');
+
+            try {
+                const feedUrl = encodeURIComponent('https://www.info.gov.hk/gia/rss/general_zh.xml');
+                const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${feedUrl}`);
+                const data = await res.json();
+
+                if (data.status === 'ok' && data.items && data.items.length > 0) {
+                    const keywords = ['停課', '教育局特別宣布', '中小學', '幼稚園'];
+                    
+                    const matchedItems = data.items.filter(item => {
+                        const text = (item.title + ' ' + item.description).toLowerCase();
+                        return keywords.some(kw => text.includes(kw));
+                    });
+
+                    if (matchedItems.length > 0) {
+                        const latest = matchedItems[0];
+                        content.innerHTML = `<b>${latest.title}</b><br>${latest.description || ''}`;
+                        box.classList.add('active');
+                        return;
+                    }
+                }
+                box.classList.remove('active');
+            } catch (err) {
+                box.classList.remove('active');
+            }
+        }
 
         async function fetchWeather() {
             try {
@@ -616,8 +694,11 @@
         
         initDistrictSelects();
         fetchWeather();
+        fetchGovSchoolClosureNotice();
         setInterval(fetchWeather, 60000);
+        setInterval(fetchGovSchoolClosureNotice, 60000);
 
+        /* ------------------ 巴士到站 API ------------------ */
         async function getKMBSeta(route, stopCode, dir) {
             try {
                 let targetStopId = stopCode;
@@ -696,7 +777,7 @@
 
             for (let bus of sortedBuses) {
                 const busDir = bus.dir || 'outbound';
-                const busOffset = parseFloat(bus.offset || 0); // 支援 30 秒 (0.5 分鐘) 的小數點計算
+                const busOffset = parseFloat(bus.offset || 0); // 時間微調（分鐘）
                 const busKey = `${bus.company}_${bus.route}_${busDir}_${bus.stop}`;
                 let rawEtas = [];
 
@@ -718,25 +799,26 @@
                     if (!item || !item.eta) return null;
                     const etaTime = new Date(item.eta);
                     
-                    // 以秒數精確計算時間差並加入微調偏移量
-                    const diffSecs = Math.round((etaTime - now) / 1000) + (busOffset * 60);
-                    if (isNaN(diffSecs)) return null;
+                    // 倒數總秒數計算 (加上微調偏移)
+                    let totalDiffSeconds = Math.round((etaTime - now) / 1000) + (busOffset * 60);
 
-                    if (diffSecs < 0) return null;
-                    if (diffSecs <= 60) return '即將到站';
-                    
-                    const diffMins = Math.round(diffSecs / 60);
+                    if (bus.company === 'kmb') {
+                        totalDiffSeconds -= 60; // 九巴預設偏慢1分鐘基準修正
+                    }
+
+                    if (totalDiffSeconds < 0) return null;
+                    if (totalDiffSeconds <= 90) return '即將到站';
+
+                    const diffMins = Math.round(totalDiffSeconds / 60);
                     return `${diffMins} 分鐘`;
                 }).filter(Boolean).slice(0, 3);
 
                 while (etas.length < 3) etas.push('-');
 
                 const isArr = etas[0] === '即將到站';
-                
-                // 巴士公司矢量 Logo 標籤
-                const companyLogo = bus.company === 'kmb' ? '<span class="bus-logo-badge logo-kmb">KMB 九巴</span>' : 
-                                    bus.company === 'ctb' ? '<span class="bus-logo-badge logo-ctb">CTB 城巴</span>' : 
-                                    '<span class="bus-logo-badge logo-nlb">NLB 嶼巴</span>';
+                const companyTag = bus.company === 'kmb' ? '<span class="bus-company-tag tag-kmb">九巴</span>' : 
+                                   bus.company === 'ctb' ? '<span class="bus-company-tag tag-ctb">城巴</span>' : 
+                                   '<span class="bus-company-tag tag-nlb">嶼巴</span>';
 
                 const itemClass = bus.company === 'kmb' ? 'item-kmb' :
                                   bus.company === 'ctb' ? 'item-ctb' : 'item-nlb';
@@ -745,7 +827,7 @@
                     <div class="bus-item ${itemClass}">
                         <div class="bus-header">
                             <div class="bus-title-group">
-                                ${companyLogo}
+                                ${companyTag}
                                 <div class="bus-name">${bus.route.toUpperCase()}</div>
                             </div>
                             <div class="bus-dest">${bus.dest_name}</div>
@@ -762,7 +844,7 @@
         }
 
         fetchBusData();
-        setInterval(fetchBusData, 60000);
+        setInterval(fetchBusData, 30000);
 
         function openSettings() {
             loadBusConfigs();
@@ -778,9 +860,21 @@
             const container = document.getElementById('config-list');
             container.innerHTML = '';
 
+            // 生成 -3分鐘 到 +3分鐘（步長0.5，即30秒）的下拉選單選項
+            const generateOffsetOptions = (selectedVal) => {
+                let options = '';
+                for (let sec = -180; sec <= 180; sec += 30) {
+                    const val = sec / 60;
+                    const label = val === 0 ? '無微調 (0分)' : (val > 0 ? `+${val} 分鐘 (+${sec}秒)` : `${val} 分鐘 (${sec}秒)`);
+                    const selected = parseFloat(selectedVal) === val ? 'selected' : '';
+                    options += `<option value="${val}" ${selected}>${label}</option>`;
+                }
+                return options;
+            };
+
             currentBuses.forEach((bus, index) => {
                 const busDir = bus.dir || 'outbound';
-                const busOffset = bus.offset !== undefined ? parseFloat(bus.offset) : 0;
+                const busOffset = bus.offset !== undefined ? bus.offset : 0;
 
                 const itemHtml = `
                     <div class="config-item">
@@ -798,22 +892,10 @@
                             <button class="delete-btn" onclick="deleteBusConfig(${index})">刪除</button>
                         </div>
                         <div class="config-row">
-                            <input type="text" class="config-input bus-stop" placeholder="App 站代號 (如 TC188) 或 站名 (如 東涌纜車站)" value="${bus.stop}">
+                            <input type="text" class="config-input bus-stop" placeholder="App 站代號 (如 TC188) 或 站名" value="${bus.stop}">
                             <input type="text" class="config-input bus-dest" placeholder="顯示目的地 (如 往 尖沙咀)" value="${bus.dest_name}">
-                            <select class="config-select bus-offset" title="調整顯示時間">
-                                <option value="3" ${busOffset === 3 ? 'selected' : ''}>+3分00秒 (+3.0)</option>
-                                <option value="2.5" ${busOffset === 2.5 ? 'selected' : ''}>+2分30秒 (+2.5)</option>
-                                <option value="2" ${busOffset === 2 ? 'selected' : ''}>+2分00秒 (+2.0)</option>
-                                <option value="1.5" ${busOffset === 1.5 ? 'selected' : ''}>+1分30秒 (+1.5)</option>
-                                <option value="1" ${busOffset === 1 ? 'selected' : ''}>+1分00秒 (+1.0)</option>
-                                <option value="0.5" ${busOffset === 0.5 ? 'selected' : ''}>+0分30秒 (+0.5)</option>
-                                <option value="0" ${busOffset === 0 ? 'selected' : ''}>不微調 (0)</option>
-                                <option value="-0.5" ${busOffset === -0.5 ? 'selected' : ''}>-0分30秒 (-0.5)</option>
-                                <option value="-1" ${busOffset === -1 ? 'selected' : ''}>-1分00秒 (-1.0)</option>
-                                <option value="-1.5" ${busOffset === -1.5 ? 'selected' : ''}>-1分30秒 (-1.5)</option>
-                                <option value="-2" ${busOffset === -2 ? 'selected' : ''}>-2分00秒 (-2.0)</option>
-                                <option value="-2.5" ${busOffset === -2.5 ? 'selected' : ''}>-2分30秒 (-2.5)</option>
-                                <option value="-3" ${busOffset === -3 ? 'selected' : ''}>-3分00秒 (-3.0)</option>
+                            <select class="config-select bus-offset" title="時間微調">
+                                ${generateOffsetOptions(busOffset)}
                             </select>
                         </div>
                     </div>
@@ -850,7 +932,7 @@
             });
 
             currentBuses = newConfigs;
-            localStorage.setItem('user_bus_configs_v3', JSON.stringify(currentBuses));
+            localStorage.setItem('user_bus_configs_v4', JSON.stringify(currentBuses));
             
             closeSettings();
             fetchBusData();
