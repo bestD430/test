@@ -90,7 +90,14 @@
             color: #6c757d;
         }
 
-        /* 即時到站時間 (ETA) 區塊 */
+        .error-msg {
+            color: #d9534f;
+            font-size: 13px;
+            margin-top: 6px;
+            display: none;
+        }
+
+        /* ETA 顯示區域 */
         .eta-container {
             margin-top: 24px;
             padding: 16px;
@@ -176,6 +183,7 @@
                 <input type="text" id="routeInput" placeholder="例如: 1A, 60X" value="1A">
                 <button onclick="loadRouteDetails()">搜尋</button>
             </div>
+            <div id="errorMsg" class="error-msg"></div>
         </div>
 
         <!-- 2. 選擇方向（顯示目的地） -->
@@ -205,14 +213,44 @@
     </div>
 
     <script>
-        // 快取車站名稱，避免重複呼叫 API
-        const stopNameCache = {};
+        let allStopsMap = null; // 用於快取全港車站名稱
 
-        // 1. 搜尋路線並帶出方向與目的地
+        // 顯示錯誤訊息
+        function showError(msg) {
+            const errDiv = document.getElementById('errorMsg');
+            if (msg) {
+                errDiv.textContent = msg;
+                errDiv.style.display = 'block';
+            } else {
+                errDiv.style.display = 'none';
+            }
+        }
+
+        // 預先載入所有車站數據（大幅優化查詢速度）
+        async function fetchAllStopsMap() {
+            if (allStopsMap) return allStopsMap;
+            try {
+                const response = await fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop');
+                const result = await response.json();
+                allStopsMap = {};
+                if (result.data) {
+                    result.data.forEach(stop => {
+                        allStopsMap[stop.stop] = stop.name_tc;
+                    });
+                }
+                return allStopsMap;
+            } catch (e) {
+                console.error("無法取得巴士站對照表", e);
+                return {};
+            }
+        }
+
+        // 1. 搜尋路線方向
         async function loadRouteDetails() {
-            const route = document.getElementById('routeInput').value.trim().toUpperCase();
-            if (!route) {
-                alert("請輸入路線號碼！");
+            showError("");
+            const routeInput = document.getElementById('routeInput').value.trim().toUpperCase();
+            if (!routeInput) {
+                showError("請輸入路線號碼！");
                 return;
             }
 
@@ -226,33 +264,41 @@
             stopSelect.disabled = true;
 
             try {
-                const response = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route/${route}`);
+                const response = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route/${routeInput}`);
+                
+                if (!response.ok) {
+                    throw new Error("網絡請求回應異常");
+                }
+
                 const result = await response.json();
 
                 if (!result.data || result.data.length === 0) {
                     boundSelect.innerHTML = '<option value="">找不到此路線</option>';
+                    showError(`找不到路線 "${routeInput}"，請確認輸入是否正確。`);
                     return;
                 }
 
                 boundSelect.innerHTML = '<option value="">-- 請選擇目的地 --</option>';
                 result.data.forEach(item => {
                     const option = document.createElement('option');
-                    // 'O' 代表 Outbound (去程)，'I' 代表 Inbound (回程)
+                    // 'O' 代表 Outbound (去程), 'I' 代表 Inbound (回程)
                     const boundValue = (item.bound === 'O') ? 'outbound' : 'inbound';
                     option.value = boundValue;
-                    option.textContent = `往：${item.dest_tc} (經 ${item.orig_tc} 開出)`;
+                    option.textContent = `往：${item.dest_tc} (開往 ${item.dest_tc})`;
                     boundSelect.appendChild(option);
                 });
 
                 boundSelect.disabled = false;
             } catch (error) {
-                console.error("載入路線方向失敗：", error);
-                boundSelect.innerHTML = '<option value="">載入失敗，請稍後再試</option>';
+                console.error("載入路線失敗：", error);
+                boundSelect.innerHTML = '<option value="">載入失敗</option>';
+                showError("無法連線至九巴 API。若您使用本地端雙擊開啟檔案，請試著改用 Local Web Server (如 Live Server) 開啟。");
             }
         }
 
-        // 2. 根據選定的方向載入該路線車站清單
+        // 2. 載入路線對應車站
         async function updateStopDropdown() {
+            showError("");
             const route = document.getElementById('routeInput').value.trim().toUpperCase();
             const bound = document.getElementById('boundSelect').value;
             const stopSelect = document.getElementById('stopSelect');
@@ -264,12 +310,17 @@
                 return;
             }
 
-            stopSelect.innerHTML = '<option value="">載入車站中...</option>';
+            stopSelect.innerHTML = '<option value="">載入車站列表中...</option>';
             stopSelect.disabled = true;
 
             try {
-                const response = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${bound}/1`);
-                const result = await response.json();
+                // 並行抓取：車站清單 + 全站名稱對照表
+                const [routeStopsRes, stopsMap] = await Promise.all([
+                    fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${bound}/1`),
+                    fetchAllStopsMap()
+                ]);
+
+                const result = await routeStopsRes.json();
 
                 if (!result.data || result.data.length === 0) {
                     stopSelect.innerHTML = '<option value="">未找到車站資料</option>';
@@ -278,28 +329,28 @@
 
                 stopSelect.innerHTML = '<option value="">-- 請選擇車站 --</option>';
 
-                // 逐一取得車站中文名稱並組合選項
-                for (let i = 0; i < result.data.length; i++) {
-                    const stopData = result.data[i];
+                result.data.forEach(stopData => {
                     const stopId = stopData.stop;
-                    const stopName = await getStopName(stopId);
-                    
+                    const stopName = stopsMap[stopId] || "未知車站";
+
                     const option = document.createElement('option');
                     option.value = stopId;
-                    option.dataset.stopName = stopName; 
+                    option.dataset.stopName = stopName;
                     option.textContent = `${stopData.seq}. ${stopName}`;
                     stopSelect.appendChild(option);
-                }
+                });
 
                 stopSelect.disabled = false;
             } catch (error) {
                 console.error("載入車站失敗：", error);
                 stopSelect.innerHTML = '<option value="">載入車站失敗</option>';
+                showError("載入車站時發生錯誤，請稍後重試。");
             }
         }
 
-        // 3. 取得特定車站的班次到站時間 (ETA)
+        // 3. 取得即時到站時間 (ETA)
         async function fetchETA() {
+            showError("");
             const route = document.getElementById('routeInput').value.trim().toUpperCase();
             const boundSelect = document.getElementById('boundSelect');
             const stopSelect = document.getElementById('stopSelect');
@@ -318,29 +369,29 @@
             const etaStopTitle = document.getElementById('etaStopTitle');
 
             etaStopTitle.textContent = `${stopName}`;
-            etaList.innerHTML = '<div class="status-msg">查詢中...</div>';
+            etaList.innerHTML = '<div class="status-msg">查詢即時班次中...</div>';
             etaResult.style.display = 'block';
 
             try {
                 const response = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/eta/${stopId}/${route}/1`);
                 const result = await response.json();
 
-                // 過濾出與目前選擇方向相符的到站資料
+                // 篩選對應方向的數據
                 const currentBoundCode = (boundSelect.value === 'outbound') ? 'O' : 'I';
-                const matchedEtas = result.data.filter(item => item.dir === currentBoundCode && item.eta !== null);
+                const matchedEtas = (result.data || []).filter(item => item.dir === currentBoundCode && item.eta !== null);
 
                 if (matchedEtas.length === 0) {
                     etaList.innerHTML = '<div class="status-msg">目前沒有即時到站班次資料或已過尾班車。</div>';
                     return;
                 }
 
-                etaList.innerHTML = ''; 
+                etaList.innerHTML = '';
 
                 matchedEtas.forEach(etaData => {
                     const etaTime = new Date(etaData.eta);
                     const now = new Date();
                     
-                    // 計算距離現在還有幾分鐘
+                    // 計算幾分鐘後到達
                     const diffMinutes = Math.max(0, Math.round((etaTime - now) / 60000));
                     const timeString = etaTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 
@@ -359,20 +410,6 @@
             } catch (error) {
                 console.error("取得 ETA 失敗：", error);
                 etaList.innerHTML = '<div class="status-msg">取得即時時間失敗，請再試一次。</div>';
-            }
-        }
-
-        // 輔助函式：取得車站中文名稱（具備快取功能）
-        async function getStopName(stopId) {
-            if (stopNameCache[stopId]) return stopNameCache[stopId];
-            try {
-                const res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop/${stopId}`);
-                const data = await res.json();
-                const name = data.data.name_tc;
-                stopNameCache[stopId] = name;
-                return name;
-            } catch (e) {
-                return "未知車站";
             }
         }
     </script>
