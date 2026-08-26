@@ -2,83 +2,118 @@
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
-    <title>巴士路線與車站選單連動</title>
+    <title>巴士路線與車站選單連動（顯示終點站）</title>
     <style>
         .form-group { margin-bottom: 15px; }
         label { display: inline-block; width: 100px; font-weight: bold; }
-        select, input { padding: 8px; width: 250px; }
+        select, input { padding: 8px; width: 300px; }
+        button { padding: 8px 15px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <h2>巴士路線與車站查詢選單</h2>
 
-    <!-- 第一步：輸入或選擇路線 -->
+    <!-- 第一步：輸入路線 -->
     <div class="form-group">
         <label for="routeInput">巴士路線：</label>
         <input type="text" id="routeInput" placeholder="例如: 1A, 60X" value="1A">
-        <button onclick="loadRouteStops()">搜尋路線</button>
+        <button onclick="loadRouteDetails()">搜尋路線</button>
     </div>
 
-    <!-- 第二步：選擇方向 -->
+    <!-- 第二步：選擇方向（顯示終點站） -->
     <div class="form-group">
         <label for="boundSelect">方向：</label>
         <select id="boundSelect" onchange="updateStopDropdown()" disabled>
             <option value="">-- 請先輸入路線 --</option>
-            <option value="outbound">去程 (Outbound)</option>
-            <option value="inbound">回程 (Inbound)</option>
         </select>
     </div>
 
-    <!-- 第三步：車站位置選單（動態更新） -->
+    <!-- 第三步：車站位置選單 -->
     <div class="form-group">
         <label for="stopSelect">車站位置：</label>
         <select id="stopSelect" disabled>
-            <option value="">-- 請選擇車站 --</option>
+            <option value="">-- 請先選擇方向 --</option>
         </select>
     </div>
 
     <script>
-        // 快取已載入的車站名稱，減少 API 重複請求
         const stopNameCache = {};
 
-        async function loadRouteStops() {
+        // 1. 取得路線詳細資訊（包含去程/回程終點站）
+        async function loadRouteDetails() {
             const route = document.getElementById('routeInput').value.trim().toUpperCase();
             if (!route) return alert("請輸入路線號碼！");
 
             const boundSelect = document.getElementById('boundSelect');
-            boundSelect.disabled = false;
+            const stopSelect = document.getElementById('stopSelect');
             
-            // 觸發載入車站選單
-            updateStopDropdown();
+            boundSelect.innerHTML = '<option value="">載入方向中...</option>';
+            boundSelect.disabled = true;
+            stopSelect.innerHTML = '<option value="">-- 請先選擇方向 --</option>';
+            stopSelect.disabled = true;
+
+            try {
+                // 呼叫 Route API 取得該路線的方向與終點站資訊
+                const response = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route/${route}`);
+                const result = await response.json();
+
+                if (!result.data || result.data.length === 0) {
+                    boundSelect.innerHTML = '<option value="">找不到此路線</option>';
+                    return;
+                }
+
+                boundSelect.innerHTML = '<option value="">-- 請選擇方向 --</option>';
+
+                // 將取得的方向資料填入選單，選項顯示「往 [終點站]」
+                result.data.forEach(item => {
+                    const option = document.createElement('option');
+                    // bound 可能是 "O" (Outbound) 或 "I" (Inbound)
+                    const boundValue = (item.bound === 'O') ? 'outbound' : 'inbound';
+                    
+                    option.value = boundValue;
+                    option.textContent = `往：${item.dest_tc} (經 ${item.orig_tc} 開出)`;
+                    boundSelect.appendChild(option);
+                });
+
+                boundSelect.disabled = false;
+            } catch (error) {
+                console.error("載入路線方向失敗：", error);
+                boundSelect.innerHTML = '<option value="">載入失敗</option>';
+            }
         }
 
+        // 2. 根據選定的方向，載入該方向的車站列表
         async function updateStopDropdown() {
             const route = document.getElementById('routeInput').value.trim().toUpperCase();
             const bound = document.getElementById('boundSelect').value;
             const stopSelect = document.getElementById('stopSelect');
 
+            if (!bound) {
+                stopSelect.innerHTML = '<option value="">-- 請先選擇方向 --</option>';
+                stopSelect.disabled = true;
+                return;
+            }
+
             stopSelect.innerHTML = '<option value="">載入車站中...</option>';
             stopSelect.disabled = true;
 
             try {
-                // 1. 呼叫 Route-Stop API 取得該路線的車站 ID 列表
+                // 呼叫 Route-Stop API 取得車站清單
                 const response = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${bound}/1`);
                 const result = await response.json();
 
                 if (!result.data || result.data.length === 0) {
-                    stopSelect.innerHTML = '<option value="">未找到此路線/方向的車站</option>';
+                    stopSelect.innerHTML = '<option value="">未找到車站資料</option>';
                     return;
                 }
 
                 stopSelect.innerHTML = '<option value="">-- 請選擇車站 --</option>';
 
-                // 2. 逐一取得車站名稱並填充至下拉選單
+                // 逐一讀取車站名稱並建立選項
                 for (let i = 0; i < result.data.length; i++) {
                     const stopData = result.data[i];
                     const stopId = stopData.stop;
-                    
-                    // 從快取或 API 獲取車站中文名稱
                     const stopName = await getStopName(stopId);
                     
                     const option = document.createElement('option');
@@ -89,8 +124,8 @@
 
                 stopSelect.disabled = false;
             } catch (error) {
-                console.error("載入失敗：", error);
-                stopSelect.innerHTML = '<option value="">載入失敗，請稍後再試</option>';
+                console.error("載入車站失敗：", error);
+                stopSelect.innerHTML = '<option value="">載入車站失敗</option>';
             }
         }
 
@@ -103,7 +138,7 @@
                 const res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop/${stopId}`);
                 const data = await res.json();
                 const name = data.data.name_tc;
-                stopNameCache[stopId] = name; // 記錄至快取
+                stopNameCache[stopId] = name;
                 return name;
             } catch (e) {
                 return "未知車站";
