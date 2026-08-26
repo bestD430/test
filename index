@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <title>巴士路線與車站選單連動</title>
+    <style>
+        .form-group { margin-bottom: 15px; }
+        label { display: inline-block; width: 100px; font-weight: bold; }
+        select, input { padding: 8px; width: 250px; }
+    </style>
+</head>
+<body>
+
+    <h2>巴士路線與車站查詢選單</h2>
+
+    <!-- 第一步：輸入或選擇路線 -->
+    <div class="form-group">
+        <label for="routeInput">巴士路線：</label>
+        <input type="text" id="routeInput" placeholder="例如: 1A, 60X" value="1A">
+        <button onclick="loadRouteStops()">搜尋路線</button>
+    </div>
+
+    <!-- 第二步：選擇方向 -->
+    <div class="form-group">
+        <label for="boundSelect">方向：</label>
+        <select id="boundSelect" onchange="updateStopDropdown()" disabled>
+            <option value="">-- 請先輸入路線 --</option>
+            <option value="outbound">去程 (Outbound)</option>
+            <option value="inbound">回程 (Inbound)</option>
+        </select>
+    </div>
+
+    <!-- 第三步：車站位置選單（動態更新） -->
+    <div class="form-group">
+        <label for="stopSelect">車站位置：</label>
+        <select id="stopSelect" disabled>
+            <option value="">-- 請選擇車站 --</option>
+        </select>
+    </div>
+
+    <script>
+        // 快取已載入的車站名稱，減少 API 重複請求
+        const stopNameCache = {};
+
+        async function loadRouteStops() {
+            const route = document.getElementById('routeInput').value.trim().toUpperCase();
+            if (!route) return alert("請輸入路線號碼！");
+
+            const boundSelect = document.getElementById('boundSelect');
+            boundSelect.disabled = false;
+            
+            // 觸發載入車站選單
+            updateStopDropdown();
+        }
+
+        async function updateStopDropdown() {
+            const route = document.getElementById('routeInput').value.trim().toUpperCase();
+            const bound = document.getElementById('boundSelect').value;
+            const stopSelect = document.getElementById('stopSelect');
+
+            stopSelect.innerHTML = '<option value="">載入車站中...</option>';
+            stopSelect.disabled = true;
+
+            try {
+                // 1. 呼叫 Route-Stop API 取得該路線的車站 ID 列表
+                const response = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${bound}/1`);
+                const result = await response.json();
+
+                if (!result.data || result.data.length === 0) {
+                    stopSelect.innerHTML = '<option value="">未找到此路線/方向的車站</option>';
+                    return;
+                }
+
+                stopSelect.innerHTML = '<option value="">-- 請選擇車站 --</option>';
+
+                // 2. 逐一取得車站名稱並填充至下拉選單
+                for (let i = 0; i < result.data.length; i++) {
+                    const stopData = result.data[i];
+                    const stopId = stopData.stop;
+                    
+                    // 從快取或 API 獲取車站中文名稱
+                    const stopName = await getStopName(stopId);
+                    
+                    const option = document.createElement('option');
+                    option.value = stopId;
+                    option.textContent = `${stopData.seq}. ${stopName}`;
+                    stopSelect.appendChild(option);
+                }
+
+                stopSelect.disabled = false;
+            } catch (error) {
+                console.error("載入失敗：", error);
+                stopSelect.innerHTML = '<option value="">載入失敗，請稍後再試</option>';
+            }
+        }
+
+        // 取得車站名稱細節 API
+        async function getStopName(stopId) {
+            if (stopNameCache[stopId]) {
+                return stopNameCache[stopId];
+            }
+            try {
+                const res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop/${stopId}`);
+                const data = await res.json();
+                const name = data.data.name_tc;
+                stopNameCache[stopId] = name; // 記錄至快取
+                return name;
+            } catch (e) {
+                return "未知車站";
+            }
+        }
+    </script>
+</body>
+</html>
