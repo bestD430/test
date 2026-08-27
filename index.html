@@ -212,43 +212,21 @@
 
         /* Google Maps 交通狀況及行車時間樣式 */
         .traffic-panel {
-            flex: 1;
             background: #1e293b;
             border-radius: 16px;
             padding: 14px;
             border: 1px solid #334155;
             display: flex;
             flex-direction: column;
-            min-height: 250px;
             gap: 10px;
+            /* 移除固定 min-height，讓隱藏地圖時高度自適應不佔空間 */
         }
 
-        /* 路線常駐設定欄 */
-        .traffic-route-inline {
-            background: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 10px;
-            padding: 10px;
+        /* 標題與控制項按鈕組 */
+        .traffic-header-actions {
             display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        .route-input-group {
-            display: flex;
-            flex: 1;
             gap: 6px;
             align-items: center;
-        }
-        .route-save-btn {
-            background: #0284c7;
-            color: #fff;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            cursor: pointer;
-            white-space: nowrap;
         }
 
         /* 起終點名稱標題列 */
@@ -257,8 +235,8 @@
             font-weight: bold;
             color: #38bdf8;
             background: rgba(56, 189, 248, 0.1);
-            padding: 6px 10px;
-            border-radius: 6px;
+            padding: 8px 12px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -286,6 +264,7 @@
         .travel-type { font-size: 0.75rem; color: #94a3b8; }
         .travel-val { font-size: 1.2rem; font-weight: bold; color: #38bdf8; }
 
+        /* 地圖容器，隱藏時使用 display: none 不佔空間 */
         .map-container {
             flex: 1;
             width: 100%;
@@ -293,7 +272,10 @@
             overflow: hidden;
             border: 1px solid #475569;
             background: #0f172a;
-            min-height: 180px;
+            min-height: 200px;
+        }
+        .map-container.hidden {
+            display: none !important;
         }
         .map-iframe {
             width: 100%;
@@ -412,6 +394,7 @@
             font-size: 0.9rem;
         }
 
+        /* 通用彈窗 Modal 樣式 */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -580,21 +563,15 @@
             <div class="traffic-panel">
                 <div class="panel-title">
                     <span>🚗 路線行程時間估計</span>
-                </div>
-
-                <!-- 常駐顯示：路線設定欄 -->
-                <div class="traffic-route-inline">
-                    <div class="route-input-group">
-                        <input type="text" id="traffic-origin-input" class="menu-input" placeholder="起點 (例: 逸東邨)">
-                        <span>➔</span>
-                        <input type="text" id="traffic-dest-input" class="menu-input" placeholder="終點 (例: 九龍志和街)">
+                    <div class="traffic-header-actions">
+                        <button class="settings-btn" id="toggle-map-btn" onclick="toggleMapVisibility()">🗺️ 隱藏地圖</button>
+                        <button class="settings-btn" onclick="openRouteModal()">⚙️ 路線設定</button>
                     </div>
-                    <button class="route-save-btn" onclick="saveTrafficConfig()">保存更新</button>
                 </div>
 
                 <!-- 顯示設定了的起點與終點名稱 -->
-                <div class="route-display-header" id="route-display-title">
-                    📍 <span id="disp-origin">逸東邨</span> ➔ <span id="disp-dest">九龍志和街</span>
+                <div class="route-display-header">
+                    📍 <span id="disp-origin">逸東邨, 香港</span> ➔ <span id="disp-dest">九龍志和街, 香港</span>
                 </div>
 
                 <!-- 私家車及巴士預估時間顯示 -->
@@ -616,7 +593,7 @@
                 </div>
 
                 <!-- Google Maps 地圖 -->
-                <div class="map-container">
+                <div class="map-container" id="map-container">
                     <iframe id="traffic-map-iframe" class="map-iframe" loading="lazy" allowfullscreen src=""></iframe>
                 </div>
             </div>
@@ -631,7 +608,30 @@
         </section>
     </main>
 
-    <!-- 設定彈窗 Modal -->
+    <!-- 路線設定 Modal -->
+    <div class="modal-overlay" id="route-modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <div class="modal-title">⚙️ 設定行車起點與終點</div>
+                <button class="modal-close" onclick="closeRouteModal()">&times;</button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 12px; margin: 10px 0;">
+                <div>
+                    <label class="menu-label" style="display:block; margin-bottom: 4px;">起點名稱 / 地址：</label>
+                    <input type="text" id="modal-origin-input" class="menu-input" placeholder="例: 逸東邨, 香港">
+                </div>
+                <div>
+                    <label class="menu-label" style="display:block; margin-bottom: 4px;">終點名稱 / 地址：</label>
+                    <input type="text" id="modal-dest-input" class="menu-input" placeholder="例: 九龍志和街, 香港">
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: flex-end;">
+                <button class="action-btn" onclick="saveRouteModalConfig()">💾 保存更新</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 巴士設定彈窗 Modal -->
     <div class="modal-overlay" id="settings-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -669,28 +669,67 @@
             destination: "九龍志和街, 香港"
         };
 
+        let isMapHidden = localStorage.getItem('traffic_map_hidden') === 'true';
+
         function initTrafficUI() {
-            document.getElementById('traffic-origin-input').value = trafficConfig.origin;
-            document.getElementById('traffic-dest-input').value = trafficConfig.destination;
-            
             // 更新起終點顯示文字
             document.getElementById('disp-origin').innerText = trafficConfig.origin;
             document.getElementById('disp-dest').innerText = trafficConfig.destination;
             
-            updateTrafficMap();
+            // 初始化地圖顯示狀態
+            const mapContainer = document.getElementById('map-container');
+            const toggleBtn = document.getElementById('toggle-map-btn');
+            
+            if (isMapHidden) {
+                mapContainer.classList.add('hidden');
+                toggleBtn.innerText = "🗺️ 顯示地圖";
+            } else {
+                mapContainer.classList.remove('hidden');
+                toggleBtn.innerText = "🗺️ 隱藏地圖";
+                updateTrafficMap();
+            }
+
             calculateTravelTimes();
         }
 
+        function toggleMapVisibility() {
+            const mapContainer = document.getElementById('map-container');
+            const toggleBtn = document.getElementById('toggle-map-btn');
+            
+            isMapHidden = !isMapHidden;
+            localStorage.setItem('traffic_map_hidden', isMapHidden);
+
+            if (isMapHidden) {
+                mapContainer.classList.add('hidden');
+                toggleBtn.innerText = "🗺️ 顯示地圖";
+            } else {
+                mapContainer.classList.remove('hidden');
+                toggleBtn.innerText = "🗺️ 隱藏地圖";
+                updateTrafficMap();
+            }
+        }
+
         function updateTrafficMap() {
+            if (isMapHidden) return;
             const origin = encodeURIComponent(trafficConfig.origin);
             const destination = encodeURIComponent(trafficConfig.destination);
             const mapUrl = `https://maps.google.com/maps?saddr=${origin}&daddr=${destination}&dirflg=d&output=embed`;
             document.getElementById('traffic-map-iframe').src = mapUrl;
         }
 
-        function saveTrafficConfig() {
-            const origin = document.getElementById('traffic-origin-input').value.trim();
-            const destination = document.getElementById('traffic-dest-input').value.trim();
+        function openRouteModal() {
+            document.getElementById('modal-origin-input').value = trafficConfig.origin;
+            document.getElementById('modal-dest-input').value = trafficConfig.destination;
+            document.getElementById('route-modal').classList.add('active');
+        }
+
+        function closeRouteModal() {
+            document.getElementById('route-modal').classList.remove('active');
+        }
+
+        function saveRouteModalConfig() {
+            const origin = document.getElementById('modal-origin-input').value.trim();
+            const destination = document.getElementById('modal-dest-input').value.trim();
 
             if (origin && destination) {
                 trafficConfig = { origin, destination };
@@ -699,6 +738,7 @@
                 document.getElementById('disp-origin').innerText = origin;
                 document.getElementById('disp-dest').innerText = destination;
                 
+                closeRouteModal();
                 updateTrafficMap();
                 calculateTravelTimes();
             }
@@ -903,7 +943,7 @@
         initDistrictSelects();
         fetchWeather();
         fetchGovSchoolClosureNotice();
-        initTrafficUI(); // 初始化交通UI及數據
+        initTrafficUI();
         setInterval(fetchWeather, 60000);
         setInterval(fetchGovSchoolClosureNotice, 60000);
         setInterval(calculateTravelTimes, 120000);
