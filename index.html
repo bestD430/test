@@ -10,11 +10,11 @@
             background-color: #0f172a;
             color: #f8fafc;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            min-height: 100vh;
+            height: 100vh;
             display: flex;
             flex-direction: column;
             padding: 16px;
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
         /* 頂部區域 */
@@ -96,7 +96,7 @@
 
         .clock-container { text-align: center; }
         #clock {
-            font-size: 3.2rem;
+            font-size: 3.5rem;
             font-weight: 700;
             letter-spacing: 2px;
             color: #38bdf8;
@@ -105,19 +105,14 @@
         #date {
             font-size: 1.05rem;
             color: #94a3b8;
-            margin-top: 6px;
+            margin-top: 4px;
         }
 
         main {
             display: flex;
             flex: 1;
             gap: 16px;
-            flex-direction: row;
-        }
-
-        @media (max-width: 900px) {
-            main { flex-direction: column; }
-            body { overflow-y: auto; }
+            height: calc(100% - 110px);
         }
 
         .left-panel {
@@ -125,9 +120,10 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+            overflow-y: auto;
         }
 
-        .weather-grid { display: flex; gap: 10px; flex: 0 0 auto; }
+        .weather-grid { display: flex; gap: 10px; flex: 0 0 auto; min-height: 190px; }
         .district-box {
             flex: 1;
             background: #1e293b;
@@ -218,7 +214,6 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            flex: 1;
         }
         .traffic-header-actions { display: flex; gap: 6px; align-items: center; }
         .route-display-header {
@@ -258,10 +253,10 @@
             overflow: hidden;
             border: 1px solid #475569;
             background: #0f172a;
-            min-height: 220px;
+            min-height: 200px;
         }
         .map-container.hidden { display: none !important; }
-        .map-iframe { width: 100%; height: 100%; border: 0; min-height: 220px; }
+        .map-iframe { width: 100%; height: 100%; border: 0; }
 
         @keyframes pulse-red {
             0% { border-color: #f43f5e; box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4); }
@@ -280,7 +275,7 @@
         .panel-title {
             font-size: 1rem;
             font-weight: bold;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             color: #f59e0b;
             display: flex;
             justify-content: space-between;
@@ -297,21 +292,21 @@
         }
         .settings-btn:active { background: #475569; }
 
-        .bus-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; max-height: calc(100vh - 180px); }
+        .bus-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
         .bus-item {
             background: #334155;
             border-radius: 12px;
             padding: 12px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
         
         .bus-item.item-kmb { background: #b91c1c; color: #ffffff; }
         .bus-item.item-ctb { background: #eab308; color: #000000; }
         .bus-item.item-nlb { background: #15803d; color: #ffffff; }
 
-        .bus-header { display: flex; justify-content: space-between; align-items: baseline; }
+        .bus-header { display: flex; justify-content: space-between; align-items: flex-end; }
         .bus-title-group { display: flex; align-items: center; gap: 8px; }
         .bus-company-tag {
             font-size: 0.75rem;
@@ -328,7 +323,25 @@
         .item-ctb .bus-name { color: #000000; }
         .item-nlb .bus-name { color: #ffffff; }
 
-        .bus-dest { font-size: 0.85rem; font-weight: 500; }
+        /* 車站資訊排版樣式 */
+        .bus-info-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+        }
+        .bus-current-stop {
+            font-size: 0.85rem;
+            font-weight: 700;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .item-kmb .bus-current-stop { color: #fef08a; }
+        .item-ctb .bus-current-stop { color: #1e1b4b; }
+        .item-nlb .bus-current-stop { color: #fef08a; }
+
+        .bus-dest { font-size: 0.8rem; font-weight: 500; opacity: 0.9; }
         .item-kmb .bus-dest { color: #fecdd3; }
         .item-ctb .bus-dest { color: #1e293b; }
         .item-nlb .bus-dest { color: #dcfce7; }
@@ -436,7 +449,7 @@
         }
         .action-btn { background: #0284c7; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .add-btn { background: #166534; color: #86efac; }
-        .hint-text { font-size: 0.75rem; color: #94a3b8; line-height: 1.4; }
+        .hint-text { font-size: 0.75rem; color: #94a3b8; }
     </style>
 </head>
 <body>
@@ -604,8 +617,8 @@
             </div>
             <div class="hint-text">
                 💡 <b>使用說明</b>：<br>
-                1. 輸入「路線」並選擇去/返程後，系統會<b>自動填入終點站名稱</b>，車站輸入框亦會<b>顯示下拉建議選項</b>。<br>
-                2. 您可以直接從下拉選單點選，或手動修改目的地及輸入<b>「車站名稱」</b>或<b>「車站代碼」</b>。
+                1. 輸入「路線」並選擇去/返程後，系統會<b>自動填入終點站與車站中文名稱</b>。<br>
+                2. 車站可直接從選單挑選，或手動修改車站與目的地。
             </div>
             <div class="config-list" id="config-list"></div>
             <div class="modal-footer">
@@ -709,19 +722,6 @@
             }
         }
 
-        // 計算兩點之間的球面距離 (Haversine Formula)
-        function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
-            const R = 6371; // 地球半徑 (公里)
-            const dLat = (lat2 - lat1) * (Math.PI / 180);
-            const dLon = (lon2 - lon1) * (Math.PI / 180);
-            const a = 
-                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * 
-                Math.sin(dLon / 2) * Math.sin(dLon / 2); 
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
-            return R * c;
-        }
-
         async function calculateTravelTimes() {
             const carTimeElem = document.getElementById('car-travel-time');
             const busTimeElem = document.getElementById('bus-travel-time');
@@ -737,35 +737,25 @@
                     `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
 
                 const [originRes, destRes] = await Promise.all([
-                    fetch(geocodeUrl(originStr)).then(r => r.json()).catch(() => []),
-                    fetch(geocodeUrl(destStr)).then(r => r.json()).catch(() => [])
+                    fetch(geocodeUrl(originStr)).then(r => r.json()),
+                    fetch(geocodeUrl(destStr)).then(r => r.json())
                 ]);
 
                 if (!originRes || !originRes.length || !destRes || !destRes.length) {
                     throw new Error("無法定位地址");
                 }
 
-                const originLat = parseFloat(originRes[0].lat);
-                const originLon = parseFloat(originRes[0].lon);
-                const destLat = parseFloat(destRes[0].lat);
-                const destLon = parseFloat(destRes[0].lon);
+                const originCoords = `${originRes[0].lon},${originRes[0].lat}`;
+                const destCoords = `${destRes[0].lon},${destRes[0].lat}`;
 
-                let durationSeconds = 0;
+                const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${originCoords};${destCoords}?overview=false`;
+                const osrmRes = await fetch(osrmUrl).then(r => r.json());
 
-                try {
-                    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${originLon},${originLat};${destLon},${destLat}?overview=false`;
-                    const osrmRes = await fetch(osrmUrl).then(r => r.json());
-
-                    if (osrmRes.code === 'Ok' && osrmRes.routes && osrmRes.routes.length) {
-                        durationSeconds = osrmRes.routes[0].duration;
-                    } else {
-                        throw new Error("OSRM 路線獲取失敗");
-                    }
-                } catch(err) {
-                    // 備用計算方案：利用直線距離估算駕駛時間 (假設市區平均車速 30 km/h)
-                    const distKm = getDistanceFromLatLonInKm(originLat, originLon, destLat, destLon);
-                    durationSeconds = (distKm / 30) * 3600;
+                if (osrmRes.code !== 'Ok' || !osrmRes.routes.length) {
+                    throw new Error("無法計算路線");
                 }
+
+                const durationSeconds = osrmRes.routes[0].duration;
                 
                 let speedFactor = 1.0;
                 try {
@@ -831,16 +821,16 @@
         }
 
         const defaultBuses = [
-            { company: "kmb", route: "E36A", dir: "inbound", stop: "TC188", dest_name: "往 元朗", offset: 0 },
-            { company: "ctb", route: "E33", dir: "outbound", stop: "東涌纜車站", dest_name: "往 機場/東涌", offset: 0 },
-            { company: "nlb", route: "23", dir: "outbound", stop: "昂坪", dest_name: "往 昂坪", offset: 0 }
+            { company: "kmb", route: "E36A", dir: "inbound", stop: "TC188", stop_name: "逸東邨巴士總站", dest_name: "往 元朗", offset: 0 },
+            { company: "ctb", route: "E33", dir: "outbound", stop: "001815", stop_name: "東涌纜車站", dest_name: "往 機場/東涌", offset: 0 },
+            { company: "nlb", route: "23", dir: "outbound", stop: "昂坪", stop_name: "昂坪", dest_name: "往 昂坪", offset: 0 }
         ];
 
         let currentBuses = [];
         let cachedRawEtas = {};
 
         function loadBusConfigs() {
-            const saved = localStorage.getItem('user_bus_configs_v6');
+            const saved = localStorage.getItem('user_bus_configs_v7');
             if (saved) {
                 try { currentBuses = JSON.parse(saved); } catch(e) { currentBuses = defaultBuses; }
             } else {
@@ -986,39 +976,32 @@
             } catch (e) { return []; }
         }
 
-        async function getCTBETA(route, stopName, dir) {
+        async function getCTBETA(route, stopCode, dir) {
             try {
-                const ctbDir = dir === 'inbound' ? 'inbound' : 'outbound';
-                const stopsRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${route.toUpperCase()}/${ctbDir}`);
-                const stopsData = await stopsRes.json();
-                
-                let stopId = "";
-                if (stopsData.data && stopsData.data.length > 0) {
-                    for (let s of stopsData.data) {
-                        if (s.stop === stopName) {
-                            stopId = s.stop;
-                            break;
-                        }
-                    }
-                    if (!stopId) {
+                let stopId = stopCode;
+                const ctbDir = dir === 'inbound' ? 'I' : 'O';
+
+                // 如果輸入的是名稱而非代碼，先查詢代碼
+                if (stopCode.length < 6) {
+                    const stopsRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${route.toUpperCase()}/${dir === 'inbound' ? 'inbound' : 'outbound'}`);
+                    const stopsData = await stopsRes.json();
+                    if (stopsData.data && stopsData.data.length > 0) {
                         for (let s of stopsData.data) {
                             const infoRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/stop/${s.stop}`);
                             const info = await infoRes.json();
-                            if (info.data && (info.data.name_tc.includes(stopName) || info.data.name_en.toLowerCase().includes(stopName.toLowerCase()))) {
+                            if (info.data && (info.data.name_tc.includes(stopCode) || info.data.name_en.toLowerCase().includes(stopCode.toLowerCase()))) {
                                 stopId = s.stop;
                                 break;
                             }
                         }
                     }
-                    if (!stopId) stopId = stopsData.data[0].stop;
                 }
 
                 if (!stopId) return [];
 
                 const etaRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/${stopId}/${route.toUpperCase()}`);
                 const etaData = await etaRes.json();
-                const dirChar = ctbDir === 'inbound' ? 'I' : 'O';
-                return etaData.data.filter(i => i.dir === dirChar);
+                return etaData.data.filter(i => i.dir === ctbDir);
             } catch (e) { return []; }
         }
 
@@ -1026,7 +1009,7 @@
             try {
                 const res = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=list`);
                 const data = await res.json();
-                const matchedStop = data.stops.find(s => s.stopName_c.includes(stopName));
+                const matchedStop = data.stops.find(s => s.stopName_c.includes(stopName) || s.stopId == stopName);
                 if (!matchedStop) return [];
 
                 const etaRes = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=estimatedArrivals&stopId=${matchedStop.stopId}&routeId=${route}`);
@@ -1095,6 +1078,10 @@
                 const itemClass = bus.company === 'kmb' ? 'item-kmb' :
                                   bus.company === 'ctb' ? 'item-ctb' : 'item-nlb';
 
+                // 現時車站顯示名稱處理
+                const currentStopDisplay = bus.stop_name || bus.stop;
+                const destDisplay = bus.dest_name ? (bus.dest_name.startsWith('往') ? bus.dest_name : `往 ${bus.dest_name}`) : '';
+
                 newHtml += `
                     <div class="bus-item ${itemClass}">
                         <div class="bus-header">
@@ -1102,7 +1089,10 @@
                                 ${companyTag}
                                 <div class="bus-name">${bus.route.toUpperCase()}</div>
                             </div>
-                            <div class="bus-dest">${bus.dest_name}</div>
+                            <div class="bus-info-group">
+                                <div class="bus-current-stop">📍 ${currentStopDisplay}</div>
+                                <div class="bus-dest">${destDisplay}</div>
+                            </div>
                         </div>
                         <div class="eta-group">
                             <div class="eta-badge first ${isArr ? 'arr' : ''}">${etas[0]}</div>
@@ -1118,7 +1108,7 @@
         fetchBusData();
         setInterval(fetchBusData, 30000);
 
-        /* ------------------ 可搜尋兼自由輸入選單 Modal 邏輯 ------------------ */
+        /* ------------------ 設定 Modal 邏輯 ------------------ */
         function openSettings() {
             loadBusConfigs();
             renderSettingsList();
@@ -1164,9 +1154,10 @@
                             <button class="delete-btn" onclick="deleteBusConfig(${index})">刪除</button>
                         </div>
                         <div class="config-row">
-                            <input type="text" class="config-input bus-stop" list="stop-list-${index}" placeholder="搜尋或選擇車站 / 輸入代碼" value="${bus.stop}">
+                            <input type="text" class="config-input bus-stop" list="stop-list-${index}" placeholder="選擇/輸入車站代碼或名稱" value="${bus.stop}" onchange="onStopInputChange(${index})">
                             <datalist id="stop-list-${index}"></datalist>
-                            <input type="text" class="config-input bus-dest" placeholder="顯示目的地 (如 往 元朗)" value="${bus.dest_name}">
+                            <input type="hidden" class="bus-stop-name" value="${bus.stop_name || ''}">
+                            <input type="text" class="config-input bus-dest" placeholder="顯示目的地 (如 往 元朗)" value="${bus.dest_name || ''}">
                             <select class="config-select bus-offset" title="時間微調">
                                 ${generateOffsetOptions(busOffset)}
                             </select>
@@ -1176,6 +1167,28 @@
                 container.innerHTML += itemHtml;
                 if (bus.route) loadStopOptions(index);
             });
+        }
+
+        // 當選擇下拉選項時，自動同步車站名稱
+        function onStopInputChange(index) {
+            const items = document.querySelectorAll('.config-item');
+            const item = items[index];
+            if (!item) return;
+
+            const stopInput = item.querySelector('.bus-stop').value;
+            const datalist = item.querySelector(`#stop-list-${index}`);
+            const stopNameHidden = item.querySelector('.bus-stop-name');
+
+            if (datalist && datalist.options) {
+                for (let opt of datalist.options) {
+                    if (opt.value === stopInput) {
+                        const name = opt.getAttribute('data-name');
+                        if (name) stopNameHidden.value = name;
+                        return;
+                    }
+                }
+            }
+            stopNameHidden.value = stopInput;
         }
 
         async function loadStopOptions(index) {
@@ -1219,7 +1232,7 @@
 
                         routeStops.forEach((s, idx) => {
                             const name = stopMap.get(s.stop) || s.stop;
-                            optionsHtml += `<option value="${s.stop}">${idx + 1}. ${name} (${s.stop})</option>`;
+                            optionsHtml += `<option value="${s.stop}" data-name="${name}">${idx + 1}. ${name} (${s.stop})</option>`;
                         });
                     }
                 } else if (company === 'ctb') {
@@ -1238,9 +1251,17 @@
                     const data = await res.json();
 
                     if (data.data) {
-                        data.data.forEach((s, idx) => {
-                            optionsHtml += `<option value="${s.stop}">${idx + 1}. 車站代碼: ${s.stop}</option>`;
-                        });
+                        for (let idx = 0; idx < data.data.length; idx++) {
+                            const s = data.data[idx];
+                            try {
+                                const infoRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/stop/${s.stop}`);
+                                const info = await infoRes.json();
+                                const stopName = info.data ? info.data.name_tc : s.stop;
+                                optionsHtml += `<option value="${s.stop}" data-name="${stopName}">${idx + 1}. ${stopName} (${s.stop})</option>`;
+                            } catch (e) {
+                                optionsHtml += `<option value="${s.stop}" data-name="${s.stop}">${idx + 1}. 車站代碼: ${s.stop}</option>`;
+                            }
+                        }
                     }
                 } else if (company === 'nlb') {
                     fetch(`https://rt.data.gov.hk/v2/transport/nlb/route.php?action=list`)
@@ -1259,12 +1280,12 @@
                     const data = await res.json();
                     if (data.stops) {
                         data.stops.forEach(s => {
-                            optionsHtml += `<option value="${s.stopName_c}">${s.stopName_c}</option>`;
+                            optionsHtml += `<option value="${s.stopName_c}" data-name="${s.stopName_c}">${s.stopName_c}</option>`;
                         });
                     }
                 }
             } catch (e) {
-                console.warn("API 載入提示：可直接於輸入框內手動填寫車站名稱或代碼", e);
+                console.warn("API 載入提示：可直接手動填寫車站名稱或代碼", e);
             }
 
             if (optionsHtml) {
@@ -1273,7 +1294,7 @@
         }
 
         function addNewBusConfig() {
-            currentBuses.push({ company: "kmb", route: "", dir: "outbound", stop: "", dest_name: "", offset: 0 });
+            currentBuses.push({ company: "kmb", route: "", dir: "outbound", stop: "", stop_name: "", dest_name: "", offset: 0 });
             renderSettingsList();
         }
 
@@ -1291,16 +1312,19 @@
                 const route = item.querySelector('.bus-route').value.trim();
                 const dir = item.querySelector('.bus-dir').value;
                 const stop = item.querySelector('.bus-stop').value.trim();
+                let stop_name = item.querySelector('.bus-stop-name').value.trim();
                 const dest_name = item.querySelector('.bus-dest').value.trim();
                 const offset = parseFloat(item.querySelector('.bus-offset').value);
 
+                if (!stop_name) stop_name = stop;
+
                 if (route && stop) {
-                    newConfigs.push({ company, route, dir, stop, dest_name, offset });
+                    newConfigs.push({ company, route, dir, stop, stop_name, dest_name, offset });
                 }
             });
 
             currentBuses = newConfigs;
-            localStorage.setItem('user_bus_configs_v6', JSON.stringify(currentBuses));
+            localStorage.setItem('user_bus_configs_v7', JSON.stringify(currentBuses));
             
             closeSettings();
             fetchBusData();
