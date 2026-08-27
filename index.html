@@ -351,8 +351,8 @@
             </div>
             <div class="hint-text">
                 💡 <b>使用說明</b>：<br>
-                1. 輸入「路線」並切換「去/返程」，輸入框會<b>自動選單顯示車站名稱</b>。<br>
-                2. 您可以直接點選選單，亦可自由手動輸入「車站名稱」或「代碼」。
+                1. 輸入「路線」並切換「去/返程」，系統會自動加載車站並自動補全<b>終點站</b>。<br>
+                2. 您可以手動調整「顯示目的地」欄位。
             </div>
             <div class="config-list" id="config-list"></div>
             <div class="modal-footer">
@@ -828,7 +828,7 @@
         fetchBusData();
         setInterval(fetchBusData, 30000);
 
-        /* ------------------ 下拉車站載入優化（修復選單無法彈出問題） ------------------ */
+        /* ------------------ 設定頁面與選單邏輯 ------------------ */
         function openSettings() {
             loadBusConfigs();
             renderSettingsList();
@@ -921,10 +921,12 @@
             const route = item.querySelector('.bus-route').value.trim().toUpperCase();
             const dir = item.querySelector('.bus-dir').value;
             const datalist = item.querySelector(`#stop-list-${index}`);
+            const destInput = item.querySelector('.bus-dest');
 
             if (!route || !datalist) return;
 
             let optionsHtml = '';
+            let lastStopName = '';
 
             try {
                 if (company === 'kmb') {
@@ -939,19 +941,11 @@
                         data = await res.json();
                     }
 
-                    if (!data.data || data.data.length === 0) {
-                        res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop`);
-                        const allData = await res.json();
-                        if (allData.data) {
-                            const kmbBound = dir === 'inbound' ? 'I' : 'O';
-                            data.data = allData.data.filter(s => s.route === route && (s.bound === kmbBound || !s.bound));
-                        }
-                    }
-
                     if (data.data && data.data.length > 0) {
                         data.data.forEach((s, idx) => {
                             const name = stopMap.get(s.stop) || s.stop;
                             optionsHtml += `<option value="${s.stop}">${idx + 1}. ${name} (${s.stop})</option>`;
+                            if (idx === data.data.length - 1) lastStopName = name;
                         });
                     }
                 } else if (company === 'ctb') {
@@ -964,21 +958,24 @@
                         data.data.forEach((s, idx) => {
                             const name = ctbMap.get(s.stop) || s.stop;
                             optionsHtml += `<option value="${s.stop}">${idx + 1}. ${name} (${s.stop})</option>`;
+                            if (idx === data.data.length - 1) lastStopName = name;
                         });
                     }
                 } else if (company === 'nlb') {
                     const res = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=list`);
                     const data = await res.json();
                     if (data.stops) {
-                        data.stops.forEach(s => {
+                        data.stops.forEach((s, idx) => {
                             optionsHtml += `<option value="${s.stopName_c}">${s.stopName_c}</option>`;
+                            if (idx === data.stops.length - 1) lastStopName = s.stopName_c;
                         });
                     }
                 }
             } catch (e) {}
 
-            if (optionsHtml) {
-                datalist.innerHTML = optionsHtml;
+            if (optionsHtml) datalist.innerHTML = optionsHtml;
+            if (lastStopName && !destInput.value) {
+                destInput.value = `往 ${lastStopName}`;
             }
         }
 
