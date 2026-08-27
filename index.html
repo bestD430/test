@@ -352,7 +352,7 @@
         .item-ctb .bus-name { color: #000000; }
         .item-nlb .bus-name { color: #ffffff; }
 
-        .bus-dest { font-size: 0.85rem; font-weight: 500; }
+        .bus-dest { font-size: 0.85rem; font-weight: 500; text-align: right; }
         .item-kmb .bus-dest { color: #fecdd3; }
         .item-ctb .bus-dest { color: #1e293b; }
         .item-nlb .bus-dest { color: #dcfce7; }
@@ -802,16 +802,16 @@
         }
 
         const defaultBuses = [
-            { company: "kmb", route: "E36A", dir: "inbound", stop: "TC188", dest_name: "往 元朗", offset: 0 },
-            { company: "ctb", route: "E33", dir: "outbound", stop: "東涌纜車站", dest_name: "往 機場/東涌", offset: 0 },
-            { company: "nlb", route: "23", dir: "outbound", stop: "昂坪", dest_name: "往 昂坪", offset: 0 }
+            { company: "kmb", route: "E36A", dir: "inbound", stop: "TC188", origin_name: "東涌", dest_name: "往 元朗", offset: 0 },
+            { company: "ctb", route: "E33", dir: "outbound", stop: "東涌纜車站", origin_name: "屯門", dest_name: "往 機場/東涌", offset: 0 },
+            { company: "nlb", route: "23", dir: "outbound", stop: "昂坪", origin_name: "東涌", dest_name: "往 昂坪", offset: 0 }
         ];
 
         let currentBuses = [];
         let cachedRawEtas = {};
 
         function loadBusConfigs() {
-            const saved = localStorage.getItem('user_bus_configs_v6');
+            const saved = localStorage.getItem('user_bus_configs_v7');
             if (saved) {
                 try { currentBuses = JSON.parse(saved); } catch(e) { currentBuses = defaultBuses; }
             } else {
@@ -1058,6 +1058,11 @@
                 const itemClass = bus.company === 'kmb' ? 'item-kmb' :
                                   bus.company === 'ctb' ? 'item-ctb' : 'item-nlb';
 
+                // 處理起點站名與目的地站名的顯示
+                const originText = bus.origin_name ? bus.origin_name : '';
+                const destText = bus.dest_name ? bus.dest_name : '';
+                const routeDirectionText = (originText && destText) ? `${originText} ➔ ${destText}` : (originText || destText);
+
                 newHtml += `
                     <div class="bus-item ${itemClass}">
                         <div class="bus-header">
@@ -1065,7 +1070,7 @@
                                 ${companyTag}
                                 <div class="bus-name">${bus.route.toUpperCase()}</div>
                             </div>
-                            <div class="bus-dest">${bus.dest_name}</div>
+                            <div class="bus-dest">${routeDirectionText}</div>
                         </div>
                         <div class="eta-group">
                             <div class="eta-badge first ${isArr ? 'arr' : ''}">${etas[0]}</div>
@@ -1129,7 +1134,8 @@
                         <div class="config-row">
                             <input type="text" class="config-input bus-stop" list="stop-list-${index}" placeholder="搜尋或選擇車站 / 輸入代碼" value="${bus.stop}">
                             <datalist id="stop-list-${index}"></datalist>
-                            <input type="text" class="config-input bus-dest" placeholder="顯示目的地 (如 往 元朗)" value="${bus.dest_name}">
+                            <input type="text" class="config-input bus-origin" placeholder="起點站名 (如 東涌)" value="${bus.origin_name || ''}">
+                            <input type="text" class="config-input bus-dest" placeholder="目的地 (如 往 元朗)" value="${bus.dest_name || ''}">
                             <select class="config-select bus-offset" title="時間微調">
                                 ${generateOffsetOptions(busOffset)}
                             </select>
@@ -1204,7 +1210,7 @@
         }
 
         function addNewBusConfig() {
-            currentBuses.push({ company: "kmb", route: "", dir: "outbound", stop: "", dest_name: "", offset: 0 });
+            currentBuses.push({ company: "kmb", route: "", dir: "outbound", stop: "", origin_name: "", dest_name: "", offset: 0 });
             renderSettingsList();
         }
 
@@ -1222,16 +1228,17 @@
                 const route = item.querySelector('.bus-route').value.trim();
                 const dir = item.querySelector('.bus-dir').value;
                 const stop = item.querySelector('.bus-stop').value.trim();
+                const origin_name = item.querySelector('.bus-origin').value.trim();
                 const dest_name = item.querySelector('.bus-dest').value.trim();
                 const offset = parseFloat(item.querySelector('.bus-offset').value);
 
                 if (route && stop) {
-                    newConfigs.push({ company, route, dir, stop, dest_name, offset });
+                    newConfigs.push({ company, route, dir, stop, origin_name, dest_name, offset });
                 }
             });
 
             currentBuses = newConfigs;
-            localStorage.setItem('user_bus_configs_v6', JSON.stringify(currentBuses));
+            localStorage.setItem('user_bus_configs_v7', JSON.stringify(currentBuses));
             
             closeSettings();
             fetchBusData();
