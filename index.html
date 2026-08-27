@@ -599,8 +599,8 @@
             </div>
             <div class="hint-text">
                 💡 <b>使用說明</b>：<br>
-                1. 輸入「路線」後，車站輸入框會<b>自動顯示下拉建議選項</b>。<br>
-                2. 您可以直接從下拉選單點選，或直接手動輸入<b>「車站名稱」</b>（如：東涌纜車站）或<b>「車站代碼」</b>（如：TC188）。
+                1. 輸入「路線」並選擇去/返程後，系統會<b>自動填入終點站名稱</b>，車站輸入框亦會<b>顯示下拉建議選項</b>。<br>
+                2. 您可以直接從下拉選單點選，或手動修改目的地及輸入<b>「車站名稱」</b>或<b>「車站代碼」</b>。
             </div>
             <div class="config-list" id="config-list"></div>
             <div class="modal-footer">
@@ -1151,6 +1151,7 @@
             const route = item.querySelector('.bus-route').value.trim().toUpperCase();
             const dir = item.querySelector('.bus-dir').value;
             const datalist = item.querySelector(`#stop-list-${index}`);
+            const destInput = item.querySelector('.bus-dest');
 
             if (!route || !datalist) return;
 
@@ -1159,6 +1160,17 @@
             try {
                 if (company === 'kmb') {
                     const dirCode = dir === 'inbound' ? 'inbound' : 'outbound';
+                    
+                    // 1. 自動獲取並填入九巴終點站
+                    fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route/${route}/${dirCode}/1`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.data && data.data.dest_tc) {
+                                destInput.value = `往 ${data.data.dest_tc}`;
+                            }
+                        }).catch(() => {});
+
+                    // 2. 載入分站列表
                     let res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${dirCode}/1`);
                     if (!res.ok) {
                         res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop`);
@@ -1178,6 +1190,18 @@
                     }
                 } else if (company === 'ctb') {
                     const ctbDir = dir === 'inbound' ? 'inbound' : 'outbound';
+
+                    // 1. 自動獲取並填入城巴終點站
+                    fetch(`https://rt.data.gov.hk/v2/transport/citybus/route/CTB/${route}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.data) {
+                                const dest = ctbDir === 'inbound' ? data.data.orig_tc : data.data.dest_tc;
+                                if (dest) destInput.value = `往 ${dest}`;
+                            }
+                        }).catch(() => {});
+
+                    // 2. 載入分站列表
                     const res = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${route}/${ctbDir}`);
                     const data = await res.json();
 
@@ -1187,6 +1211,20 @@
                         });
                     }
                 } else if (company === 'nlb') {
+                    // 1. 自動獲取並填入嶼巴終點站
+                    fetch(`https://rt.data.gov.hk/v2/transport/nlb/route.php?action=list`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.routes) {
+                                const matchedRoute = data.routes.find(r => r.routeName.toUpperCase() === route);
+                                if (matchedRoute) {
+                                    const dest = dir === 'inbound' ? matchedRoute.start_c : matchedRoute.destination_c;
+                                    if (dest) destInput.value = `往 ${dest}`;
+                                }
+                            }
+                        }).catch(() => {});
+
+                    // 2. 載入分站列表
                     const res = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=list`);
                     const data = await res.json();
                     if (data.stops) {
