@@ -219,17 +219,14 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            /* 移除固定 min-height，讓隱藏地圖時高度自適應不佔空間 */
         }
 
-        /* 標題與控制項按鈕組 */
         .traffic-header-actions {
             display: flex;
             gap: 6px;
             align-items: center;
         }
 
-        /* 起終點名稱標題列 */
         .route-display-header {
             font-size: 0.95rem;
             font-weight: bold;
@@ -244,7 +241,6 @@
             border: 1px dashed rgba(56, 189, 248, 0.3);
         }
 
-        /* 時間顯示卡片 */
         .travel-time-container {
             display: flex;
             gap: 10px;
@@ -264,7 +260,6 @@
         .travel-type { font-size: 0.75rem; color: #94a3b8; }
         .travel-val { font-size: 1.2rem; font-weight: bold; color: #38bdf8; }
 
-        /* 地圖容器，隱藏時使用 display: none 不佔空間 */
         .map-container {
             flex: 1;
             width: 100%;
@@ -394,7 +389,7 @@
             font-size: 0.9rem;
         }
 
-        /* 通用彈窗 Modal 樣式 */
+        /* Modal 樣式 */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -471,13 +466,11 @@
 <body>
 
     <header>
-        <!-- 政府新聞網 停課特別消息 -->
         <div class="school-closure-box" id="school-closure-box">
             <div class="closure-title">🚨 政府特別公告（停課消息）：</div>
             <div class="closure-content" id="closure-content">加載中...</div>
         </div>
 
-        <!-- 天氣警報顯示欄 -->
         <div class="weather-warning-box" id="weather-warning-box">
             <div class="warning-title">⚠️ 天文台現正生效警告：</div>
             <div class="warning-list" id="warning-list"></div>
@@ -492,7 +485,6 @@
     <main>
         <div class="left-panel">
             <div class="weather-grid">
-                <!-- 區域一 -->
                 <div class="district-box">
                     <div class="district-header">
                         <span class="district-title" id="d1-custom-title">📍 東涌</span>
@@ -525,7 +517,6 @@
                     </div>
                 </div>
 
-                <!-- 區域二 -->
                 <div class="district-box">
                     <div class="district-header">
                         <span class="district-title" id="d2-custom-title">📍 尖沙咀</span>
@@ -569,12 +560,11 @@
                     </div>
                 </div>
 
-                <!-- 顯示設定了的起點與終點名稱 -->
+                <!-- 顯示設定的起點與終點名稱 (會自動剔除「香港」) -->
                 <div class="route-display-header">
-                    📍 <span id="disp-origin">逸東邨, 香港</span> ➔ <span id="disp-dest">九龍志和街, 香港</span>
+                    📍 <span id="disp-origin">逸東邨</span> ➔ <span id="disp-dest">九龍志和街</span>
                 </div>
 
-                <!-- 私家車及巴士預估時間顯示 -->
                 <div class="travel-time-container">
                     <div class="travel-card">
                         <span class="travel-icon">🚗</span>
@@ -592,7 +582,6 @@
                     </div>
                 </div>
 
-                <!-- Google Maps 地圖 -->
                 <div class="map-container" id="map-container">
                     <iframe id="traffic-map-iframe" class="map-iframe" loading="lazy" allowfullscreen src=""></iframe>
                 </div>
@@ -618,11 +607,11 @@
             <div style="display: flex; flex-direction: column; gap: 12px; margin: 10px 0;">
                 <div>
                     <label class="menu-label" style="display:block; margin-bottom: 4px;">起點名稱 / 地址：</label>
-                    <input type="text" id="modal-origin-input" class="menu-input" placeholder="例: 逸東邨, 香港">
+                    <input type="text" id="modal-origin-input" class="menu-input" placeholder="例: 逸東邨">
                 </div>
                 <div>
                     <label class="menu-label" style="display:block; margin-bottom: 4px;">終點名稱 / 地址：</label>
-                    <input type="text" id="modal-dest-input" class="menu-input" placeholder="例: 九龍志和街, 香港">
+                    <input type="text" id="modal-dest-input" class="menu-input" placeholder="例: 九龍志和街">
                 </div>
             </div>
             <div class="modal-footer" style="justify-content: flex-end;">
@@ -671,12 +660,17 @@
 
         let isMapHidden = localStorage.getItem('traffic_map_hidden') === 'true';
 
+        // 輔助函式：用作將顯示文字中的「, 香港」或「香港」去除
+        function cleanHongKongText(text) {
+            if (!text) return '';
+            return text.replace(/,?\s*香港/g, '').trim();
+        }
+
         function initTrafficUI() {
-            // 更新起終點顯示文字
-            document.getElementById('disp-origin').innerText = trafficConfig.origin;
-            document.getElementById('disp-dest').innerText = trafficConfig.destination;
+            // 清除「香港」字眼後再顯示於前端
+            document.getElementById('disp-origin').innerText = cleanHongKongText(trafficConfig.origin);
+            document.getElementById('disp-dest').innerText = cleanHongKongText(trafficConfig.destination);
             
-            // 初始化地圖顯示狀態
             const mapContainer = document.getElementById('map-container');
             const toggleBtn = document.getElementById('toggle-map-btn');
             
@@ -711,15 +705,19 @@
 
         function updateTrafficMap() {
             if (isMapHidden) return;
-            const origin = encodeURIComponent(trafficConfig.origin);
-            const destination = encodeURIComponent(trafficConfig.destination);
+            // 如果輸入沒有寫「香港」，向地圖查詢時自動補上以維持精準度
+            const originStr = trafficConfig.origin.includes('香港') ? trafficConfig.origin : `${trafficConfig.origin}, 香港`;
+            const destStr = trafficConfig.destination.includes('香港') ? trafficConfig.destination : `${trafficConfig.destination}, 香港`;
+
+            const origin = encodeURIComponent(originStr);
+            const destination = encodeURIComponent(destStr);
             const mapUrl = `https://maps.google.com/maps?saddr=${origin}&daddr=${destination}&dirflg=d&output=embed`;
             document.getElementById('traffic-map-iframe').src = mapUrl;
         }
 
         function openRouteModal() {
-            document.getElementById('modal-origin-input').value = trafficConfig.origin;
-            document.getElementById('modal-dest-input').value = trafficConfig.destination;
+            document.getElementById('modal-origin-input').value = cleanHongKongText(trafficConfig.origin);
+            document.getElementById('modal-dest-input').value = cleanHongKongText(trafficConfig.destination);
             document.getElementById('route-modal').classList.add('active');
         }
 
@@ -735,8 +733,8 @@
                 trafficConfig = { origin, destination };
                 localStorage.setItem('traffic_cfg', JSON.stringify(trafficConfig));
                 
-                document.getElementById('disp-origin').innerText = origin;
-                document.getElementById('disp-dest').innerText = destination;
+                document.getElementById('disp-origin').innerText = cleanHongKongText(origin);
+                document.getElementById('disp-dest').innerText = cleanHongKongText(destination);
                 
                 closeRouteModal();
                 updateTrafficMap();
