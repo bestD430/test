@@ -17,6 +17,7 @@
             overflow: hidden;
         }
 
+        /* 頂部區域 */
         header {
             display: flex;
             flex-direction: column;
@@ -27,6 +28,7 @@
             gap: 8px;
         }
 
+        /* 政府停課特別消息顯示欄 */
         .school-closure-box {
             display: none;
             width: 100%;
@@ -41,9 +43,23 @@
             animation: pulse-red 2s infinite;
         }
         .school-closure-box.active { display: flex; }
-        .closure-title { font-size: 0.85rem; font-weight: bold; color: #fb7185; display: flex; align-items: center; gap: 6px; }
-        .closure-content { font-size: 0.85rem; color: #ffe4e6; line-height: 1.4; max-height: 80px; overflow-y: auto; }
+        .closure-title {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #fb7185;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .closure-content {
+            font-size: 0.85rem;
+            color: #ffe4e6;
+            line-height: 1.4;
+            max-height: 80px;
+            overflow-y: auto;
+        }
 
+        /* 天氣警報顯示欄 */
         .weather-warning-box {
             display: none;
             width: 100%;
@@ -56,17 +72,56 @@
             gap: 6px;
         }
         .weather-warning-box.active { display: flex; }
-        .warning-title { font-size: 0.8rem; font-weight: bold; color: #fb7185; display: flex; align-items: center; gap: 6px; }
-        .warning-list { display: flex; flex-wrap: wrap; gap: 6px; }
-        .warning-badge { background: #9f1239; color: #fff; font-size: 0.75rem; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+        .warning-title {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #fb7185;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .warning-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .warning-badge {
+            background: #9f1239;
+            color: #fff;
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
 
         .clock-container { text-align: center; }
-        #clock { font-size: 3.5rem; font-weight: 700; letter-spacing: 2px; color: #38bdf8; line-height: 1; }
-        #date { font-size: 1.05rem; color: #94a3b8; margin-top: 4px; }
+        #clock {
+            font-size: 3.5rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #38bdf8;
+            line-height: 1;
+        }
+        #date {
+            font-size: 1.05rem;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
 
-        main { display: flex; flex: 1; gap: 16px; height: calc(100% - 110px); }
+        main {
+            display: flex;
+            flex: 1;
+            gap: 16px;
+            height: calc(100% - 110px);
+        }
 
-        .left-panel { flex: 1.2; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+        .left-panel {
+            flex: 1.2;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+        }
 
         .weather-grid { display: flex; gap: 10px; flex: 0 0 auto; min-height: 190px; }
         .district-box {
@@ -80,9 +135,31 @@
             justify-content: space-between;
             position: relative;
         }
-        .district-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px dashed #475569; padding-bottom: 6px; }
-        .district-title { font-size: 1rem; font-weight: bold; color: #38bdf8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .weather-toggle-btn { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 0.9rem; padding: 2px 4px; }
+        .district-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            border-bottom: 1px dashed #475569;
+            padding-bottom: 6px;
+        }
+        .district-title {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #38bdf8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .weather-toggle-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 2px 4px;
+        }
+        .weather-toggle-btn:hover { color: #f8fafc; }
 
         .weather-settings-menu {
             display: none;
@@ -99,8 +176,27 @@
         }
         .weather-settings-menu.active { display: flex; }
         .menu-label { font-size: 0.75rem; color: #94a3b8; margin-bottom: -2px; }
-        .menu-input, .menu-select { background: #1e293b; color: #f8fafc; border: 1px solid #475569; padding: 5px 8px; border-radius: 6px; font-size: 0.85rem; outline: none; width: 100%; }
-        .menu-save-btn { background: #0284c7; color: #fff; border: none; padding: 6px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; margin-top: 4px; }
+        .menu-input, .menu-select {
+            background: #1e293b;
+            color: #f8fafc;
+            border: 1px solid #475569;
+            padding: 5px 8px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            outline: none;
+            width: 100%;
+        }
+        .menu-save-btn {
+            background: #0284c7;
+            color: #fff;
+            border: none;
+            padding: 6px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 4px;
+        }
 
         .day-weather { margin-bottom: 4px; }
         .day-weather:last-child { margin-bottom: 0; }
@@ -110,20 +206,55 @@
         .weather-icon { width: 38px; height: 38px; object-fit: contain; }
         .weather-desc { font-size: 0.8rem; color: #cbd5e1; line-height: 1.2; }
 
-        .traffic-panel { background: #1e293b; border-radius: 16px; padding: 14px; border: 1px solid #334155; display: flex; flex-direction: column; gap: 10px; }
+        .traffic-panel {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 14px;
+            border: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
         .traffic-header-actions { display: flex; gap: 6px; align-items: center; }
         .route-display-header {
-            font-size: 0.95rem; font-weight: bold; color: #38bdf8; background: rgba(56, 189, 248, 0.1); padding: 8px 12px; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px dashed rgba(56, 189, 248, 0.3);
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.1);
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: 1px dashed rgba(56, 189, 248, 0.3);
         }
 
         .travel-time-container { display: flex; gap: 10px; }
-        .travel-card { flex: 1; background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 10px; display: flex; align-items: center; justify-content: space-between; }
+        .travel-card {
+            flex: 1;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
         .travel-icon { font-size: 1.5rem; }
         .travel-info { text-align: right; }
         .travel-type { font-size: 0.75rem; color: #94a3b8; }
         .travel-val { font-size: 1.2rem; font-weight: bold; color: #38bdf8; }
 
-        .map-container { flex: 1; width: 100%; border-radius: 10px; overflow: hidden; border: 1px solid #475569; background: #0f172a; min-height: 200px; }
+        .map-container {
+            flex: 1;
+            width: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #475569;
+            background: #0f172a;
+            min-height: 200px;
+        }
         .map-container.hidden { display: none !important; }
         .map-iframe { width: 100%; height: 100%; border: 0; }
 
@@ -133,19 +264,56 @@
             100% { border-color: #f43f5e; box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
         }
 
-        .bus-panel { flex: 1; background: #1e293b; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; }
-        .panel-title { font-size: 1rem; font-weight: bold; margin-bottom: 4px; color: #f59e0b; display: flex; justify-content: space-between; align-items: center; }
-        .settings-btn { background: #334155; color: #f8fafc; border: 1px solid #475569; padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; }
+        .bus-panel {
+            flex: 1;
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+        }
+        .panel-title {
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+            color: #f59e0b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .settings-btn {
+            background: #334155;
+            color: #f8fafc;
+            border: 1px solid #475569;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .settings-btn:active { background: #475569; }
 
         .bus-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
-        .bus-item { background: #334155; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+        .bus-item {
+            background: #334155;
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
         .bus-item.item-kmb { background: #b91c1c; color: #ffffff; }
         .bus-item.item-ctb { background: #eab308; color: #000000; }
         .bus-item.item-nlb { background: #15803d; color: #ffffff; }
 
         .bus-header { display: flex; justify-content: space-between; align-items: baseline; }
         .bus-title-group { display: flex; align-items: center; gap: 8px; }
-        .bus-company-tag { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+        .bus-company-tag {
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
         .tag-kmb { background: #7f1d1d; color: #ffffff; }
         .tag-ctb { background: #713f12; color: #ffffff; }
         .tag-nlb { background: #166534; color: #bbf7d0; }
@@ -161,27 +329,106 @@
         .item-nlb .bus-dest { color: #dcfce7; }
 
         .eta-group { display: flex; gap: 8px; align-items: center; }
-        .eta-badge { flex: 1; background: #0f172a; border-radius: 6px; padding: 8px 4px; text-align: center; font-size: 0.85rem; font-weight: bold; color: #94a3b8; border: 1px solid #475569; }
-        .eta-badge.first { flex: 1.6; background: #064e3b; color: #34d399; border-color: #10b981; font-size: 1.5rem; font-weight: 900; padding: 6px 4px; box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
-        .eta-badge.first.arr { background: #881337; color: #fb7185; border-color: #f43f5e; box-shadow: 0 0 10px rgba(244, 63, 94, 0.3); }
+        .eta-badge {
+            flex: 1;
+            background: #0f172a;
+            border-radius: 6px;
+            padding: 8px 4px;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #94a3b8;
+            border: 1px solid #475569;
+        }
+        .eta-badge.first {
+            flex: 1.6;
+            background: #064e3b;
+            color: #34d399;
+            border-color: #10b981;
+            font-size: 1.5rem;
+            font-weight: 900;
+            padding: 6px 4px;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+        }
+        .eta-badge.first.arr {
+            background: #881337;
+            color: #fb7185;
+            border-color: #f43f5e;
+            box-shadow: 0 0 10px rgba(244, 63, 94, 0.3);
+        }
 
         .loading-text { text-align: center; color: #94a3b8; padding: 20px; font-size: 0.9rem; }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.75); display: none; justify-content: center; align-items: center; z-index: 999; }
+        /* Modal 樣式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
         .modal-overlay.active { display: flex; }
-        .modal-content { background: #1e293b; border-radius: 16px; width: 90%; max-width: 650px; max-height: 85vh; padding: 16px; border: 1px solid #475569; display: flex; flex-direction: column; gap: 12px; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 8px; }
+        .modal-content {
+            background: #1e293b;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 650px;
+            max-height: 85vh;
+            padding: 16px;
+            border: 1px solid #475569;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 8px;
+        }
         .modal-title { font-size: 1.1rem; font-weight: bold; color: #38bdf8; }
         .modal-close { background: none; border: none; color: #94a3b8; font-size: 1.4rem; cursor: pointer; }
 
         .config-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; max-height: 380px; }
-        .config-item { background: #0f172a; border-radius: 8px; padding: 10px; border: 1px solid #334155; display: flex; flex-direction: column; gap: 8px; }
+        .config-item {
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
         .config-row { display: flex; gap: 8px; align-items: center; }
-        .config-input, .config-select { background: #1e293b; border: 1px solid #475569; color: #fff; padding: 6px 8px; border-radius: 6px; font-size: 0.85rem; outline: none; }
+        .config-input, .config-select {
+            background: #1e293b;
+            border: 1px solid #475569;
+            color: #fff;
+            padding: 6px 8px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            outline: none;
+        }
         .config-input { flex: 1; }
-        .delete-btn { background: #991b1b; color: #fca5a5; border: none; padding: 6px 10px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; }
+        .delete-btn {
+            background: #991b1b;
+            color: #fca5a5;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
 
-        .modal-footer { display: flex; justify-content: space-between; border-top: 1px solid #334155; padding-top: 10px; }
+        .modal-footer {
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #334155;
+            padding-top: 10px;
+        }
         .action-btn { background: #0284c7; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .add-btn { background: #166534; color: #86efac; }
         .hint-text { font-size: 0.75rem; color: #94a3b8; }
@@ -274,6 +521,7 @@
                 </div>
             </div>
 
+            <!-- 交通狀況板塊 -->
             <div class="traffic-panel">
                 <div class="panel-title">
                     <span>🚗 路線行程時間估計</span>
@@ -351,8 +599,8 @@
             </div>
             <div class="hint-text">
                 💡 <b>使用說明</b>：<br>
-                1. 輸入「路線」並切換「去/返程」，系統會自動加載車站並自動補全<b>終點站</b>。<br>
-                2. 您可以手動調整「顯示目的地」欄位。
+                1. 輸入「路線」後，車站輸入框會<b>自動顯示下拉建議選項</b>。<br>
+                2. 您可以直接從下拉選單點選，或直接手動輸入<b>「車站名稱」</b>（如：東涌纜車站）或<b>「車站代碼」</b>（如：TC188）。
             </div>
             <div class="config-list" id="config-list"></div>
             <div class="modal-footer">
@@ -378,9 +626,6 @@
         };
 
         let isMapHidden = localStorage.getItem('traffic_map_hidden') === 'true';
-
-        let kmbStopsCache = null;
-        let ctbStopsCache = null;
 
         function cleanHongKongText(text) {
             if (!text) return '';
@@ -514,6 +759,7 @@
                 busTimeElem.innerText = `約 ${busMinutes} 分鐘`;
 
             } catch (e) {
+                console.error("時間計算失敗：", e);
                 carTimeElem.innerText = "無法估算";
                 busTimeElem.innerText = "無法估算";
             }
@@ -691,7 +937,7 @@
         setInterval(fetchGovSchoolClosureNotice, 60000);
         setInterval(calculateTravelTimes, 120000);
 
-        /* ------------------ 巴士 API 到站預測 ------------------ */
+        /* ------------------ 巴士 API 邏輯 ------------------ */
         async function getKMBSeta(route, stopCode, dir) {
             try {
                 let targetStopId = stopCode;
@@ -718,10 +964,17 @@
                 const stopsRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${route.toUpperCase()}/${ctbDir}`);
                 const stopsData = await stopsRes.json();
                 
-                let stopId = stopName;
+                let stopId = "";
                 if (stopsData.data && stopsData.data.length > 0) {
-                    const found = stopsData.data.find(s => s.stop === stopName);
-                    if (!found) stopId = stopsData.data[0].stop;
+                    for (let s of stopsData.data) {
+                        const infoRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/stop/${s.stop}`);
+                        const info = await infoRes.json();
+                        if (info.data && (info.data.name_tc.includes(stopName) || info.data.name_en.toLowerCase().includes(stopName.toLowerCase()))) {
+                            stopId = s.stop;
+                            break;
+                        }
+                    }
+                    if (!stopId) stopId = stopsData.data[0].stop;
                 }
 
                 if (!stopId) return [];
@@ -784,6 +1037,7 @@
                 let etas = (rawEtas || []).map(item => {
                     if (!item || !item.eta) return null;
                     const etaTime = new Date(item.eta);
+                    
                     let totalDiffSeconds = Math.round((etaTime - now) / 1000) + (busOffset * 60);
 
                     if (bus.company === 'kmb') totalDiffSeconds -= 60;
@@ -828,7 +1082,7 @@
         fetchBusData();
         setInterval(fetchBusData, 30000);
 
-        /* ------------------ 設定頁面與選單邏輯 ------------------ */
+        /* ------------------ 可搜尋兼自由輸入選單 Modal 邏輯 ------------------ */
         function openSettings() {
             loadBusConfigs();
             renderSettingsList();
@@ -874,7 +1128,7 @@
                             <button class="delete-btn" onclick="deleteBusConfig(${index})">刪除</button>
                         </div>
                         <div class="config-row">
-                            <input type="text" class="config-input bus-stop" list="stop-list-${index}" placeholder="點擊/輸入搜尋車站" value="${bus.stop}">
+                            <input type="text" class="config-input bus-stop" list="stop-list-${index}" placeholder="搜尋或選擇車站 / 輸入代碼" value="${bus.stop}">
                             <datalist id="stop-list-${index}"></datalist>
                             <input type="text" class="config-input bus-dest" placeholder="顯示目的地 (如 往 元朗)" value="${bus.dest_name}">
                             <select class="config-select bus-offset" title="時間微調">
@@ -888,30 +1142,6 @@
             });
         }
 
-        async function getKmbStopsMap() {
-            if (kmbStopsCache) return kmbStopsCache;
-            try {
-                const res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop`);
-                const data = await res.json();
-                kmbStopsCache = new Map(data.data.map(s => [s.stop, s.name_tc]));
-                return kmbStopsCache;
-            } catch (e) {
-                return new Map();
-            }
-        }
-
-        async function getCtbStopsMap() {
-            if (ctbStopsCache) return ctbStopsCache;
-            try {
-                const res = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/stop/CTB`);
-                const data = await res.json();
-                ctbStopsCache = new Map(data.data.map(s => [s.stop, s.name_tc]));
-                return ctbStopsCache;
-            } catch (e) {
-                return new Map();
-            }
-        }
-
         async function loadStopOptions(index) {
             const items = document.querySelectorAll('.config-item');
             const item = items[index];
@@ -921,61 +1151,56 @@
             const route = item.querySelector('.bus-route').value.trim().toUpperCase();
             const dir = item.querySelector('.bus-dir').value;
             const datalist = item.querySelector(`#stop-list-${index}`);
-            const destInput = item.querySelector('.bus-dest');
 
             if (!route || !datalist) return;
 
             let optionsHtml = '';
-            let lastStopName = '';
 
             try {
                 if (company === 'kmb') {
-                    const stopMap = await getKmbStopsMap();
                     const dirCode = dir === 'inbound' ? 'inbound' : 'outbound';
-                    
                     let res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${dirCode}/1`);
-                    let data = await res.json();
-
-                    if (!data.data || data.data.length === 0) {
-                        res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${dirCode}/2`);
-                        data = await res.json();
+                    if (!res.ok) {
+                        res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop`);
                     }
+                    const data = await res.json();
 
                     if (data.data && data.data.length > 0) {
-                        data.data.forEach((s, idx) => {
+                        const routeStops = data.data.filter(s => s.route === route);
+                        const stopsRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop`);
+                        const stopsData = await stopsRes.json();
+                        const stopMap = new Map(stopsData.data.map(s => [s.stop, s.name_tc]));
+
+                        routeStops.forEach((s, idx) => {
                             const name = stopMap.get(s.stop) || s.stop;
                             optionsHtml += `<option value="${s.stop}">${idx + 1}. ${name} (${s.stop})</option>`;
-                            if (idx === data.data.length - 1) lastStopName = name;
                         });
                     }
                 } else if (company === 'ctb') {
                     const ctbDir = dir === 'inbound' ? 'inbound' : 'outbound';
-                    const ctbMap = await getCtbStopsMap();
                     const res = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${route}/${ctbDir}`);
                     const data = await res.json();
 
-                    if (data.data && data.data.length > 0) {
+                    if (data.data) {
                         data.data.forEach((s, idx) => {
-                            const name = ctbMap.get(s.stop) || s.stop;
-                            optionsHtml += `<option value="${s.stop}">${idx + 1}. ${name} (${s.stop})</option>`;
-                            if (idx === data.data.length - 1) lastStopName = name;
+                            optionsHtml += `<option value="${s.stop}">${idx + 1}. 車站代碼: ${s.stop}</option>`;
                         });
                     }
                 } else if (company === 'nlb') {
                     const res = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=list`);
                     const data = await res.json();
                     if (data.stops) {
-                        data.stops.forEach((s, idx) => {
+                        data.stops.forEach(s => {
                             optionsHtml += `<option value="${s.stopName_c}">${s.stopName_c}</option>`;
-                            if (idx === data.stops.length - 1) lastStopName = s.stopName_c;
                         });
                     }
                 }
-            } catch (e) {}
+            } catch (e) {
+                console.warn("API 載入提示：可直接於輸入框內手動填寫車站名稱或代碼", e);
+            }
 
-            if (optionsHtml) datalist.innerHTML = optionsHtml;
-            if (lastStopName && !destInput.value) {
-                destInput.value = `往 ${lastStopName}`;
+            if (optionsHtml) {
+                datalist.innerHTML = optionsHtml;
             }
         }
 
