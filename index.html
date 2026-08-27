@@ -94,9 +94,7 @@
             font-weight: 600;
         }
 
-        .clock-container {
-            text-align: center;
-        }
+        .clock-container { text-align: center; }
         #clock {
             font-size: 3.5rem;
             font-weight: 700;
@@ -166,9 +164,7 @@
         .weather-settings-menu {
             display: none;
             position: absolute;
-            top: 40px;
-            left: 10px;
-            right: 10px;
+            top: 40px; left: 10px; right: 10px;
             background: #0f172a;
             border: 1px solid #475569;
             border-radius: 8px;
@@ -210,7 +206,6 @@
         .weather-icon { width: 38px; height: 38px; object-fit: contain; }
         .weather-desc { font-size: 0.8rem; color: #cbd5e1; line-height: 1.2; }
 
-        /* Google Maps 交通狀況及行車時間樣式 */
         .traffic-panel {
             background: #1e293b;
             border-radius: 16px;
@@ -220,13 +215,7 @@
             flex-direction: column;
             gap: 10px;
         }
-
-        .traffic-header-actions {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-        }
-
+        .traffic-header-actions { display: flex; gap: 6px; align-items: center; }
         .route-display-header {
             font-size: 0.95rem;
             font-weight: bold;
@@ -241,10 +230,7 @@
             border: 1px dashed rgba(56, 189, 248, 0.3);
         }
 
-        .travel-time-container {
-            display: flex;
-            gap: 10px;
-        }
+        .travel-time-container { display: flex; gap: 10px; }
         .travel-card {
             flex: 1;
             background: #0f172a;
@@ -269,14 +255,8 @@
             background: #0f172a;
             min-height: 200px;
         }
-        .map-container.hidden {
-            display: none !important;
-        }
-        .map-iframe {
-            width: 100%;
-            height: 100%;
-            border: 0;
-        }
+        .map-container.hidden { display: none !important; }
+        .map-iframe { width: 100%; height: 100%; border: 0; }
 
         @keyframes pulse-red {
             0% { border-color: #f43f5e; box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4); }
@@ -338,12 +318,7 @@
         .tag-ctb { background: #713f12; color: #ffffff; }
         .tag-nlb { background: #166534; color: #bbf7d0; }
 
-        .bus-name {
-            font-size: 1.8rem;
-            font-weight: 800;
-            letter-spacing: 1px;
-            line-height: 1;
-        }
+        .bus-name { font-size: 1.8rem; font-weight: 800; letter-spacing: 1px; line-height: 1; }
         .item-kmb .bus-name { color: #ffffff; }
         .item-ctb .bus-name { color: #000000; }
         .item-nlb .bus-name { color: #ffffff; }
@@ -382,12 +357,7 @@
             box-shadow: 0 0 10px rgba(244, 63, 94, 0.3);
         }
 
-        .loading-text {
-            text-align: center;
-            color: #94a3b8;
-            padding: 20px;
-            font-size: 0.9rem;
-        }
+        .loading-text { text-align: center; color: #94a3b8; padding: 20px; font-size: 0.9rem; }
 
         /* Modal 樣式 */
         .modal-overlay {
@@ -422,7 +392,7 @@
         .modal-title { font-size: 1.1rem; font-weight: bold; color: #38bdf8; }
         .modal-close { background: none; border: none; color: #94a3b8; font-size: 1.4rem; cursor: pointer; }
 
-        .config-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; max-height: 360px; }
+        .config-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; max-height: 380px; }
         .config-item {
             background: #0f172a;
             border-radius: 8px;
@@ -440,6 +410,7 @@
             padding: 6px 8px;
             border-radius: 6px;
             font-size: 0.85rem;
+            outline: none;
         }
         .config-input { flex: 1; }
         .delete-btn {
@@ -550,7 +521,7 @@
                 </div>
             </div>
 
-            <!-- Google Maps 交通狀況板塊 -->
+            <!-- 交通狀況板塊 -->
             <div class="traffic-panel">
                 <div class="panel-title">
                     <span>🚗 路線行程時間估計</span>
@@ -560,7 +531,6 @@
                     </div>
                 </div>
 
-                <!-- 顯示設定的起點與終點名稱 (已自動剔除「香港」) -->
                 <div class="route-display-header">
                     📍 <span id="disp-origin">逸東邨</span> ➔ <span id="disp-dest">滿東邨</span>
                 </div>
@@ -620,7 +590,7 @@
         </div>
     </div>
 
-    <!-- 巴士設定彈窗 Modal -->
+    <!-- 巴士設定 Modal (含下拉選單) -->
     <div class="modal-overlay" id="settings-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -628,11 +598,10 @@
                 <button class="modal-close" onclick="closeSettings()">&times;</button>
             </div>
             <div class="hint-text">
-                💡 <b>填寫指南</b>：<br>
-                • <b>更新頻率</b>：系統將每 30 秒自動更新一次到站時間。<br>
-                • <b>九巴 (KMB)</b>：填 App 站代碼（如 <code>TC188</code>）或 Stop ID，並選擇正確方向。<br>
-                • <b>城巴/嶼巴</b>：直接填 App 內的中文/英文<b>站名</b>（如 <code>東涌纜車站</code>），並選擇去程/返程。<br>
-                • <b>時間微調</b>：可手動正負調整到站預估時間（步長 30 秒）。
+                💡 <b>使用步驟</b>：<br>
+                1. 選擇「巴士公司」、輸入「路線」並設定「方向」。<br>
+                2. 系統會<b>自動加載所有車站</b>至下拉選單，直接點擊選擇即可。<br>
+                3. 可手動微調預估到站時間（步長 30 秒）。
             </div>
             <div class="config-list" id="config-list"></div>
             <div class="modal-footer">
@@ -652,15 +621,13 @@
         let weather1 = JSON.parse(localStorage.getItem('weather_cfg_1')) || { name: "東涌", district: "東涌" };
         let weather2 = JSON.parse(localStorage.getItem('weather_cfg_2')) || { name: "尖沙咀", district: "尖沙咀" };
 
-        /* ------------------ Google Maps 及 交通時間計算數據 ------------------ */
         let trafficConfig = JSON.parse(localStorage.getItem('traffic_cfg')) || {
-            origin: "逸東邨, 香港",
-            destination: "滿東邨, 香港"
+            origin: "逸東邨",
+            destination: "滿東邨"
         };
 
         let isMapHidden = localStorage.getItem('traffic_map_hidden') === 'true';
 
-        // 輔助函式：將顯示文字中的「, 香港」或「香港」去除
         function cleanHongKongText(text) {
             if (!text) return '';
             return text.replace(/,?\s*香港/g, '').trim();
@@ -707,9 +674,7 @@
             const originStr = trafficConfig.origin.includes('香港') ? trafficConfig.origin : `${trafficConfig.origin}, 香港`;
             const destStr = trafficConfig.destination.includes('香港') ? trafficConfig.destination : `${trafficConfig.destination}, 香港`;
 
-            const origin = encodeURIComponent(originStr);
-            const destination = encodeURIComponent(destStr);
-            const mapUrl = `https://maps.google.com/maps?saddr=${origin}&daddr=${destination}&dirflg=d&output=embed`;
+            const mapUrl = `https://maps.google.com/maps?saddr=${encodeURIComponent(originStr)}&daddr=${encodeURIComponent(destStr)}&dirflg=d&output=embed`;
             document.getElementById('traffic-map-iframe').src = mapUrl;
         }
 
@@ -740,7 +705,6 @@
             }
         }
 
-        /* ------------------ 動態計算真實行車時間 (OSRM 路由 API) ------------------ */
         async function calculateTravelTimes() {
             const carTimeElem = document.getElementById('car-travel-time');
             const busTimeElem = document.getElementById('bus-travel-time');
@@ -752,7 +716,6 @@
             const destStr = trafficConfig.destination.includes('香港') ? trafficConfig.destination : `${trafficConfig.destination}, 香港`;
 
             try {
-                // 1. 地理編碼：將地點名稱轉換為經緯度
                 const geocodeUrl = (address) => 
                     `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
 
@@ -768,7 +731,6 @@
                 const originCoords = `${originRes[0].lon},${originRes[0].lat}`;
                 const destCoords = `${destRes[0].lon},${destRes[0].lat}`;
 
-                // 2. 呼叫 OSRM API 計算實際駕車時間
                 const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${originCoords};${destCoords}?overview=false`;
                 const osrmRes = await fetch(osrmUrl).then(r => r.json());
 
@@ -778,7 +740,6 @@
 
                 const durationSeconds = osrmRes.routes[0].duration;
                 
-                // 3. 取得即時交通快慢加減係數
                 let speedFactor = 1.0;
                 try {
                     const speedRes = await fetch('https://rt.data.gov.hk/v1/transport/traffic-speed-map');
@@ -790,7 +751,6 @@
                     }
                 } catch(e) {}
 
-                // 計算私家車與巴士時間
                 let carMinutes = Math.max(2, Math.round((durationSeconds / 60) * speedFactor));
                 let busMinutes = carMinutes < 10 
                     ? Math.round(carMinutes * 1.5) + 3 
@@ -853,7 +813,7 @@
         let cachedRawEtas = {};
 
         function loadBusConfigs() {
-            const saved = localStorage.getItem('user_bus_configs_v4');
+            const saved = localStorage.getItem('user_bus_configs_v5');
             if (saved) {
                 try { currentBuses = JSON.parse(saved); } catch(e) { currentBuses = defaultBuses; }
             } else {
@@ -873,7 +833,6 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        /* ------------------ info.gov.hk 停課消息監測 ------------------ */
         async function fetchGovSchoolClosureNotice() {
             const box = document.getElementById('school-closure-box');
             const content = document.getElementById('closure-content');
@@ -885,7 +844,6 @@
 
                 if (data.status === 'ok' && data.items && data.items.length > 0) {
                     const keywords = ['停課', '教育局特別宣布', '中小學', '幼稚園'];
-                    
                     const matchedItems = data.items.filter(item => {
                         const text = (item.title + ' ' + item.description).toLowerCase();
                         return keywords.some(kw => text.includes(kw));
@@ -971,7 +929,7 @@
 
             } catch (err) {}
         }
-        
+
         initDistrictSelects();
         fetchWeather();
         fetchGovSchoolClosureNotice();
@@ -980,7 +938,7 @@
         setInterval(fetchGovSchoolClosureNotice, 60000);
         setInterval(calculateTravelTimes, 120000);
 
-        /* ------------------ 巴士到站 API ------------------ */
+        /* ------------------ 巴士 API 邏輯 ------------------ */
         async function getKMBSeta(route, stopCode, dir) {
             try {
                 let targetStopId = stopCode;
@@ -1012,7 +970,7 @@
                     for (let s of stopsData.data) {
                         const infoRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/stop/${s.stop}`);
                         const info = await infoRes.json();
-                        if (info.data.name_tc.includes(stopName) || info.data.name_en.toLowerCase().includes(stopName.toLowerCase())) {
+                        if (info.data && (info.data.name_tc.includes(stopName) || info.data.name_en.toLowerCase().includes(stopName.toLowerCase()))) {
                             stopId = s.stop;
                             break;
                         }
@@ -1083,9 +1041,7 @@
                     
                     let totalDiffSeconds = Math.round((etaTime - now) / 1000) + (busOffset * 60);
 
-                    if (bus.company === 'kmb') {
-                        totalDiffSeconds -= 60;
-                    }
+                    if (bus.company === 'kmb') totalDiffSeconds -= 60;
 
                     if (totalDiffSeconds < 0) return null;
                     if (totalDiffSeconds <= 90) return '即將到站';
@@ -1127,6 +1083,7 @@
         fetchBusData();
         setInterval(fetchBusData, 30000);
 
+        /* ------------------ 下拉式選單 Modal 邏輯 ------------------ */
         function openSettings() {
             loadBusConfigs();
             renderSettingsList();
@@ -1157,22 +1114,24 @@
                 const busOffset = bus.offset !== undefined ? bus.offset : 0;
 
                 const itemHtml = `
-                    <div class="config-item">
+                    <div class="config-item" data-index="${index}">
                         <div class="config-row">
-                            <select class="config-select bus-company">
+                            <select class="config-select bus-company" onchange="loadStopOptions(${index})">
                                 <option value="kmb" ${bus.company === 'kmb' ? 'selected' : ''}>九巴 (KMB)</option>
                                 <option value="ctb" ${bus.company === 'ctb' ? 'selected' : ''}>城巴 (CTB)</option>
                                 <option value="nlb" ${bus.company === 'nlb' ? 'selected' : ''}>嶼巴 (NLB)</option>
                             </select>
-                            <input type="text" class="config-input bus-route" placeholder="路線 (例: 1A / E33)" value="${bus.route}">
-                            <select class="config-select bus-dir">
+                            <input type="text" class="config-input bus-route" placeholder="路線 (例: 1A / E33)" value="${bus.route}" onchange="loadStopOptions(${index})">
+                            <select class="config-select bus-dir" onchange="loadStopOptions(${index})">
                                 <option value="outbound" ${busDir === 'outbound' ? 'selected' : ''}>去程 (Outbound)</option>
                                 <option value="inbound" ${busDir === 'inbound' ? 'selected' : ''}>返程 (Inbound)</option>
                             </select>
                             <button class="delete-btn" onclick="deleteBusConfig(${index})">刪除</button>
                         </div>
                         <div class="config-row">
-                            <input type="text" class="config-input bus-stop" placeholder="App 站代號 (如 TC188) 或 站名" value="${bus.stop}">
+                            <select class="config-select bus-stop" style="flex: 1;">
+                                <option value="${bus.stop}">${bus.stop ? bus.stop : '請選擇車站'}</option>
+                            </select>
                             <input type="text" class="config-input bus-dest" placeholder="顯示目的地 (如 往 尖沙咀)" value="${bus.dest_name}">
                             <select class="config-select bus-offset" title="時間微調">
                                 ${generateOffsetOptions(busOffset)}
@@ -1181,7 +1140,76 @@
                     </div>
                 `;
                 container.innerHTML += itemHtml;
+                if (bus.route) loadStopOptions(index, bus.stop);
             });
+        }
+
+        async function loadStopOptions(index, currentSavedStop = "") {
+            const items = document.querySelectorAll('.config-item');
+            const item = items[index];
+            if (!item) return;
+
+            const company = item.querySelector('.bus-company').value;
+            const route = item.querySelector('.bus-route').value.trim().toUpperCase();
+            const dir = item.querySelector('.bus-dir').value;
+            const stopSelect = item.querySelector('.bus-stop');
+
+            if (!route) {
+                stopSelect.innerHTML = '<option value="">請先輸入路線</option>';
+                return;
+            }
+
+            stopSelect.innerHTML = '<option value="">載入車站中...</option>';
+            let optionsHtml = '<option value="">-- 請選擇巴士站 --</option>';
+
+            try {
+                if (company === 'kmb') {
+                    const dirCode = dir === 'inbound' ? 'inbound' : 'outbound';
+                    const res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${dirCode}/1`);
+                    const data = await res.json();
+
+                    if (data.data && data.data.length > 0) {
+                        const stopsRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop`);
+                        const stopsData = await stopsRes.json();
+                        const stopMap = new Map(stopsData.data.map(s => [s.stop, s.name_tc]));
+
+                        data.data.forEach((s, idx) => {
+                            const name = stopMap.get(s.stop) || s.stop;
+                            const isSelected = (s.stop === currentSavedStop || name.includes(currentSavedStop)) ? 'selected' : '';
+                            optionsHtml += `<option value="${s.stop}" ${isSelected}>${idx + 1}. ${name}</option>`;
+                        });
+                    }
+                } else if (company === 'ctb') {
+                    const ctbDir = dir === 'inbound' ? 'inbound' : 'outbound';
+                    const res = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${route}/${ctbDir}`);
+                    const data = await res.json();
+
+                    if (data.data && data.data.length > 0) {
+                        for (let [idx, s] of data.data.entries()) {
+                            const infoRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/stop/${s.stop}`);
+                            const info = await infoRes.json();
+                            const name = info.data ? info.data.name_tc : s.stop;
+                            const isSelected = name.includes(currentSavedStop) ? 'selected' : '';
+                            optionsHtml += `<option value="${name}" ${isSelected}>${idx + 1}. ${name}</option>`;
+                        }
+                    }
+                } else if (company === 'nlb') {
+                    const res = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=list`);
+                    const data = await res.json();
+                    
+                    if (data.stops) {
+                        data.stops.forEach((s) => {
+                            const isSelected = s.stopName_c.includes(currentSavedStop) ? 'selected' : '';
+                            optionsHtml += `<option value="${s.stopName_c}" ${isSelected}>${s.stopName_c}</option>`;
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error("載入車站失敗", e);
+                optionsHtml = '<option value="">無法載入（請重試）</option>';
+            }
+
+            stopSelect.innerHTML = optionsHtml;
         }
 
         function addNewBusConfig() {
@@ -1212,7 +1240,7 @@
             });
 
             currentBuses = newConfigs;
-            localStorage.setItem('user_bus_configs_v4', JSON.stringify(currentBuses));
+            localStorage.setItem('user_bus_configs_v5', JSON.stringify(currentBuses));
             
             closeSettings();
             fetchBusData();
