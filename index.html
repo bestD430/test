@@ -220,14 +220,56 @@
             display: flex;
             flex-direction: column;
             min-height: 250px;
-            position: relative;
+            gap: 10px;
+        }
+
+        /* 路線常駐設定欄 */
+        .traffic-route-inline {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .route-input-group {
+            display: flex;
+            flex: 1;
+            gap: 6px;
+            align-items: center;
+        }
+        .route-save-btn {
+            background: #0284c7;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        /* 起終點名稱標題列 */
+        .route-display-header {
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.1);
+            padding: 6px 10px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: 1px dashed rgba(56, 189, 248, 0.3);
         }
 
         /* 時間顯示卡片 */
         .travel-time-container {
             display: flex;
             gap: 10px;
-            margin-bottom: 12px;
         }
         .travel-card {
             flex: 1;
@@ -251,36 +293,12 @@
             overflow: hidden;
             border: 1px solid #475569;
             background: #0f172a;
-            display: none; /* 預設隱藏地圖 */
-            position: relative;
+            min-height: 180px;
         }
-        .map-container.active { display: block; }
         .map-iframe {
             width: 100%;
             height: 100%;
             border: 0;
-        }
-        .map-placeholder {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            background: #0f172a;
-            color: #64748b;
-            border: 1px dashed #334155;
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            gap: 6px;
-        }
-        .key-badge {
-            background: #334155;
-            color: #38bdf8;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-family: monospace;
         }
 
         @keyframes pulse-red {
@@ -300,7 +318,7 @@
         .panel-title {
             font-size: 1rem;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 4px;
             color: #f59e0b;
             display: flex;
             justify-content: space-between;
@@ -558,17 +576,28 @@
                 </div>
             </div>
 
-            <!-- Google Maps 實時交通狀況板塊 -->
+            <!-- Google Maps 交通狀況板塊 -->
             <div class="traffic-panel">
                 <div class="panel-title">
                     <span>🚗 路線行程時間估計</span>
-                    <div>
-                        <button class="settings-btn" onclick="toggleMapDisplay()">🗺️ 切換地圖 [M]</button>
-                        <button class="settings-btn" onclick="toggleTrafficMenu()">⚙️ 設定路線</button>
-                    </div>
                 </div>
 
-                <!-- 新增：私家車及巴士預估時間顯示 -->
+                <!-- 常駐顯示：路線設定欄 -->
+                <div class="traffic-route-inline">
+                    <div class="route-input-group">
+                        <input type="text" id="traffic-origin-input" class="menu-input" placeholder="起點 (例: 逸東邨)">
+                        <span>➔</span>
+                        <input type="text" id="traffic-dest-input" class="menu-input" placeholder="終點 (例: 九龍志和街)">
+                    </div>
+                    <button class="route-save-btn" onclick="saveTrafficConfig()">保存更新</button>
+                </div>
+
+                <!-- 顯示設定了的起點與終點名稱 -->
+                <div class="route-display-header" id="route-display-title">
+                    📍 <span id="disp-origin">逸東邨</span> ➔ <span id="disp-dest">九龍志和街</span>
+                </div>
+
+                <!-- 私家車及巴士預估時間顯示 -->
                 <div class="travel-time-container">
                     <div class="travel-card">
                         <span class="travel-icon">🚗</span>
@@ -586,22 +615,8 @@
                     </div>
                 </div>
 
-                <!-- 交通路線設定選單 -->
-                <div class="weather-settings-menu" id="traffic-menu">
-                    <span class="menu-label">起點：</span>
-                    <input type="text" id="traffic-origin-input" class="menu-input" placeholder="例如: 逸東邨">
-                    <span class="menu-label">終點：</span>
-                    <input type="text" id="traffic-dest-input" class="menu-input" placeholder="例如: 九龍志和街">
-                    <button class="menu-save-btn" onclick="saveTrafficConfig()">保存並更新數據</button>
-                </div>
-
-                <!-- 地圖未顯示時的預設佔位提示 -->
-                <div class="map-placeholder" id="map-placeholder">
-                    <div>按下鍵盤 <span class="key-badge">M</span> 鍵或點擊上方按鈕顯示/隱藏實時地圖</div>
-                </div>
-
-                <!-- Google Maps 地圖 (預設隱藏) -->
-                <div class="map-container" id="map-container">
+                <!-- Google Maps 地圖 -->
+                <div class="map-container">
                     <iframe id="traffic-map-iframe" class="map-iframe" loading="lazy" allowfullscreen src=""></iframe>
                 </div>
             </div>
@@ -654,28 +669,16 @@
             destination: "九龍志和街, 香港"
         };
 
-        // 按鍵快捷鍵邏輯：按「M」鍵切換地圖顯示與隱藏
-        document.addEventListener('keydown', function(e) {
-            // 如果使用者正在輸入文字框，則忽略快捷鍵觸發
-            if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+        function initTrafficUI() {
+            document.getElementById('traffic-origin-input').value = trafficConfig.origin;
+            document.getElementById('traffic-dest-input').value = trafficConfig.destination;
             
-            if (e.key === 'm' || e.key === 'M') {
-                toggleMapDisplay();
-            }
-        });
-
-        function toggleMapDisplay() {
-            const mapContainer = document.getElementById('map-container');
-            const placeholder = document.getElementById('map-placeholder');
+            // 更新起終點顯示文字
+            document.getElementById('disp-origin').innerText = trafficConfig.origin;
+            document.getElementById('disp-dest').innerText = trafficConfig.destination;
             
-            if (mapContainer.classList.contains('active')) {
-                mapContainer.classList.remove('active');
-                placeholder.style.display = 'flex';
-            } else {
-                mapContainer.classList.add('active');
-                placeholder.style.display = 'none';
-                updateTrafficMap(); // 確保打開地圖時載入最新路線
-            }
+            updateTrafficMap();
+            calculateTravelTimes();
         }
 
         function updateTrafficMap() {
@@ -683,13 +686,6 @@
             const destination = encodeURIComponent(trafficConfig.destination);
             const mapUrl = `https://maps.google.com/maps?saddr=${origin}&daddr=${destination}&dirflg=d&output=embed`;
             document.getElementById('traffic-map-iframe').src = mapUrl;
-        }
-
-        function toggleTrafficMenu() {
-            const menu = document.getElementById('traffic-menu');
-            document.getElementById('traffic-origin-input').value = trafficConfig.origin;
-            document.getElementById('traffic-dest-input').value = trafficConfig.destination;
-            menu.classList.toggle('active');
         }
 
         function saveTrafficConfig() {
@@ -700,13 +696,12 @@
                 trafficConfig = { origin, destination };
                 localStorage.setItem('traffic_cfg', JSON.stringify(trafficConfig));
                 
-                // 若地圖當前正顯示，立即更新地圖
-                if (document.getElementById('map-container').classList.contains('active')) {
-                    updateTrafficMap();
-                }
+                document.getElementById('disp-origin').innerText = origin;
+                document.getElementById('disp-dest').innerText = destination;
+                
+                updateTrafficMap();
                 calculateTravelTimes();
             }
-            toggleTrafficMenu();
         }
 
         /* ------------------ 估計私家車與巴士所需時間 ------------------ */
@@ -717,31 +712,23 @@
             busTimeElem.innerText = "計算中...";
 
             try {
-                // 嘗試調用香港運輸署實時交通速度 API (免費無需Key)
                 const res = await fetch('https://rt.data.gov.hk/v1/transport/traffic-speed-map');
                 const speedData = await res.json();
                 
-                // 根據香港普遍路況，計算高峰期與平峰期速度因子
                 let speedFactor = 1.0; 
                 if (speedData && Array.isArray(speedData)) {
-                    // 若獲取到擁堵數據，適當調整速度因子
                     const congestedRoads = speedData.filter(r => r.TRAFFIC_SPEED_LEVEL === 'S' || r.TRAFFIC_SPEED_LEVEL === 'M');
-                    if (congestedRoads.length > 30) speedFactor = 1.35; // 嚴重塞車
-                    else if (congestedRoads.length > 15) speedFactor = 1.15; // 中度塞車
+                    if (congestedRoads.length > 30) speedFactor = 1.35;
+                    else if (congestedRoads.length > 15) speedFactor = 1.15;
                 }
 
-                // 根據距離演算法計算基礎預估（基準模擬）
-                // 預估私家車平均行車時間（包含即時路況加權）
-                let baseMinutes = Math.floor(Math.random() * 10) + 32; // 預設常見跨區基準時間 (~35-45分鐘)
+                let baseMinutes = Math.floor(Math.random() * 10) + 32;
                 let carMinutes = Math.round(baseMinutes * speedFactor);
-                
-                // 巴士考慮停站、等車與繞路因素，一般為私家車的 1.4 ~ 1.6 倍
                 let busMinutes = Math.round(carMinutes * 1.45) + 5;
 
                 carTimeElem.innerText = `約 ${carMinutes} 分鐘`;
                 busTimeElem.innerText = `約 ${busMinutes} 分鐘`;
             } catch (e) {
-                // 回退預設預估算法
                 carTimeElem.innerText = "約 38 分鐘";
                 busTimeElem.innerText = "約 58 分鐘";
             }
@@ -916,10 +903,10 @@
         initDistrictSelects();
         fetchWeather();
         fetchGovSchoolClosureNotice();
-        calculateTravelTimes(); // 計算路程所需時間
+        initTrafficUI(); // 初始化交通UI及數據
         setInterval(fetchWeather, 60000);
         setInterval(fetchGovSchoolClosureNotice, 60000);
-        setInterval(calculateTravelTimes, 120000); // 每2分鐘更新一次預估行車時間
+        setInterval(calculateTravelTimes, 120000);
 
         /* ------------------ 巴士到站 API ------------------ */
         async function getKMBSeta(route, stopCode, dir) {
