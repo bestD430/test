@@ -352,7 +352,26 @@
         .item-ctb .bus-name { color: #000000; }
         .item-nlb .bus-name { color: #ffffff; }
 
-        .bus-dest { font-size: 0.85rem; font-weight: 500; text-align: right; }
+        /* 修改：巴士到站路線/站名樣式 (大字體起點) */
+        .bus-dest { 
+            font-size: 0.85rem; 
+            font-weight: 500; 
+            text-align: right; 
+            display: flex;
+            align-items: baseline;
+            justify-content: flex-end;
+            gap: 4px;
+        }
+        .bus-origin-text {
+            font-size: 1.15rem;
+            font-weight: 800;
+        }
+        .bus-dest-text {
+            font-size: 0.85rem;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
         .item-kmb .bus-dest { color: #fecdd3; }
         .item-ctb .bus-dest { color: #1e293b; }
         .item-nlb .bus-dest { color: #dcfce7; }
@@ -1058,10 +1077,16 @@
                 const itemClass = bus.company === 'kmb' ? 'item-kmb' :
                                   bus.company === 'ctb' ? 'item-ctb' : 'item-nlb';
 
-                // 處理起點站名與目的地站名的顯示
-                const originText = bus.origin_name ? bus.origin_name : '';
-                const destText = bus.dest_name ? bus.dest_name : '';
-                const routeDirectionText = (originText && destText) ? `${originText} ➔ ${destText}` : (originText || destText);
+                // 處理起點站名（大字體）與目的地站名的顯示
+                const originText = bus.origin_name ? `<span class="bus-origin-text">${bus.origin_name}</span>` : '';
+                const destText = bus.dest_name ? `<span class="bus-dest-text">${bus.dest_name}</span>` : '';
+                
+                let routeDirectionHtml = '';
+                if (originText && destText) {
+                    routeDirectionHtml = `${originText} <span style="font-size: 0.8rem; opacity: 0.7;">➔</span> ${destText}`;
+                } else {
+                    routeDirectionHtml = originText || destText;
+                }
 
                 newHtml += `
                     <div class="bus-item ${itemClass}">
@@ -1070,7 +1095,7 @@
                                 ${companyTag}
                                 <div class="bus-name">${bus.route.toUpperCase()}</div>
                             </div>
-                            <div class="bus-dest">${routeDirectionText}</div>
+                            <div class="bus-dest">${routeDirectionHtml}</div>
                         </div>
                         <div class="eta-group">
                             <div class="eta-badge first ${isArr ? 'arr' : ''}">${etas[0]}</div>
