@@ -1113,6 +1113,7 @@
             if (!item) return;
             const dirSelect = item.querySelector('.bus-dir');
             item.dataset.currentDir = dirSelect.value;
+            // 更新目標目的地名稱並載入該方向的車站
             const selectedOpt = dirSelect.options[dirSelect.selectedIndex];
             const destInput = item.querySelector('.bus-dest');
             if (selectedOpt && selectedOpt.text) {
@@ -1373,4 +1374,3 @@
     </script>
 </body>
 </html>
-
