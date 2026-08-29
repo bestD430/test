@@ -256,7 +256,7 @@
             width: 12px;
             height: 12px;
             border-radius: 50%;
-            background-color: #94a3b8; /* 預設灰色 */
+            background-color: #94a3b8;
             box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
         }
         .status-text {
@@ -264,14 +264,10 @@
             font-weight: bold;
             color: #94a3b8;
         }
-
-        /* 暢順 (綠色) */
         .status-smooth .status-dot { background-color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.6); }
         .status-smooth .status-text { color: #34d399; }
-        /* 繁忙 (黃色) */
         .status-busy .status-dot { background-color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.6); }
         .status-busy .status-text { color: #fbbf24; }
-        /* 擠塞 (紅色) */
         .status-congested .status-dot { background-color: #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.6); }
         .status-congested .status-text { color: #f87171; }
 
@@ -352,7 +348,6 @@
         .item-ctb .bus-name { color: #000000; }
         .item-nlb .bus-name { color: #ffffff; }
 
-        /* 修改：巴士到站路線/站名樣式 (大字體起點) */
         .bus-dest { 
             font-size: 0.85rem; 
             font-weight: 500; 
@@ -362,15 +357,8 @@
             justify-content: flex-end;
             gap: 4px;
         }
-        .bus-origin-text {
-            font-size: 1.15rem;
-            font-weight: 800;
-        }
-        .bus-dest-text {
-            font-size: 0.85rem;
-            font-weight: 500;
-            opacity: 0.9;
-        }
+        .bus-origin-text { font-size: 1.15rem; font-weight: 800; }
+        .bus-dest-text { font-size: 0.85rem; font-weight: 500; opacity: 0.9; }
 
         .item-kmb .bus-dest { color: #fecdd3; }
         .item-ctb .bus-dest { color: #1e293b; }
@@ -461,6 +449,7 @@
             outline: none;
         }
         .config-input { flex: 1; }
+        .config-select.bus-stop { flex: 1.5; }
         .delete-btn {
             background: #991b1b;
             color: #fca5a5;
@@ -641,8 +630,8 @@
             </div>
             <div class="hint-text">
                 💡 <b>使用說明</b>：<br>
-                1. 輸入「路線」後，車站輸入框會<b>自動顯示下拉建議選項</b>。<br>
-                2. 您可以直接從下拉選單點選，或手動輸入<b>「車站名稱」</b>（如：東涌纜車站）或<b>「車站代碼」</b>（如：TC188）。
+                1. 輸入「路線」和選擇「行車方向」後，車站選單會<b>自動列出該路線車站</b>，並為您自動填寫「終點」。<br>
+                2. 從下拉選單選擇上車車站後，系統會自動為您填寫「起點站名」。
             </div>
             <div class="config-list" id="config-list"></div>
             <div class="modal-footer">
@@ -759,9 +748,7 @@
                 const speedData = await speedRes.json();
                 
                 if (Array.isArray(speedData)) {
-                    // S = Slow (擁塞), M = Medium (繁忙), F = Fast (暢順)
                     const congestedCount = speedData.filter(r => r.TRAFFIC_SPEED_LEVEL === 'S' || r.TRAFFIC_SPEED_LEVEL === 'M').length;
-                    
                     if (congestedCount > 30) {
                         card.classList.add('status-congested');
                         statusText.innerText = '交通擠塞';
@@ -976,23 +963,27 @@
             } catch (e) { return []; }
         }
 
-        async function getCTBETA(route, stopName, dir) {
+        async function getCTBETA(route, stopIdOrName, dir) {
             try {
                 const ctbDir = dir === 'inbound' ? 'inbound' : 'outbound';
-                const stopsRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${route.toUpperCase()}/${ctbDir}`);
-                const stopsData = await stopsRes.json();
+                let stopId = stopIdOrName;
                 
-                let stopId = "";
-                if (stopsData.data && stopsData.data.length > 0) {
-                    for (let s of stopsData.data) {
-                        const infoRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/stop/${s.stop}`);
-                        const info = await infoRes.json();
-                        if (info.data && (info.data.name_tc.includes(stopName) || info.data.name_en.toLowerCase().includes(stopName.toLowerCase()))) {
-                            stopId = s.stop;
-                            break;
+                // 兼容處理舊資料若是中文名稱
+                if (/[\u4e00-\u9fa5]/.test(stopIdOrName)) {
+                    const stopsRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${route.toUpperCase()}/${ctbDir}`);
+                    const stopsData = await stopsRes.json();
+                    stopId = "";
+                    if (stopsData.data && stopsData.data.length > 0) {
+                        for (let s of stopsData.data) {
+                            const infoRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/stop/${s.stop}`);
+                            const info = await infoRes.json();
+                            if (info.data && (info.data.name_tc.includes(stopIdOrName) || info.data.name_en.toLowerCase().includes(stopIdOrName.toLowerCase()))) {
+                                stopId = s.stop;
+                                break;
+                            }
                         }
+                        if (!stopId) stopId = stopsData.data[0].stop;
                     }
-                    if (!stopId) stopId = stopsData.data[0].stop;
                 }
 
                 if (!stopId) return [];
@@ -1000,7 +991,7 @@
                 const etaRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/${stopId}/${route.toUpperCase()}`);
                 const etaData = await etaRes.json();
                 const dirChar = ctbDir === 'inbound' ? 'I' : 'O';
-                return etaData.data.filter(i => i.dir === dirChar);
+                return (etaData.data || []).filter(i => i.dir === dirChar);
             } catch (e) { return []; }
         }
 
@@ -1013,7 +1004,7 @@
 
                 const etaRes = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=estimatedArrivals&stopId=${matchedStop.stopId}&routeId=${route}`);
                 const etaData = await etaRes.json();
-                return etaData.estimatedArrivals.map(i => ({ eta: i.estimatedArrivalAt }));
+                return (etaData.estimatedArrivals || []).map(i => ({ eta: i.estimatedArrivalAt }));
             } catch (e) { return []; }
         }
 
@@ -1055,7 +1046,6 @@
                 let etas = (rawEtas || []).map(item => {
                     if (!item || !item.eta) return null;
                     const etaTime = new Date(item.eta);
-                    
                     let totalDiffSeconds = Math.round((etaTime - now) / 1000) + (busOffset * 60);
 
                     if (bus.company === 'kmb') totalDiffSeconds -= 60;
@@ -1077,7 +1067,6 @@
                 const itemClass = bus.company === 'kmb' ? 'item-kmb' :
                                   bus.company === 'ctb' ? 'item-ctb' : 'item-nlb';
 
-                // 處理起點站名（大字體）與目的地站名的顯示
                 const originText = bus.origin_name ? `<span class="bus-origin-text">${bus.origin_name}</span>` : '';
                 const destText = bus.dest_name ? `<span class="bus-dest-text">${bus.dest_name}</span>` : '';
                 
@@ -1111,7 +1100,7 @@
         fetchBusData();
         setInterval(fetchBusData, 30000);
 
-        /* ------------------ 可搜尋兼自由輸入選單 Modal 邏輯 ------------------ */
+        /* ------------------ 彈出式車站位置選單及自動填寫邏輯 ------------------ */
         function openSettings() {
             loadBusConfigs();
             renderSettingsList();
@@ -1142,23 +1131,24 @@
                 const busOffset = bus.offset !== undefined ? bus.offset : 0;
 
                 const itemHtml = `
-                    <div class="config-item" data-index="${index}">
+                    <div class="config-item" data-index="${index}" data-current-stop="${bus.stop}">
                         <div class="config-row">
-                            <select class="config-select bus-company" onchange="loadStopOptions(${index})">
+                            <select class="config-select bus-company" onchange="loadStopOptions(${index}, true)">
                                 <option value="kmb" ${bus.company === 'kmb' ? 'selected' : ''}>九巴/龍運 (KMB)</option>
                                 <option value="ctb" ${bus.company === 'ctb' ? 'selected' : ''}>城巴 (CTB)</option>
                                 <option value="nlb" ${bus.company === 'nlb' ? 'selected' : ''}>嶼巴 (NLB)</option>
                             </select>
-                            <input type="text" class="config-input bus-route" placeholder="路線 (例: E36A / E33)" value="${bus.route}" onchange="loadStopOptions(${index})">
-                            <select class="config-select bus-dir" onchange="loadStopOptions(${index})">
+                            <input type="text" class="config-input bus-route" placeholder="路線 (例: E36A)" value="${bus.route}" onchange="loadStopOptions(${index}, true)">
+                            <select class="config-select bus-dir" onchange="loadStopOptions(${index}, true)">
                                 <option value="outbound" ${busDir === 'outbound' ? 'selected' : ''}>去程 (Outbound)</option>
                                 <option value="inbound" ${busDir === 'inbound' ? 'selected' : ''}>返程 (Inbound)</option>
                             </select>
                             <button class="delete-btn" onclick="deleteBusConfig(${index})">刪除</button>
                         </div>
                         <div class="config-row">
-                            <input type="text" class="config-input bus-stop" list="stop-list-${index}" placeholder="搜尋或選擇車站 / 輸入代碼" value="${bus.stop}">
-                            <datalist id="stop-list-${index}"></datalist>
+                            <select class="config-select bus-stop" onchange="handleStopChange(${index})">
+                                <option value="${bus.stop}" selected>${bus.stop ? '已選代碼: ' + bus.stop : '請先輸入路線...'}</option>
+                            </select>
                             <input type="text" class="config-input bus-origin" placeholder="起點站名 (如 東涌)" value="${bus.origin_name || ''}">
                             <input type="text" class="config-input bus-dest" placeholder="目的地 (如 往 元朗)" value="${bus.dest_name || ''}">
                             <select class="config-select bus-offset" title="時間微調">
@@ -1168,11 +1158,11 @@
                     </div>
                 `;
                 container.innerHTML += itemHtml;
-                if (bus.route) loadStopOptions(index);
+                if (bus.route) loadStopOptions(index, false); // Initialize API data without overriding user text
             });
         }
 
-        async function loadStopOptions(index) {
+        async function loadStopOptions(index, isUserAction = false) {
             const items = document.querySelectorAll('.config-item');
             const item = items[index];
             if (!item) return;
@@ -1180,58 +1170,140 @@
             const company = item.querySelector('.bus-company').value;
             const route = item.querySelector('.bus-route').value.trim().toUpperCase();
             const dir = item.querySelector('.bus-dir').value;
-            const datalist = item.querySelector(`#stop-list-${index}`);
+            const stopSelect = item.querySelector('.bus-stop');
+            const destInput = item.querySelector('.bus-dest');
+            const originInput = item.querySelector('.bus-origin');
 
-            if (!route || !datalist) return;
+            if (!route) {
+                stopSelect.innerHTML = '<option value="">請先輸入路線...</option>';
+                return;
+            }
 
-            let optionsHtml = '';
+            stopSelect.innerHTML = '<option value="">載入車站中...</option>';
+            let optionsHtml = '<option value="">請選擇車站...</option>';
+            let destName = '';
 
             try {
                 if (company === 'kmb') {
+                    // 1. 自動填寫終點
+                    const routeRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route/`);
+                    const routeData = await routeRes.json();
+                    const routeInfo = routeData.data.find(r => r.route === route && r.bound === (dir === 'inbound' ? 'I' : 'O'));
+                    if (routeInfo) destName = `往 ${routeInfo.dest_tc}`;
+
+                    // 2. 獲取車站選單
                     const dirCode = dir === 'inbound' ? 'inbound' : 'outbound';
                     let res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${dirCode}/1`);
-                    if (!res.ok) {
-                        res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop`);
-                    }
+                    if (!res.ok) res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop`);
                     const data = await res.json();
 
                     if (data.data && data.data.length > 0) {
-                        const routeStops = data.data.filter(s => s.route === route);
+                        let routeStops = [];
+                        if (res.url.includes('/1')) {
+                            routeStops = data.data;
+                        } else {
+                            routeStops = data.data.filter(s => s.route === route && s.bound === (dir === 'inbound' ? 'I' : 'O'));
+                        }
+
                         const stopsRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop`);
                         const stopsData = await stopsRes.json();
                         const stopMap = new Map(stopsData.data.map(s => [s.stop, s.name_tc]));
 
                         routeStops.forEach((s, idx) => {
                             const name = stopMap.get(s.stop) || s.stop;
-                            optionsHtml += `<option value="${s.stop}">${idx + 1}. ${name} (${s.stop})</option>`;
+                            optionsHtml += `<option value="${s.stop}">${idx + 1}. ${name}</option>`;
                         });
                     }
                 } else if (company === 'ctb') {
+                    // 1. 自動填寫終點
                     const ctbDir = dir === 'inbound' ? 'inbound' : 'outbound';
+                    const routeRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/route/CTB/${route}`);
+                    const routeData = await routeRes.json();
+                    if (routeData.data) {
+                        destName = `往 ${dir === 'inbound' ? routeData.data.orig_tc : routeData.data.dest_tc}`;
+                    }
+
+                    // 2. 獲取車站選單
                     const res = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${route}/${ctbDir}`);
                     const data = await res.json();
 
                     if (data.data) {
+                        // 並行獲取所有車站名稱
+                        const stopPromises = data.data.map(s => fetch(`https://rt.data.gov.hk/v2/transport/citybus/stop/${s.stop}`).then(r => r.json()).catch(() => null));
+                        const stopDetails = await Promise.all(stopPromises);
+
                         data.data.forEach((s, idx) => {
-                            optionsHtml += `<option value="${s.stop}">${idx + 1}. 車站代碼: ${s.stop}</option>`;
+                            const detail = stopDetails[idx];
+                            const name = (detail && detail.data && detail.data.name_tc) ? detail.data.name_tc : `代碼: ${s.stop}`;
+                            optionsHtml += `<option value="${s.stop}">${idx + 1}. ${name}</option>`;
                         });
                     }
                 } else if (company === 'nlb') {
-                    const res = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=list`);
-                    const data = await res.json();
-                    if (data.stops) {
-                        data.stops.forEach(s => {
-                            optionsHtml += `<option value="${s.stopName_c}">${s.stopName_c}</option>`;
-                        });
+                    // NLB需透過RouteList匹配
+                    const routeRes = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/route.php?action=list`);
+                    const routeData = await routeRes.json();
+                    const nlbRoutes = routeData.routes.filter(r => r.routeNo === route);
+                    
+                    const routeInfo = (dir === 'inbound' && nlbRoutes.length > 1) ? nlbRoutes[1] : nlbRoutes[0];
+                    if (routeInfo) {
+                        const locations = routeInfo.routeName_c.split('>');
+                        if (locations.length >= 2) {
+                            destName = `往 ${locations[locations.length - 1].trim()}`;
+                        }
+
+                        const res = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=list&routeId=${routeInfo.routeId}`);
+                        const data = await res.json();
+                        if (data.stops) {
+                            data.stops.forEach((s, idx) => {
+                                optionsHtml += `<option value="${s.stopName_c}">${idx + 1}. ${s.stopName_c}</option>`;
+                            });
+                        }
                     }
                 }
+
+                if (isUserAction && destName) {
+                    destInput.value = destName;
+                }
+
             } catch (e) {
-                console.warn("API 載入提示：可直接於輸入框內手動填寫車站名稱或代碼", e);
+                console.warn("車站列表載入失敗", e);
+                optionsHtml = '<option value="">載入失敗，請重試</option>';
             }
 
-            if (optionsHtml) {
-                datalist.innerHTML = optionsHtml;
+            stopSelect.innerHTML = optionsHtml;
+            
+            const currentStop = item.dataset.currentStop;
+            if (!isUserAction && currentStop) {
+                // 初次載入，保留原本設定的車站
+                stopSelect.value = currentStop;
+            } else if (isUserAction) {
+                // 使用者主動更改路線，清空起點
+                originInput.value = '';
+                item.dataset.currentStop = '';
             }
+        }
+
+        // 選擇車站後自動填寫起點
+        function handleStopChange(index) {
+            const items = document.querySelectorAll('.config-item');
+            const item = items[index];
+            if (!item) return;
+
+            const stopSelect = item.querySelector('.bus-stop');
+            const originInput = item.querySelector('.bus-origin');
+
+            const selectedOption = stopSelect.options[stopSelect.selectedIndex];
+            if (selectedOption && selectedOption.value) {
+                const fullName = selectedOption.text;
+                // 去除序列前綴（如 "1. "）提取純站名
+                const cleanName = fullName.replace(/^\d+\.\s*/, '');
+                originInput.value = cleanName;
+            } else {
+                originInput.value = '';
+            }
+            
+            // 更新狀態
+            item.dataset.currentStop = selectedOption.value;
         }
 
         function addNewBusConfig() {
@@ -1252,7 +1324,7 @@
                 const company = item.querySelector('.bus-company').value;
                 const route = item.querySelector('.bus-route').value.trim();
                 const dir = item.querySelector('.bus-dir').value;
-                const stop = item.querySelector('.bus-stop').value.trim();
+                const stop = item.querySelector('.bus-stop').value;
                 const origin_name = item.querySelector('.bus-origin').value.trim();
                 const dest_name = item.querySelector('.bus-dest').value.trim();
                 const offset = parseFloat(item.querySelector('.bus-offset').value);
