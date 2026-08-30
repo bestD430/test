@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>交通看板 Dashboard (動態路線版)</title>
+  <title>交通看板 Dashboard</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
     body { background-color: #121212; color: #FFFFFF; padding: 10px; display: flex; flex-direction: column; gap: 12px; }
@@ -25,7 +25,7 @@
 
     /* 單條巴士路線卡片 */
     .bus-item { background: #262626; border-radius: 8px; border: 1px solid #444; padding: 10px; display: none; }
-    .bus-item.active { display: block; } /* 僅顯示已設定或正在編輯的卡片 */
+    .bus-item.active { display: block; } /* 僅顯示已開啟的卡片 */
     
     .bus-item-header { display: flex; justify-content: space-between; align-items: center; }
     .bus-item-title { font-size: 14px; font-weight: bold; color: #90CAF9; }
@@ -155,7 +155,7 @@
           busConfigs[i].active = true;
           var item = document.getElementById('bus-item-' + i);
           item.classList.add('active');
-          document.getElementById('config-' + i).classList.add('show'); // 自動展開設定選單
+          document.getElementById('config-' + i).classList.add('show');
           break;
         }
       }
@@ -174,7 +174,7 @@
       document.getElementById('config-' + idx).classList.toggle('show');
     }
 
-    // 修正版：搜尋方向 (完整相容城巴 CTB E21A 及龍運/九巴路線)
+    // 修正版：搜尋方向 (極量化精準 API 相容城巴 E21A 及九巴/龍運)
     function fetchDirections(idx) {
       var company = document.getElementById('company-' + idx).value;
       var route = document.getElementById('route-input-' + idx).value.trim().toUpperCase();
@@ -190,7 +190,6 @@
       stopSelect.disabled = true;
 
       if (company === 'KMB') {
-        // 九巴/龍運 API
         fetch('https://data.etabus.gov.hk/v1/transport/kmb/route/')
           .then(function(res) { return res.json(); })
           .then(function(data) {
@@ -210,32 +209,34 @@
                 dirSelect.innerHTML = '<option value="">找不到此九巴/龍運路線</option>';
               }
             }
+          })
+          .catch(function() {
+            dirSelect.innerHTML = '<option value="">連線失敗，請重試</option>';
           });
       } else {
-        // 城巴 (Citybus) 修正版：直接從城巴全路線表匹配 (相容 E21A, A21 等路線)
-        fetch('https://data.etabus.gov.hk/v1/transport/citybus/route/CTB')
+        // 城巴 (CTB) 單一路線精準查詢 - 秒速載入不打結
+        fetch('https://data.etabus.gov.hk/v1/transport/citybus/route/CTB/' + route)
           .then(function(res) { return res.json(); })
           .then(function(data) {
             dirSelect.innerHTML = '<option value="">-- 請選擇行車方向 (終點站) --</option>';
-            if (data.data) {
-              var matchedCTB = data.data.filter(function(r) { return r.route === route; });
-              if (matchedCTB.length > 0) {
-                // 自動生成去程與回程
-                var optOut = document.createElement('option');
-                optOut.value = 'outbound|1';
-                optOut.innerText = '往：' + matchedCTB[0].dest_tc;
-                dirSelect.appendChild(optOut);
+            if (data.data && data.data.dest_tc) {
+              var optOut = document.createElement('option');
+              optOut.value = 'outbound|1';
+              optOut.innerText = '往：' + data.data.dest_tc;
+              dirSelect.appendChild(optOut);
 
-                var optIn = document.createElement('option');
-                optIn.value = 'inbound|1';
-                optIn.innerText = '往：' + matchedCTB[0].orig_tc;
-                dirSelect.appendChild(optIn);
+              var optIn = document.createElement('option');
+              optIn.value = 'inbound|1';
+              optIn.innerText = '往：' + data.data.orig_tc;
+              dirSelect.appendChild(optIn);
 
-                dirSelect.disabled = false;
-              } else {
-                dirSelect.innerHTML = '<option value="">找不到此城巴路線</option>';
-              }
+              dirSelect.disabled = false;
+            } else {
+              dirSelect.innerHTML = '<option value="">找不到城巴路線 ' + route + '</option>';
             }
+          })
+          .catch(function() {
+            dirSelect.innerHTML = '<option value="">城巴 API 連線失敗</option>';
           });
       }
     }
