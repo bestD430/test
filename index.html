@@ -17,12 +17,27 @@
     .weather-box { text-align: center; font-size: 14px; }
     .weather-icon { font-size: 24px; display: block; }
 
-    /* 第二欄：巴士即時到站 (重點優化顯示) */
-    .bus-sec h3 { font-size: 16px; margin-bottom: 8px; color: #FFD54F; }
-    .config-panel { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; background: #2A2A2A; padding: 8px; border-radius: 6px; }
-    select, input, button { background: #333; color: #FFF; border: 1px solid #555; padding: 8px; border-radius: 4px; font-size: 14px; }
-    button { background: #1E88E5; border: none; font-weight: bold; cursor: pointer; }
+    /* 第二欄：巴士即時到站標題區 */
+    .bus-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .bus-header h3 { font-size: 16px; color: #FFD54F; }
+    .toggle-btn { background: #333; color: #80CBC4; border: 1px solid #555; padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
     
+    /* 隱藏式設定面板 */
+    .config-panel { 
+      display: none; /* 預設隱藏 */
+      flex-direction: column; 
+      gap: 6px; 
+      margin-bottom: 10px; 
+      background: #2A2A2A; 
+      padding: 10px; 
+      border-radius: 8px; 
+      border: 1px solid #444;
+    }
+    .config-panel.show { display: flex; } /* 展開時顯示 */
+
+    select, input, button { background: #333; color: #FFF; border: 1px solid #555; padding: 8px; border-radius: 4px; font-size: 14px; }
+    .search-btn { background: #1E88E5; border: none; font-weight: bold; cursor: pointer; }
+
     /* 到站時間專用板面 */
     .eta-display { 
       background: #000; 
@@ -35,7 +50,7 @@
       flex-direction: column;
       justify-content: center;
     }
-    /* 首班車：大字體 + 顯眼黃色 */
+    .eta-title { font-size: 14px; color: #888; margin-bottom: 4px; }
     .eta-first { 
       font-size: 38px; 
       font-weight: bold; 
@@ -43,9 +58,6 @@
       line-height: 1.2;
       margin-bottom: 6px;
     }
-    .eta-first span { font-size: 18px; color: #FFF; }
-    
-    /* 第二、三班車：較小字體次要顯示 */
     .eta-next { 
       font-size: 15px; 
       color: #BBB; 
@@ -56,6 +68,9 @@
       gap: 15px;
     }
     .eta-next span { color: #80CBC4; font-weight: bold; }
+
+    /* 第三欄：Google Maps */
+    .map-sec iframe { width: 100%; height: 240px; border: 0; border-radius: 8px; }
   </style>
 </head>
 <body>
@@ -78,13 +93,23 @@
     </div>
   </div>
 
-  <!-- 第二欄：巴士到站時間 -->
+  <!-- 第二欄：巴士即時到站 (含隱藏選單) -->
   <div class="card bus-sec">
-    <h3>🚌 巴士即時到站</h3>
-    <div class="config-panel">
+    <div class="bus-header">
+      <h3>🚌 巴士即時到站</h3>
+      <button class="toggle-btn" onclick="toggleConfig()">⚙️ 設定路線</button>
+    </div>
+
+    <!-- 可開關的隱藏式設定面板 -->
+    <div id="config-panel" class="config-panel">
+      <select id="company-select" onchange="resetSelection()">
+        <option value="KMB">九巴 / 龍運 (KMB/LWB)</option>
+        <option value="CTB">城巴 (Citybus)</option>
+      </select>
+
       <div style="display:flex; gap:6px;">
-        <input type="text" id="route-input" placeholder="路線 (如 603)" style="flex:1;">
-        <button onclick="fetchDirections()">搜尋</button>
+        <input type="text" id="route-input" placeholder="輸入路線 (如 603 / 10)" style="flex:1;">
+        <button class="search-btn" onclick="fetchDirections()">搜尋</button>
       </div>
       
       <select id="dir-select" onchange="fetchStops()" disabled>
@@ -98,18 +123,18 @@
 
     <!-- 即時到站時間顯示區 -->
     <div id="eta-result" class="eta-display">
-      <div style="color:#888;">請選擇路線與車站</div>
+      <div style="color:#888;">點擊右上方「⚙️ 設定路線」選擇車站</div>
     </div>
   </div>
 
   <!-- 第三欄：交通路況 (Google Maps) -->
   <div class="card map-sec">
     <h3 style="font-size:14px; margin-bottom:6px; color:#90CAF9;">🚗 自訂路線交通路況</h3>
-    <iframe id="map-iframe" style="width:100%; height:240px; border:0; border-radius:8px;" src="https://maps.google.com/maps?q=from:Central,HongKong+to:Shatin,HongKong&output=embed"></iframe>
+    <iframe id="map-iframe" src="https://maps.google.com/maps?q=from:Central,HongKong+to:Shatin,HongKong&output=embed"></iframe>
   </div>
 
   <script>
-    // 1. 時鐘與日期功能
+    // 1. 時鐘與日期
     function updateClock() {
       var now = new Date();
       var h = String(now.getHours()).padStart(2, '0');
@@ -120,11 +145,29 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    // 2. 巴士 API & 到站計算 (相容 iOS 12 Safari)
+    // 2. 切換選單隱藏 / 顯示
+    function toggleConfig() {
+      var panel = document.getElementById('config-panel');
+      panel.classList.toggle('show');
+    }
+
+    // 3. 巴士 API 邏輯 (相容 iOS 12 Safari)
+    var currentCompany = 'KMB';
     var currentRoute = '';
+    var currentStopName = '';
     var timer = null;
 
+    function resetSelection() {
+      currentCompany = document.getElementById('company-select').value;
+      document.getElementById('dir-select').innerHTML = '<option value="">-- 請先輸入路線 --</option>';
+      document.getElementById('dir-select').disabled = true;
+      document.getElementById('stop-select').innerHTML = '<option value="">-- 請選擇車站 --</option>';
+      document.getElementById('stop-select').disabled = true;
+      if (timer) clearInterval(timer);
+    }
+
     function fetchDirections() {
+      currentCompany = document.getElementById('company-select').value;
       var route = document.getElementById('route-input').value.trim().toUpperCase();
       if (!route) return;
       currentRoute = route;
@@ -135,50 +178,81 @@
       stopSelect.innerHTML = '<option value="">-- 請選擇車站 --</option>';
       stopSelect.disabled = true;
 
-      fetch('https://data.etabus.gov.hk/v1/transport/kmb/route-bound/' + route)
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-          dirSelect.innerHTML = '<option value="">-- 請選擇行車方向 (終點站) --</option>';
-          if (data.data && data.data.length > 0) {
-            data.data.forEach(function(item) {
-              var opt = document.createElement('option');
-              opt.value = item.bound + '|' + item.service_type;
-              opt.innerText = '往：' + item.dest_tc;
-              dirSelect.appendChild(opt);
-            });
-            dirSelect.disabled = false;
-          } else {
-            dirSelect.innerHTML = '<option value="">找不到此路線</option>';
-          }
-        });
+      if (currentCompany === 'KMB') {
+        fetch('https://data.etabus.gov.hk/v1/transport/kmb/route-bound/' + route)
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            dirSelect.innerHTML = '<option value="">-- 請選擇行車方向 (終點站) --</option>';
+            if (data.data && data.data.length > 0) {
+              data.data.forEach(function(item) {
+                var opt = document.createElement('option');
+                opt.value = item.bound + '|' + item.service_type;
+                opt.innerText = '往：' + item.dest_tc;
+                dirSelect.appendChild(opt);
+              });
+              dirSelect.disabled = false;
+            } else {
+              dirSelect.innerHTML = '<option value="">找不到此九巴路線</option>';
+            }
+          });
+      } else {
+        fetch('https://data.etabus.gov.hk/v1/transport/citybus/route/CTB/' + route)
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            dirSelect.innerHTML = '<option value="">-- 請選擇行車方向 (終點站) --</option>';
+            if (data.data) {
+              var optOut = document.createElement('option');
+              optOut.value = 'outbound|1';
+              optOut.innerText = '往：' + data.data.dest_tc;
+              dirSelect.appendChild(optOut);
+
+              var optIn = document.createElement('option');
+              optIn.value = 'inbound|1';
+              optIn.innerText = '往：' + data.data.orig_tc;
+              dirSelect.appendChild(optIn);
+
+              dirSelect.disabled = false;
+            } else {
+              dirSelect.innerHTML = '<option value="">找不到此城巴路線</option>';
+            }
+          });
+      }
     }
 
     function fetchStops() {
       var dirVal = document.getElementById('dir-select').value;
       if (!dirVal) return;
       var parts = dirVal.split('|');
-      var bound = parts[0] === 'O' ? 'outbound' : 'inbound';
+      var bound = parts[0] === 'O' || parts[0] === 'outbound' ? 'outbound' : 'inbound';
       var serviceType = parts[1];
 
       var stopSelect = document.getElementById('stop-select');
       stopSelect.innerHTML = '<option value="">載入車站中...</option>';
 
-      fetch('https://data.etabus.gov.hk/v1/transport/kmb/route-stop/' + currentRoute + '/' + bound + '/' + serviceType)
+      var url = currentCompany === 'KMB'
+        ? 'https://data.etabus.gov.hk/v1/transport/kmb/route-stop/' + currentRoute + '/' + bound + '/' + serviceType
+        : 'https://data.etabus.gov.hk/v1/transport/citybus/route-stop/CTB/' + currentRoute + '/' + bound;
+
+      fetch(url)
         .then(function(res) { return res.json(); })
         .then(function(data) {
           stopSelect.innerHTML = '<option value="">-- 請選擇車站位置 --</option>';
           if (data.data && data.data.length > 0) {
-            var promises = data.data.slice(0, 30).map(function(stop) {
-              return fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop/' + stop.stop)
-                .then(function(r) { return r.json(); });
+            var promises = data.data.slice(0, 35).map(function(stop) {
+              var stopUrl = currentCompany === 'KMB'
+                ? 'https://data.etabus.gov.hk/v1/transport/kmb/stop/' + stop.stop
+                : 'https://data.etabus.gov.hk/v1/transport/citybus/stop/' + stop.stop;
+              return fetch(stopUrl).then(function(r) { return r.json(); });
             });
 
             Promise.all(promises).then(function(stopDetails) {
               stopDetails.forEach(function(detail, index) {
-                var opt = document.createElement('option');
-                opt.value = detail.data.stop;
-                opt.innerText = (index + 1) + '. ' + detail.data.name_tc;
-                stopSelect.appendChild(opt);
+                if (detail.data) {
+                  var opt = document.createElement('option');
+                  opt.value = detail.data.stop;
+                  opt.innerText = (index + 1) + '. ' + detail.data.name_tc;
+                  stopSelect.appendChild(opt);
+                }
               });
               stopSelect.disabled = false;
             });
@@ -186,24 +260,32 @@
         });
     }
 
-    // 取得即時 ETA 並處理 3 班車顯示
     function getETA() {
-      var stopId = document.getElementById('stop-select').value;
+      var stopSelect = document.getElementById('stop-select');
+      var stopId = stopSelect.value;
       if (!stopId) return;
 
-      // 自動每 30 秒更新一次到站時間
+      // 取得選取的站名
+      currentStopName = stopSelect.options[stopSelect.selectedIndex].text;
+
+      // 選取完成後自動收合設定選單
+      document.getElementById('config-panel').classList.remove('show');
+
       if (timer) clearInterval(timer);
       timer = setInterval(getETA, 30000);
 
-      fetch('https://data.etabus.gov.hk/v1/transport/kmb/eta/' + stopId + '/' + currentRoute + '/1')
+      var url = currentCompany === 'KMB'
+        ? 'https://data.etabus.gov.hk/v1/transport/kmb/eta/' + stopId + '/' + currentRoute + '/1'
+        : 'https://data.etabus.gov.hk/v1/transport/citybus/eta/CTB/' + stopId + '/' + currentRoute;
+
+      fetch(url)
         .then(function(res) { return res.json(); })
         .then(function(data) {
           var etaDisplay = document.getElementById('eta-result');
           
           if (data.data && data.data.length > 0) {
-            // 過濾並計算前 3 班車時間
             var validEtas = data.data
-              .filter(function(item) { return item.eta !== null; })
+              .filter(function(item) { return item.eta !== null && item.eta !== ''; })
               .slice(0, 3)
               .map(function(item) {
                 var diff = Math.round((new Date(item.eta) - new Date()) / 60000);
@@ -211,14 +293,13 @@
               });
 
             if (validEtas.length === 0) {
-              etaDisplay.innerHTML = '<div style="color:#888;">尾班車已過或暫無班次</div>';
+              etaDisplay.innerHTML = '<div class="eta-title">' + currentRoute + ' - ' + currentStopName + '</div><div style="color:#888;">尾班車已過或暫無班次</div>';
               return;
             }
 
-            // 1. 首班車 (大字體)
-            var html = '<div class="eta-first">' + validEtas[0] + '</div>';
+            var html = '<div class="eta-title">' + currentCompany + ' ' + currentRoute + ' 號線 (' + currentStopName + ')</div>';
+            html += '<div class="eta-first">' + validEtas[0] + '</div>';
 
-            // 2. 第二與第三班車 (併排小字體)
             if (validEtas.length > 1) {
               html += '<div class="eta-next">';
               if (validEtas[1]) html += '<div>下班: <span>' + validEtas[1] + '</span></div>';
@@ -228,7 +309,7 @@
 
             etaDisplay.innerHTML = html;
           } else {
-            etaDisplay.innerHTML = '<div style="color:#888;">暫無即時到站資料</div>';
+            etaDisplay.innerHTML = '<div class="eta-title">' + currentRoute + ' - ' + currentStopName + '</div><div style="color:#888;">暫無即時到站資料</div>';
           }
         });
     }
