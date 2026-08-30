@@ -1,183 +1,181 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-HK">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>分區天氣 - 可隱藏功能範例</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>交通看板 Dashboard</title>
   <style>
-    :root {
-      --bg-color: #f4f6f8;
-      --card-bg: #ffffff;
-      --text-color: #333333;
-      --border-color: #e0e0e0;
-      --primary-color: #007bff;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
+    body { background-color: #121212; color: #FFFFFF; padding: 10px; display: flex; flex-direction: column; gap: 12px; }
+    .card { background: #1E1E1E; border-radius: 12px; padding: 12px; border: 1px solid #333; }
+    
+    /* 第一欄：時間與天氣 */
+    .time-sec { text-align: center; }
+    .clock { font-size: 52px; font-weight: bold; color: #00E676; letter-spacing: 2px; }
+    .date { font-size: 16px; color: #AAA; margin-bottom: 8px; }
+    .weather-container { display: flex; justify-content: space-around; border-top: 1px solid #333; pt: 8px; margin-top: 6px; }
+    .weather-box { text-align: center; font-size: 14px; }
+    .weather-icon { font-size: 24px; display: block; }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background-color: var(--bg-color);
-      display: flex;
-      justify-content: center;
-      padding: 40px 20px;
-      margin: 0;
-    }
+    /* 第二欄：巴士即時到站 */
+    .bus-sec h3 { font-size: 16px; margin-bottom: 8px; color: #FFD54F; }
+    .config-panel { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; background: #2A2A2A; padding: 8px; border-radius: 6px; }
+    select, input, button { background: #333; color: #FFF; border: 1px solid #555; padding: 6px; border-radius: 4px; font-size: 14px; }
+    button { background: #1E88E5; border: none; font-weight: bold; cursor: pointer; }
+    .eta-display { background: #000; border-radius: 6px; padding: 10px; font-size: 18px; color: #FF9800; min-height: 50px; text-align: center; }
 
-    /* 天氣區塊外框 */
-    .weather-card {
-      width: 100%;
-      max-width: 400px;
-      background-color: var(--card-bg);
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-      border: 1px solid var(--border-color);
-      overflow: hidden;
-    }
-
-    /* 標頭 (可點擊區域) */
-    .weather-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 20px;
-      cursor: pointer;
-      user-select: none;
-      background-color: var(--card-bg);
-      transition: background-color 0.2s ease;
-    }
-
-    .weather-header:hover {
-      background-color: #f9f9f9;
-    }
-
-    .weather-title {
-      margin: 0;
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--text-color);
-    }
-
-    /* 箭頭圖示動畫 */
-    .toggle-icon {
-      width: 20px;
-      height: 20px;
-      fill: none;
-      stroke: #666;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      transition: transform 0.3s ease;
-    }
-
-    /* 折疊時箭頭旋轉 */
-    .weather-card.collapsed .toggle-icon {
-      transform: rotate(-180deg);
-    }
-
-    /* 隱藏內容區域 - 平滑高度過渡 */
-    .weather-content-wrapper {
-      display: grid;
-      grid-template-rows: 1fr;
-      transition: grid-template-rows 0.3s ease, padding 0.3s ease;
-      padding: 0 20px 16px 20px;
-      border-top: 1px solid var(--border-color);
-    }
-
-    .weather-card.collapsed .weather-content-wrapper {
-      grid-template-rows: 0fr;
-      padding-top: 0;
-      padding-bottom: 0;
-      border-top-color: transparent;
-    }
-
-    .weather-content {
-      overflow: hidden;
-    }
-
-    /* 天氣網格卡片 */
-    .district-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      margin-top: 12px;
-    }
-
-    .district-item {
-      background-color: #f0f7ff;
-      border-radius: 8px;
-      padding: 10px 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.95rem;
-    }
-
-    .district-name {
-      color: #555;
-    }
-
-    .district-temp {
-      font-weight: bold;
-      color: var(--primary-color);
-    }
+    /* 第三欄：Google Map 路況 */
+    .map-sec iframe { width: 100%; height: 260px; border: 0; border-radius: 8px; }
   </style>
 </head>
 <body>
 
-  <div class="weather-card" id="weatherCard">
-    <!-- 點擊此處切換顯示 / 隱藏 -->
-    <div class="weather-header" id="weatherHeader">
-      <h3 class="weather-title">分區天氣</h3>
-      <svg class="toggle-icon" viewBox="0 0 24 24">
-        <polyline points="6 9 12 15 18 9"></polyline>
-      </svg>
-    </div>
-
-    <!-- 展開 / 隱藏 內容區 -->
-    <div class="weather-content-wrapper">
-      <div class="weather-content">
-        <div class="district-grid">
-          <div class="district-item">
-            <span class="district-name">中西區</span>
-            <span class="district-temp">28°C</span>
-          </div>
-          <div class="district-item">
-            <span class="district-name">油尖旺</span>
-            <span class="district-temp">29°C</span>
-          </div>
-          <div class="district-item">
-            <span class="district-name">沙田</span>
-            <span class="district-temp">27°C</span>
-          </div>
-          <div class="district-item">
-            <span class="district-name">屯門</span>
-            <span class="district-temp">28°C</span>
-          </div>
-        </div>
+  <!-- 第一欄：時間與天氣 -->
+  <div class="card time-sec">
+    <div id="clock" class="clock">00:00</div>
+    <div id="date" class="date">----年--月--日</div>
+    <div class="weather-container">
+      <div class="weather-box">
+        <span>區塊 A (中環)</span>
+        <span class="weather-icon">☀️</span>
+        <span id="temp-a">28°C</span>
+      </div>
+      <div class="weather-box">
+        <span>區塊 B (沙田)</span>
+        <span class="weather-icon">⛅</span>
+        <span id="temp-b">27°C</span>
       </div>
     </div>
   </div>
 
+  <!-- 第二欄：巴士到站時間 (支援 KMB API 選單) -->
+  <div class="card bus-sec">
+    <h3>🚌 巴士即時到站設定</h3>
+    <div class="config-panel">
+      <div style="display:flex; gap:6px;">
+        <input type="text" id="route-input" placeholder="輸入路線 (如 603)" style="flex:1;">
+        <button onclick="fetchDirections()">搜尋路線</button>
+      </div>
+      
+      <!-- 動態下拉選單 -->
+      <select id="dir-select" onchange="fetchStops()" disabled>
+        <option value="">-- 請先輸入路線 --</option>
+      </select>
+
+      <select id="stop-select" onchange="getETA()" disabled>
+        <option value="">-- 請選擇車站 --</option>
+      </select>
+    </div>
+
+    <div id="eta-result" class="eta-display">請設定巴士路線與車站</div>
+  </div>
+
+  <!-- 第三欄：交通路況 (Google Maps) -->
+  <div class="card map-sec">
+    <h3 style="font-size:14px; margin-bottom:6px; color:#90CAF9;">🚗 自訂路線交通路況</h3>
+    <!-- 請替換 YOUR_API_KEY，或替換為 Embed 地圖連結 -->
+    <iframe id="map-iframe" src="https://maps.google.com/maps?q=from:Central,HongKong+to:Shatin,HongKong&output=embed"></iframe>
+  </div>
+
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const weatherCard = document.getElementById('weatherCard');
-      const weatherHeader = document.getElementById('weatherHeader');
+    // 1. 時鐘與日期功能
+    function updateClock() {
+      var now = new Date();
+      var h = String(now.getHours()).padStart(2, '0');
+      var m = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('clock').innerText = h + ':' + m;
+      document.getElementById('date').innerText = now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日';
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
 
-      // 從 localStorage 讀取儲存的狀態 (預設展開)
-      const isCollapsed = localStorage.getItem('weather_collapsed') === 'true';
+    // 2. 巴士獨立設定邏輯 (以九巴 API 為示範，舊版 ES5 相容寫法)
+    var currentRoute = '';
 
-      // 初始化狀態
-      if (isCollapsed) {
-        weatherCard.classList.add('collapsed');
-      }
+    function fetchDirections() {
+      var route = document.getElementById('route-input').value.trim().toUpperCase();
+      if (!route) return;
+      currentRoute = route;
 
-      // 點擊事件：切換狀態並寫入 localStorage
-      weatherHeader.addEventListener('click', () => {
-        weatherCard.classList.toggle('collapsed');
-        const nowCollapsed = weatherCard.classList.contains('collapsed');
-        localStorage.setItem('weather_collapsed', nowCollapsed);
-      });
-    });
+      var dirSelect = document.getElementById('dir-select');
+      var stopSelect = document.getElementById('stop-select');
+      dirSelect.innerHTML = '<option value="">載入中...</option>';
+      stopSelect.innerHTML = '<option value="">-- 請選擇車站 --</option>';
+      stopSelect.disabled = true;
+
+      // 取得路線方向
+      fetch('https://data.etabus.gov.hk/v1/transport/kmb/route-bound/' + route)
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          dirSelect.innerHTML = '<option value="">-- 請選擇行車方向 (終點站) --</option>';
+          if (data.data && data.data.length > 0) {
+            data.data.forEach(function(item) {
+              var opt = document.createElement('option');
+              opt.value = item.bound + '|' + item.service_type;
+              opt.innerText = '往：' + item.dest_tc;
+              dirSelect.appendChild(opt);
+            });
+            dirSelect.disabled = false;
+          } else {
+            dirSelect.innerHTML = '<option value="">找不到此路線</option>';
+          }
+        });
+    }
+
+    function fetchStops() {
+      var dirVal = document.getElementById('dir-select').value;
+      if (!dirVal) return;
+      var parts = dirVal.split('|');
+      var bound = parts[0] === 'O' ? 'outbound' : 'inbound';
+      var serviceType = parts[1];
+
+      var stopSelect = document.getElementById('stop-select');
+      stopSelect.innerHTML = '<option value="">載入車站中...</option>';
+
+      // 取得車站列表
+      fetch('https://data.etabus.gov.hk/v1/transport/kmb/route-stop/' + currentRoute + '/' + bound + '/' + serviceType)
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          stopSelect.innerHTML = '<option value="">-- 請選擇車站位置 --</option>';
+          if (data.data && data.data.length > 0) {
+            var promises = data.data.slice(0, 30).map(function(stop) {
+              return fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop/' + stop.stop)
+                .then(function(r) { return r.json(); });
+            });
+
+            Promise.all(promises).then(function(stopDetails) {
+              stopDetails.forEach(function(detail, index) {
+                var opt = document.createElement('option');
+                opt.value = detail.data.stop;
+                opt.innerText = (index + 1) + '. ' + detail.data.name_tc;
+                stopSelect.appendChild(opt);
+              });
+              stopSelect.disabled = false;
+            });
+          }
+        });
+    }
+
+    function getETA() {
+      var stopId = document.getElementById('stop-select').value;
+      if (!stopId) return;
+
+      fetch('https://data.etabus.gov.hk/v1/transport/kmb/eta/' + stopId + '/' + currentRoute + '/1')
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          var etaResult = document.getElementById('eta-result');
+          if (data.data && data.data.length > 0) {
+            var times = data.data.slice(0, 2).map(function(eta) {
+              if (!eta.eta) return '尾班車已過';
+              var diff = Math.round((new Date(eta.eta) - new Date()) / 60000);
+              return diff <= 0 ? '即將到站' : diff + ' 分鐘';
+            });
+            etaResult.innerText = currentRoute + ' 號線：' + times.join(' / ');
+          } else {
+            etaResult.innerText = '暫無即時到站資料';
+          }
+        });
+    }
   </script>
-
 </body>
 </html>
