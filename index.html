@@ -25,7 +25,7 @@
 
     /* 單條巴士路線卡片 */
     .bus-item { background: #262626; border-radius: 8px; border: 1px solid #444; padding: 10px; display: none; }
-    .bus-item.active { display: block; } /* 僅顯示已開啟的卡片 */
+    .bus-item.active { display: block; }
     
     .bus-item-header { display: flex; justify-content: space-between; align-items: center; }
     .bus-item-title { font-size: 14px; font-weight: bold; color: #90CAF9; }
@@ -76,9 +76,7 @@
       <h3>🚌 巴士即時到站</h3>
       <button class="add-btn" onclick="addNewCard()">➕ 新增路線</button>
     </div>
-    <div id="bus-list" class="bus-list">
-      <!-- JS 動態生成 10 個欄位 -->
-    </div>
+    <div id="bus-list" class="bus-list"></div>
   </div>
 
   <!-- 第三欄：交通路況 (Google Maps) -->
@@ -99,13 +97,11 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    // 儲存 10 個卡片狀態
     var busConfigs = [];
     for (var i = 0; i < 10; i++) {
-      busConfigs.push({ id: i, active: false, company: 'KMB', route: '', bound: '', serviceType: '', stopId: '', stopName: '' });
+      busConfigs.push({ id: i, active: false, company: 'KMB', ctbCo: 'CTB', route: '', bound: '', serviceType: '', stopId: '', stopName: '' });
     }
 
-    // 初始化建構 10 個欄位
     function initBusCards() {
       var container = document.getElementById('bus-list');
       var html = '';
@@ -148,25 +144,21 @@
     }
     initBusCards();
 
-    // 點擊「➕ 新增路線」時，自動顯示第一個未被使用的卡片
     function addNewCard() {
       for (var i = 0; i < 10; i++) {
         if (!busConfigs[i].active) {
           busConfigs[i].active = true;
-          var item = document.getElementById('bus-item-' + i);
-          item.classList.add('active');
+          document.getElementById('bus-item-' + i).classList.add('active');
           document.getElementById('config-' + i).classList.add('show');
           break;
         }
       }
     }
 
-    // 刪除 / 隱藏卡片
     function deleteCard(idx) {
       busConfigs[idx].active = false;
       busConfigs[idx].stopId = '';
-      var item = document.getElementById('bus-item-' + idx);
-      item.classList.remove('active');
+      document.getElementById('bus-item-' + idx).classList.remove('active');
       document.getElementById('config-' + idx).classList.remove('show');
     }
 
@@ -174,7 +166,7 @@
       document.getElementById('config-' + idx).classList.toggle('show');
     }
 
-    // 修正版：搜尋方向 (極量化精準 API 相容城巴 E21A 及九巴/龍運)
+    // 突破城巴 API 限制：CTB / NWFB 雙向自動相容搜尋
     function fetchDirections(idx) {
       var company = document.getElementById('company-' + idx).value;
       var route = document.getElementById('route-input-' + idx).value.trim().toUpperCase();
@@ -185,7 +177,7 @@
 
       var dirSelect = document.getElementById('dir-' + idx);
       var stopSelect = document.getElementById('stop-' + idx);
-      dirSelect.innerHTML = '<option value="">載入中...</option>';
+      dirSelect.innerHTML = '<option value="">搜尋中...</option>';
       stopSelect.innerHTML = '<option value="">-- 請選擇車站 --</option>';
       stopSelect.disabled = true;
 
@@ -206,38 +198,45 @@
                 });
                 dirSelect.disabled = false;
               } else {
-                dirSelect.innerHTML = '<option value="">找不到此九巴/龍運路線</option>';
+                dirSelect.innerHTML = '<option value="">找不到九巴/龍運路線 ' + route + '</option>';
               }
             }
-          })
-          .catch(function() {
-            dirSelect.innerHTML = '<option value="">連線失敗，請重試</option>';
           });
       } else {
-        // 城巴 (CTB) 單一路線精準查詢 - 秒速載入不打結
-        fetch('https://data.etabus.gov.hk/v1/transport/citybus/route/CTB/' + route)
-          .then(function(res) { return res.json(); })
-          .then(function(data) {
-            dirSelect.innerHTML = '<option value="">-- 請選擇行車方向 (終點站) --</option>';
-            if (data.data && data.data.dest_tc) {
-              var optOut = document.createElement('option');
-              optOut.value = 'outbound|1';
-              optOut.innerText = '往：' + data.data.dest_tc;
-              dirSelect.appendChild(optOut);
+        // 並行查詢 CTB 與 NWFB 資料庫，確保 E21A 等特殊路線 100% 查得到
+        var p1 = fetch('https://data.etabus.gov.hk/v1/transport/citybus/route/CTB/' + route).then(function(r){ return r.json(); }).catch(function(){ return {}; });
+        var p2 = fetch('https://data.etabus.gov.hk/v1/transport/citybus/route/NWFB/' + route).then(function(r){ return r.json(); }).catch(function(){ return {}; });
 
-              var optIn = document.createElement('option');
-              optIn.value = 'inbound|1';
-              optIn.innerText = '往：' + data.data.orig_tc;
-              dirSelect.appendChild(optIn);
+        Promise.all([p1, p2]).then(function(results) {
+          var resCTB = results[0];
+          var resNWFB = results[1];
+          var routeData = null;
 
-              dirSelect.disabled = false;
-            } else {
-              dirSelect.innerHTML = '<option value="">找不到城巴路線 ' + route + '</option>';
-            }
-          })
-          .catch(function() {
-            dirSelect.innerHTML = '<option value="">城巴 API 連線失敗</option>';
-          });
+          if (resCTB && resCTB.data && resCTB.data.dest_tc) {
+            routeData = resCTB.data;
+            busConfigs[idx].ctbCo = 'CTB';
+          } else if (resNWFB && resNWFB.data && resNWFB.data.dest_tc) {
+            routeData = resNWFB.data;
+            busConfigs[idx].ctbCo = 'NWFB';
+          }
+
+          dirSelect.innerHTML = '<option value="">-- 請選擇行車方向 (終點站) --</option>';
+          if (routeData) {
+            var optOut = document.createElement('option');
+            optOut.value = 'outbound|1';
+            optOut.innerText = '往：' + routeData.dest_tc;
+            dirSelect.appendChild(optOut);
+
+            var optIn = document.createElement('option');
+            optIn.value = 'inbound|1';
+            optIn.innerText = '往：' + routeData.orig_tc;
+            dirSelect.appendChild(optIn);
+
+            dirSelect.disabled = false;
+          } else {
+            dirSelect.innerHTML = '<option value="">找不到城巴路線 ' + route + '</option>';
+          }
+        });
       }
     }
 
@@ -254,7 +253,7 @@
 
       var url = busConfigs[idx].company === 'KMB'
         ? 'https://data.etabus.gov.hk/v1/transport/kmb/route-stop/' + busConfigs[idx].route + '/' + busConfigs[idx].bound + '/' + busConfigs[idx].serviceType
-        : 'https://data.etabus.gov.hk/v1/transport/citybus/route-stop/CTB/' + busConfigs[idx].route + '/' + busConfigs[idx].bound;
+        : 'https://data.etabus.gov.hk/v1/transport/citybus/route-stop/' + busConfigs[idx].ctbCo + '/' + busConfigs[idx].route + '/' + busConfigs[idx].bound;
 
       fetch(url)
         .then(function(res) { return res.json(); })
@@ -283,7 +282,7 @@
         });
     }
 
-    // 儲存並獲取 ETA
+    // 儲存並取得 ETA
     function saveAndGetETA(idx) {
       var stopSelect = document.getElementById('stop-' + idx);
       if (!stopSelect.value) return;
@@ -291,23 +290,20 @@
       busConfigs[idx].stopId = stopSelect.value;
       busConfigs[idx].stopName = stopSelect.options[stopSelect.selectedIndex].text;
 
-      // 更新卡片標題
       document.getElementById('title-' + idx).innerText = busConfigs[idx].company + ' ' + busConfigs[idx].route + ' (' + busConfigs[idx].stopName + ')';
-      
-      // 收合設定面板
       document.getElementById('config-' + idx).classList.remove('show');
 
       fetchETAForIndex(idx);
     }
 
-    // 定期抓取 ETA
+    // 取得即時到站時間
     function fetchETAForIndex(idx) {
       var cfg = busConfigs[idx];
       if (!cfg.stopId || !cfg.active) return;
 
       var url = cfg.company === 'KMB'
         ? 'https://data.etabus.gov.hk/v1/transport/kmb/eta/' + cfg.stopId + '/' + cfg.route + '/' + cfg.serviceType
-        : 'https://data.etabus.gov.hk/v1/transport/citybus/eta/CTB/' + cfg.stopId + '/' + cfg.route;
+        : 'https://data.etabus.gov.hk/v1/transport/citybus/eta/' + cfg.ctbCo + '/' + cfg.stopId + '/' + cfg.route;
 
       fetch(url)
         .then(function(res) { return res.json(); })
@@ -341,7 +337,7 @@
         });
     }
 
-    // 全局每 30 秒自動刷新
+    // 自動每 30 秒更新 ETA
     setInterval(function() {
       for (var i = 0; i < 10; i++) {
         if (busConfigs[i].active && busConfigs[i].stopId) {
