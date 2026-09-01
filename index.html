@@ -116,7 +116,6 @@
 
         .bus-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1; padding-right: 4px; }
         .bus-item {
-            background: #334155;
             border-radius: 12px;
             padding: 12px;
             display: flex;
@@ -125,23 +124,47 @@
             width: 100%;
         }
         
-        .bus-item.item-kmb { background: #b91c1c; color: #ffffff; }
-        .bus-item.item-lwb { background: #c2410c; color: #ffffff; }
-        .bus-item.item-ctb { background: #eab308; color: #000000; }
-        .bus-item.item-nlb { background: #15803d; color: #ffffff; }
+        /* 九巴 (KMB): 經典深紅色背景 + 亮紅邊框 */
+        .bus-item.item-kmb { 
+            background: #991b1b; 
+            color: #ffffff; 
+            border: 2px solid #ef4444; 
+        }
+        
+        /* 龍運 (LWB): 經典亮橘黃色背景 + 深灰黑文字與亮黃邊框 (顯著拉開色彩差異) */
+        .bus-item.item-lwb { 
+            background: #ea580c; 
+            color: #ffffff; 
+            border: 2px solid #fb923c; 
+        }
+
+        /* 城巴 (CTB) */
+        .bus-item.item-ctb { 
+            background: #ca8a04; 
+            color: #000000; 
+            border: 2px solid #facc15; 
+        }
+
+        /* 嶼巴 (NLB) */
+        .bus-item.item-nlb { 
+            background: #15803d; 
+            color: #ffffff; 
+            border: 2px solid #4ade80; 
+        }
 
         .bus-header { display: flex; justify-content: space-between; align-items: baseline; }
         .bus-title-group { display: flex; align-items: center; gap: 8px; }
+        
         .bus-company-tag {
             font-size: 0.75rem;
             padding: 2px 6px;
             border-radius: 4px;
             font-weight: bold;
         }
-        .tag-kmb { background: #7f1d1d; color: #ffffff; }
-        .tag-lwb { background: #7c2d12; color: #ffedd5; }
-        .tag-ctb { background: #713f12; color: #ffffff; }
-        .tag-nlb { background: #166534; color: #bbf7d0; }
+        .tag-kmb { background: #450a0a; color: #fca5a5; border: 1px solid #991b1b; }
+        .tag-lwb { background: #431407; color: #ffedd5; border: 1px solid #c2410c; }
+        .tag-ctb { background: #422006; color: #fef08a; border: 1px solid #ca8a04; }
+        .tag-nlb { background: #052e16; color: #bbf7d0; border: 1px solid #166534; }
 
         .bus-name { font-size: 3.5rem; font-weight: 700; letter-spacing: 2px; line-height: 1; }
         .item-kmb .bus-name, .item-lwb .bus-name, .item-nlb .bus-name { color: #ffffff; }
@@ -303,7 +326,7 @@
             </div>
             <div class="hint-text">
                 💡 <b>使用說明</b>：<br>
-                1. 現在已支援獨立選擇 **九巴 (KMB)** 或 **龍運 (LWB)**。<br>
+                1. 九巴與龍運已改採用高對比度色系，更容易快速識別。<br>
                 2. 輸入「路線」後，「行車方向」選單將自動載入該路線終點站名稱。<br>
                 3. 選擇方向與車站後，系統會自動儲存設定。
             </div>
@@ -379,9 +402,8 @@
         setInterval(fetchWeatherWarnings, 60000);
 
         const defaultBuses = [
-            { company: "lwb", route: "E36A", dir: "inbound", stop: "TC188", origin_name: "東涌", dest_name: "往 元朗", offset: 0 },
-            { company: "ctb", route: "E33", dir: "outbound", stop: "001854", origin_name: "屯門", dest_name: "往 機場/東涌", offset: 0 },
-            { company: "nlb", route: "23", dir: "outbound", stop: "昂坪", origin_name: "東涌", dest_name: "往 昂坪", offset: 0 }
+            { company: "kmb", route: "67M", dir: "outbound", stop: "TM286", origin_name: "富泰邨", dest_name: "往 葵芳站", offset: 0 },
+            { company: "lwb", route: "E36A", dir: "inbound", stop: "TC188", origin_name: "逸東邨雍逸樓", dest_name: "往 元朗(德業街)", offset: 0 }
         ];
 
         let currentBuses = [];
