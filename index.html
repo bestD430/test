@@ -303,7 +303,7 @@
             </div>
             <div class="hint-text">
                 💡 <b>使用說明</b>：<br>
-                1. 可分開選擇 **九巴 (KMB)** 或 **龍運 (LWB)**。<br>
+                1. 現在已支援獨立選擇 **九巴 (KMB)** 或 **龍運 (LWB)**。<br>
                 2. 輸入「路線」後，「行車方向」選單將自動載入該路線終點站名稱。<br>
                 3. 選擇方向與車站後，系統會自動儲存設定。
             </div>
@@ -388,7 +388,7 @@
         let cachedRawEtas = {};
 
         function loadBusConfigs() {
-            const saved = localStorage.getItem('user_bus_configs_v8');
+            const saved = localStorage.getItem('user_bus_configs_v9');
             if (saved) {
                 try { currentBuses = JSON.parse(saved); } catch(e) { currentBuses = defaultBuses; }
             } else {
@@ -851,7 +851,7 @@
             });
 
             currentBuses = newConfigs;
-            localStorage.setItem('user_bus_configs_v8', JSON.stringify(currentBuses));
+            localStorage.setItem('user_bus_configs_v9', JSON.stringify(currentBuses));
             closeSettings();
             fetchBusData();
         }
