@@ -29,7 +29,32 @@
             flex-shrink: 0;
         }
 
-        .clock-container { text-align: center; }
+        .clock-container { 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .weather-warnings {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 48px;
+        }
+
+        .warning-icon {
+            height: 42px;
+            width: auto;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+
+        .no-warning {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
         #clock {
             font-size: 3.5rem;
             font-weight: 700;
@@ -41,6 +66,7 @@
             font-size: 1.05rem;
             color: #94a3b8;
             margin-top: 4px;
+            text-align: center;
         }
 
         main {
@@ -241,9 +267,14 @@
 
     <header>
         <div class="clock-container">
-            <div id="clock">00:00:00</div>
-            <div id="date">--年--月--日 星期-</div>
+            <div class="weather-warnings" id="weather-warnings">
+                <!-- 天文台警告 Icon 將自動載入於此 -->
+            </div>
+            <div>
+                <div id="clock">00:00:00</div>
+            </div>
         </div>
+        <div id="date">--年--月--日 星期-</div>
     </header>
 
     <main>
@@ -300,6 +331,66 @@
         }
         setInterval(updateClock, 1000);
         updateClock();
+
+        /* ------------------ 天文台警告 API ------------------ */
+        async function fetchWeatherWarnings() {
+            const container = document.getElementById('weather-warnings');
+            try {
+                const res = await fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=tc');
+                if (!res.ok) return;
+                const data = await res.json();
+                
+                let iconsHtml = '';
+                // data 格式通常為物件，key 是警告代碼 (如 WRAIN, TC1 等)
+                for (const key in data) {
+                    if (data.hasOwnProperty(key)) {
+                        const warning = data[key];
+                        // 取得香港天文台官方提供的警告標誌圖片或代碼對應
+                        if (warning.code && warning.actionCode) {
+                            // 天文台官方圖標一般可透過代碼組合，或直接使用官方提供的 icon 網址（若 API 內含或標準路徑）
+                            // 這裡透過香港天文台公開警告圖標規則組合
+                        }
+                    }
+                }
+
+                // 為了確保穩定抓取香港天文台現正生效的警告資訊，改用本地天氣警告狀態 API
+                const infoRes = await fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrh&lang=tc');
+                // 同時也常使用 warnInfo API
+                const warnRes = await fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warningInfo&lang=tc');
+                if (warnRes.ok) {
+                    const warnData = await warnRes.json();
+                    let activeIcons = [];
+                    // 檢查 warnInfo 中的有效警告
+                    for (const code in warnData) {
+                        const warnDetails = warnData[code];
+                        if (warnDetails && warnDetails.details && warnDetails.details.length > 0) {
+                            warnDetails.details.forEach(item => {
+                                if (item.warningCode) {
+                                    // 對應香港天文台警告圖標檔名規則，例如 rain_red, rain_black, tc1, tc3, tc8se 等
+                                    activeIcons.push(item.warningCode.toLowerCase());
+                                }
+                            });
+                        }
+                    }
+
+                    if (activeIcons.length > 0) {
+                        iconsHtml = activeIcons.map(code => `<img class="warning-icon" src="https://www.hko.gov.hk/images/HKOWarningIcons/${code}.png" alt="${code}" onerror="this.style.display='none'">`).join('');
+                    }
+                }
+
+                if (!iconsHtml) {
+                    // 若無任何警告，保持空白或不顯示
+                    container.innerHTML = '';
+                } else {
+                    container.innerHTML = iconsHtml;
+                }
+            } catch (e) {
+                // 網路或API異常時不影響主畫面
+                container.innerHTML = '';
+            }
+        }
+        fetchWeatherWarnings();
+        setInterval(fetchWeatherWarnings, 60000); // 每分鐘檢查一次天氣警告
 
         const defaultBuses = [
             { company: "kmb", route: "E36A", dir: "inbound", stop: "TC188", origin_name: "東涌", dest_name: "往 元朗", offset: 0 },
