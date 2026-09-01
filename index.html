@@ -300,7 +300,7 @@
                 <button class="modal-close" onclick="closeSettings()">&times;</button>
             </div>
             <div class="hint-text">
-                💡 已修復嶼巴路線及車站名稱選單問題。
+                💡 已修復風球信號顯示問題。
             </div>
             <div class="config-list" id="config-list"></div>
             <div class="modal-footer">
@@ -365,10 +365,23 @@
                             else if (key === "WRAINR") badges.push('<span class="warning-badge badge-red-rain">🌧️ 紅雨</span>');
                             else if (key === "WRAINB") badges.push('<span class="warning-badge badge-black-rain">🌧️ 黑雨</span>');
                             else if (key.startsWith("WTCSGN")) {
-                                const tcNum = key.replace("WTCSGN", "");
-                                badges.push(`<span class="warning-badge badge-tc">🌀 ${tcNum}號風球</span>`);
+                                const code = key.replace("WTCSGN", "");
+                                let tcText = "";
+                                if (code === "L") tcText = "1號戒備";
+                                else if (code === "M") tcText = "3號強風";
+                                else if (code === "8NE") tcText = "8號東北";
+                                else if (code === "8SE") tcText = "8號東南";
+                                else if (code === "8NW") tcText = "8號西北";
+                                else if (code === "8SW") tcText = "8號西南";
+                                else if (code === "9") tcText = "9號烈風";
+                                else if (code === "10") tcText = "10號颶風";
+                                else tcText = `${code}號風球`;
+
+                                badges.push(`<span class="warning-badge badge-tc">🌀 ${tcText}</span>`);
                             } else if (key === "WTS") {
                                 badges.push('<span class="warning-badge badge-ts">⛈️ 雷暴</span>');
+                            } else if (key === "SMS") {
+                                badges.push('<span class="warning-badge badge-tc">💨 強烈季候風</span>');
                             }
                         }
                     }
