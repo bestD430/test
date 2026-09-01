@@ -24,7 +24,7 @@
             padding-bottom: 10px;
             border-bottom: 1px solid #334155;
             margin-bottom: 12px;
-            gap: 8px;
+            gap: 6px;
             flex-shrink: 0;
         }
 
@@ -32,21 +32,72 @@
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+
+        #clock {
+            font-size: 3.5rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #38bdf8;
+            line-height: 1;
+        }
+        #date {
+            font-size: 1.05rem;
+            color: #94a3b8;
+            margin-top: 2px;
+            text-align: center;
+        }
+
+        /* 日期下方的天氣整合區域 */
+        .weather-sub-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             gap: 12px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        .weather-info-box {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #1e293b;
+            padding: 3px 10px;
+            border-radius: 20px;
+            border: 1px solid #334155;
+        }
+
+        .weather-icon {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+        }
+
+        .weather-emoji {
+            font-size: 1.2rem;
+            line-height: 1;
+        }
+
+        .weather-temp {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #38bdf8;
         }
 
         .weather-warnings {
             display: flex;
             align-items: center;
             gap: 6px;
+            flex-wrap: wrap;
         }
 
         .warning-badge {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 4px 8px;
-            border-radius: 8px;
+            padding: 3px 10px;
+            border-radius: 20px;
             font-size: 0.85rem;
             font-weight: bold;
             color: #ffffff;
@@ -61,26 +112,12 @@
         .badge-tc { background: #ea580c; color: #fff; }
         .badge-ts { background: #7c3aed; color: #fff; }
 
-        #clock {
-            font-size: 3.2rem;
-            font-weight: 700;
-            letter-spacing: 2px;
-            color: #38bdf8;
-            line-height: 1;
-        }
-        #date {
-            font-size: 1.05rem;
-            color: #94a3b8;
-            margin-top: 4px;
-            text-align: center;
-        }
-
         main {
             display: flex;
             flex: 1;
             flex-direction: column;
             gap: 16px;
-            height: calc(100% - 110px);
+            height: calc(100% - 130px);
             overflow: hidden;
         }
 
@@ -272,14 +309,21 @@
 
     <header>
         <div class="clock-container">
-            <div class="weather-warnings" id="weather-warnings">
-                <span class="warning-badge badge-none">☀️ 晴朗</span>
-            </div>
-            <div>
-                <div id="clock">00:00:00</div>
-            </div>
+            <div id="clock">00:00:00</div>
         </div>
         <div id="date">--年--月--日 星期-</div>
+        
+        <!-- 天氣資訊（本地圖片 + Fallback 備用 Emoji） -->
+        <div class="weather-sub-bar">
+            <div class="weather-info-box" id="weather-info-box" style="display: none;">
+                <img id="weather-icon" class="weather-icon" src="" alt="weather icon" />
+                <span id="weather-emoji-fallback" class="weather-emoji" style="display: none;">🌤️</span>
+                <span id="weather-temp" class="weather-temp">--°C</span>
+            </div>
+            <div class="weather-warnings" id="weather-warnings">
+                <span class="warning-badge badge-none">☀️ 天氣良好</span>
+            </div>
+        </div>
     </header>
 
     <main>
@@ -300,7 +344,7 @@
                 <button class="modal-close" onclick="closeSettings()">&times;</button>
             </div>
             <div class="hint-text">
-                💡 已修復風球信號顯示問題。
+                💡 天氣 Icon 讀取自本地 `weather-icons/` 資料夾。
             </div>
             <div class="config-list" id="config-list"></div>
             <div class="modal-footer">
@@ -348,9 +392,41 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        async function fetchWeatherWarnings() {
+        async function fetchWeatherData() {
             const container = document.getElementById('weather-warnings');
+            const weatherBox = document.getElementById('weather-info-box');
+            const weatherIcon = document.getElementById('weather-icon');
+            const emojiFallback = document.getElementById('weather-emoji-fallback');
+            const weatherTemp = document.getElementById('weather-temp');
+
             try {
+                // 1. 抓取氣溫及天氣 Icon 編號 (rhrread API)
+                const rhrRes = await fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=tc');
+                if (rhrRes.ok) {
+                    const rhrData = await rhrRes.json();
+                    if (rhrData.icon && rhrData.icon.length > 0) {
+                        const iconId = rhrData.icon[0];
+                        
+                        // 設為本地路徑：weather-icons/picXX.png
+                        weatherIcon.style.display = 'block';
+                        emojiFallback.style.display = 'none';
+                        weatherIcon.src = `weather-icons/pic${iconId}.png`;
+
+                        // 圖片找不到時自動轉用 Emoji 備用
+                        weatherIcon.onerror = function() {
+                            this.style.display = 'none';
+                            emojiFallback.style.display = 'inline';
+                        };
+
+                        weatherBox.style.display = 'flex';
+                    }
+                    if (rhrData.temperature && rhrData.temperature.data && rhrData.temperature.data.length > 0) {
+                        const hkoTemp = rhrData.temperature.data.find(t => t.place === "香港天文台") || rhrData.temperature.data[0];
+                        weatherTemp.innerText = `${hkoTemp.value}°C`;
+                    }
+                }
+
+                // 2. 抓取警告信號摘要 (warnsum API)
                 const res = await fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=tc');
                 if (!res.ok) return;
                 const data = await res.json();
@@ -396,8 +472,8 @@
                 container.innerHTML = '<span class="warning-badge badge-none">☀️ 天氣良好</span>';
             }
         }
-        fetchWeatherWarnings();
-        setInterval(fetchWeatherWarnings, 60000);
+        fetchWeatherData();
+        setInterval(fetchWeatherData, 60000);
 
         const defaultBuses = [
             { company: "lwb", route: "E36A", dir: "inbound", stop: "TC188", origin_name: "東涌", dest_name: "往 元朗", offset: 0 },
