@@ -26,6 +26,7 @@
             border-bottom: 1px solid #334155;
             margin-bottom: 12px;
             gap: 8px;
+            flex-shrink: 0;
         }
 
         .clock-container { text-align: center; }
@@ -45,18 +46,10 @@
         main {
             display: flex;
             flex: 1;
+            flex-direction: column;
             gap: 16px;
             height: calc(100% - 110px);
-        }
-
-        .left-panel {
-            flex: 1.2;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            overflow-y: auto;
-            justify-content: center;
-            align-items: center;
+            overflow: hidden;
         }
 
         .bus-panel {
@@ -66,15 +59,17 @@
             padding: 14px;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
         .panel-title {
             font-size: 1rem;
             font-weight: bold;
-            margin-bottom: 4px;
+            margin-bottom: 8px;
             color: #f59e0b;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-shrink: 0;
         }
         .settings-btn {
             background: #334155;
@@ -87,7 +82,7 @@
         }
         .settings-btn:active { background: #475569; }
 
-        .bus-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+        .bus-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1; padding-right: 4px; }
         .bus-item {
             background: #334155;
             border-radius: 12px;
@@ -95,6 +90,7 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
+            width: 100%;
         }
         
         .bus-item.item-kmb { background: #b91c1c; color: #ffffff; }
@@ -239,7 +235,6 @@
         .action-btn { background: #0284c7; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .add-btn { background: #166534; color: #86efac; }
         .hint-text { font-size: 0.75rem; color: #94a3b8; }
-        .menu-label { font-size: 0.75rem; color: #94a3b8; margin-bottom: -2px; }
     </style>
 </head>
 <body>
@@ -252,10 +247,6 @@
     </header>
 
     <main>
-        <div class="left-panel">
-            <div style="color: #64748b; font-size: 0.9rem; text-align: center;">已取消路況及天氣顯示欄</div>
-        </div>
-
         <section class="bus-panel">
             <div class="panel-title">
                 <span>🚌 巴士到站預計時間</span>
