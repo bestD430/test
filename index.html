@@ -10,34 +10,37 @@
             background-color: #0f172a;
             color: #f8fafc;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            width: 100vw;
             height: 100vh;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             padding: 16px;
             overflow: hidden;
+            writing-mode: vertical-rl;
         }
 
-        /* 頂部區域 */
+        /* 頂部區域（直式下改為右側側邊欄或頂部欄，此處適應直式佈局為縱向排列） */
         header {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #334155;
-            margin-bottom: 12px;
-            gap: 8px;
+            padding-right: 12px;
+            border-right: 1px solid #334155;
+            margin-right: 12px;
+            gap: 12px;
+            writing-mode: vertical-rl;
         }
 
         /* 政府停課特別消息顯示欄 */
         .school-closure-box {
             display: none;
-            width: 100%;
-            max-width: 800px;
+            height: 100%;
+            max-height: 800px;
             background: rgba(225, 29, 72, 0.2);
             border: 2px solid #f43f5e;
             border-radius: 10px;
-            padding: 8px 14px;
-            flex-direction: column;
+            padding: 14px 8px;
+            flex-direction: row;
             gap: 4px;
             box-shadow: 0 0 14px rgba(244, 63, 94, 0.3);
             animation: pulse-red 2s infinite;
@@ -55,20 +58,20 @@
             font-size: 0.85rem;
             color: #ffe4e6;
             line-height: 1.4;
-            max-height: 80px;
-            overflow-y: auto;
+            max-width: 120px;
+            overflow-x: auto;
         }
 
         /* 天氣警報顯示欄 */
         .weather-warning-box {
             display: none;
-            width: 100%;
-            max-width: 800px;
+            height: 100%;
+            max-height: 800px;
             background: rgba(225, 29, 72, 0.15);
             border: 1px solid #f43f5e;
             border-radius: 10px;
-            padding: 8px 12px;
-            flex-direction: column;
+            padding: 12px 8px;
+            flex-direction: row;
             gap: 6px;
         }
         .weather-warning-box.active { display: flex; }
@@ -89,52 +92,44 @@
             background: #9f1239;
             color: #fff;
             font-size: 0.75rem;
-            padding: 3px 8px;
+            padding: 8px 3px;
             border-radius: 6px;
             font-weight: 600;
         }
 
         .clock-container { text-align: center; }
         #clock {
-            font-size: 3.5rem;
+            font-size: 3rem;
             font-weight: 700;
             letter-spacing: 2px;
             color: #38bdf8;
             line-height: 1;
+            writing-mode: horizontal-tb;
         }
         #date {
             font-size: 1.05rem;
             color: #94a3b8;
             margin-top: 4px;
+            writing-mode: horizontal-tb;
         }
 
         main {
             display: flex;
             flex: 1;
             gap: 16px;
-            height: calc(100% - 110px);
-            overflow: hidden;
+            width: calc(100% - 110px);
+            writing-mode: vertical-rl;
         }
 
         .left-panel {
             flex: 1.2;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             gap: 12px;
-            overflow-y: auto;
-            height: 100%;
+            overflow-x: auto;
         }
 
-        .right-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            overflow-y: auto;
-            height: 100%;
-        }
-
-        .weather-grid { display: flex; gap: 10px; flex: 0 0 auto; min-height: 190px; }
+        .weather-grid { display: flex; gap: 10px; flex: 0 0 auto; min-width: 190px; flex-direction: row; }
         .district-box {
             flex: 1;
             background: #1e293b;
@@ -153,6 +148,7 @@
             margin-bottom: 8px;
             border-bottom: 1px dashed #475569;
             padding-bottom: 6px;
+            flex-direction: column;
         }
         .district-title {
             font-size: 1rem;
@@ -175,7 +171,7 @@
         .weather-settings-menu {
             display: none;
             position: absolute;
-            top: 40px; left: 10px; right: 10px;
+            top: 10px; bottom: 10px; right: 40px;
             background: #0f172a;
             border: 1px solid #475569;
             border-radius: 8px;
@@ -195,7 +191,7 @@
             border-radius: 6px;
             font-size: 0.85rem;
             outline: none;
-            width: 100%;
+            height: 100%;
         }
         .menu-save-btn {
             background: #0284c7;
@@ -212,8 +208,8 @@
         .day-weather { margin-bottom: 4px; }
         .day-weather:last-child { margin-bottom: 0; }
         .day-label { font-size: 0.8rem; color: #94a3b8; }
-        .temp-row { display: flex; justify-content: space-between; align-items: center; margin: 2px 0; }
-        .temp-val { font-size: 1.2rem; font-weight: bold; }
+        .temp-row { display: flex; justify-content: space-between; align-items: center; margin: 2px 0; flex-direction: column; }
+        .temp-val { font-size: 1.2rem; font-weight: bold; writing-mode: horizontal-tb; }
         .weather-icon { width: 38px; height: 38px; object-fit: contain; }
         .weather-desc { font-size: 0.8rem; color: #cbd5e1; line-height: 1.2; }
 
@@ -225,8 +221,6 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            flex: 1;
-            min-height: 280px;
         }
         .traffic-header-actions { display: flex; gap: 6px; align-items: center; }
         .route-display-header {
@@ -251,6 +245,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-direction: column;
         }
         .traffic-status-title {
             font-size: 0.85rem;
@@ -263,6 +258,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-direction: column;
         }
         .status-dot {
             width: 12px;
@@ -285,12 +281,12 @@
 
         .map-container {
             flex: 1;
-            width: 100%;
+            height: 100%;
             border-radius: 10px;
             overflow: hidden;
             border: 1px solid #475569;
             background: #0f172a;
-            min-height: 150px;
+            min-width: 200px;
         }
         .map-container.hidden { display: none !important; }
         .map-iframe { width: 100%; height: 100%; border: 0; }
@@ -302,13 +298,12 @@
         }
 
         .bus-panel {
+            flex: 1;
             background: #1e293b;
             border-radius: 16px;
             padding: 14px;
             display: flex;
             flex-direction: column;
-            flex: 1.5;
-            min-height: 300px;
         }
         .panel-title {
             font-size: 1rem;
@@ -318,6 +313,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            writing-mode: horizontal-tb;
         }
         .settings-btn {
             background: #334155;
@@ -330,7 +326,7 @@
         }
         .settings-btn:active { background: #475569; }
 
-        .bus-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1; }
+        .bus-list { display: flex; flex-direction: row; gap: 10px; overflow-x: auto; }
         .bus-item {
             background: #334155;
             border-radius: 12px;
@@ -344,8 +340,8 @@
         .bus-item.item-ctb { background: #eab308; color: #000000; }
         .bus-item.item-nlb { background: #15803d; color: #ffffff; }
 
-        .bus-header { display: flex; justify-content: space-between; align-items: baseline; }
-        .bus-title-group { display: flex; align-items: center; gap: 8px; }
+        .bus-header { display: flex; justify-content: space-between; align-items: baseline; flex-direction: column; }
+        .bus-title-group { display: flex; align-items: center; gap: 8px; flex-direction: column; }
         .bus-company-tag {
             font-size: 0.75rem;
             padding: 2px 6px;
@@ -356,7 +352,7 @@
         .tag-ctb { background: #713f12; color: #ffffff; }
         .tag-nlb { background: #166534; color: #bbf7d0; }
 
-        .bus-name { font-size: 1.8rem; font-weight: 800; letter-spacing: 1px; line-height: 1; }
+        .bus-name { font-size: 1.8rem; font-weight: 800; letter-spacing: 1px; line-height: 1; writing-mode: horizontal-tb; }
         .item-kmb .bus-name { color: #ffffff; }
         .item-ctb .bus-name { color: #000000; }
         .item-nlb .bus-name { color: #ffffff; }
@@ -369,6 +365,7 @@
             align-items: baseline;
             justify-content: flex-end;
             gap: 4px;
+            flex-direction: column;
         }
         .bus-origin-text { font-size: 1.15rem; font-weight: 800; }
         .bus-dest-text { font-size: 0.85rem; font-weight: 500; opacity: 0.9; }
@@ -377,7 +374,7 @@
         .item-ctb .bus-dest { color: #1e293b; }
         .item-nlb .bus-dest { color: #dcfce7; }
 
-        .eta-group { display: flex; gap: 8px; align-items: center; }
+        .eta-group { display: flex; gap: 8px; align-items: center; flex-direction: column; }
         .eta-badge {
             flex: 1;
             background: #0f172a;
@@ -388,6 +385,7 @@
             font-weight: bold;
             color: #94a3b8;
             border: 1px solid #475569;
+            writing-mode: horizontal-tb;
         }
         .eta-badge.first {
             flex: 1.6;
@@ -398,12 +396,14 @@
             font-weight: 900;
             padding: 6px 4px;
             box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+            writing-mode: horizontal-tb;
         }
         .eta-badge.first.arr {
             background: #881337;
             color: #fb7185;
             border-color: #f43f5e;
             box-shadow: 0 0 10px rgba(244, 63, 94, 0.3);
+            writing-mode: horizontal-tb;
         }
 
         .loading-text { text-align: center; color: #94a3b8; padding: 20px; font-size: 0.9rem; }
@@ -417,6 +417,7 @@
             justify-content: center;
             align-items: center;
             z-index: 999;
+            writing-mode: horizontal-tb;
         }
         .modal-overlay.active { display: flex; }
         .modal-content {
@@ -504,7 +505,6 @@
     </header>
 
     <main>
-        <!-- 左側：天氣欄 (移至上方) -->
         <div class="left-panel">
             <div class="weather-grid">
                 <div class="district-box">
@@ -571,17 +571,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- 右側：巴士到站預計時間 (中) 與 路況欄 (下) -->
-        <div class="right-panel">
-            <section class="bus-panel">
-                <div class="panel-title">
-                    <span>🚌 巴士到站預計時間</span>
-                    <button class="settings-btn" onclick="openSettings()">⚙️ 路線設定</button>
-                </div>
-                <div class="bus-list" id="bus-list"></div>
-            </section>
 
             <!-- 交通狀況板塊 -->
             <div class="traffic-panel">
@@ -612,6 +601,14 @@
                 </div>
             </div>
         </div>
+
+        <section class="bus-panel">
+            <div class="panel-title">
+                <span>🚌 巴士到站預計時間</span>
+                <button class="settings-btn" onclick="openSettings()">⚙️ 路線設定</button>
+            </div>
+            <div class="bus-list" id="bus-list"></div>
+        </section>
     </main>
 
     <!-- 路線設定 Modal -->
@@ -1385,7 +1382,7 @@
             renderSettingsList();
         }
 
-        function saveBusConfig() {
+        function saveBusCardConfig() {
             const items = document.querySelectorAll('.config-item');
             const newConfigs = [];
 
