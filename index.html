@@ -124,29 +124,10 @@
             width: 100%;
         }
         
-        /* 九巴 (KMB): 經典鮮紅色 */
-        .bus-item.item-kmb { 
-            background: #cc1c1c; 
-            color: #ffffff; 
-        }
-        
-        /* 龍運 (LWB): 鮮亮橘色 */
-        .bus-item.item-lwb { 
-            background: #ea580c; 
-            color: #ffffff; 
-        }
-
-        /* 城巴 (CTB): 復原為附圖純亮黃色 */
-        .bus-item.item-ctb { 
-            background: #eab308; 
-            color: #000000; 
-        }
-
-        /* 嶼巴 (NLB): 復原為附圖純草綠色 */
-        .bus-item.item-nlb { 
-            background: #16a34a; 
-            color: #ffffff; 
-        }
+        .bus-item.item-kmb { background: #cc1c1c; color: #ffffff; }
+        .bus-item.item-lwb { background: #ea580c; color: #ffffff; }
+        .bus-item.item-ctb { background: #eab308; color: #000000; }
+        .bus-item.item-nlb { background: #16a34a; color: #ffffff; }
 
         .bus-header { display: flex; justify-content: space-between; align-items: baseline; }
         .bus-title-group { display: flex; align-items: center; gap: 8px; }
@@ -319,10 +300,7 @@
                 <button class="modal-close" onclick="closeSettings()">&times;</button>
             </div>
             <div class="hint-text">
-                💡 <b>使用說明</b>：<br>
-                1. 城巴與嶼巴已完全還原附圖配色風格。<br>
-                2. 輸入「路線」後，「行車方向」選單將自動載入該路線終點站名稱。<br>
-                3. 選擇方向與車站後，系統會自動儲存設定。
+                💡 已修復嶼巴路線及車站名稱選單問題。
             </div>
             <div class="config-list" id="config-list"></div>
             <div class="modal-footer">
@@ -335,6 +313,7 @@
     <script>
         let kmbStopsCacheMap = null;
         const ctbStopsCache = {};
+        let nlbRoutesCache = null;
 
         async function getKmbStopsMap() {
             if (kmbStopsCacheMap) return kmbStopsCacheMap;
@@ -345,6 +324,18 @@
                 return kmbStopsCacheMap;
             } catch (e) {
                 return new Map();
+            }
+        }
+
+        async function getNlbRoutes() {
+            if (nlbRoutesCache) return nlbRoutesCache;
+            try {
+                const res = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/route.php?action=list`);
+                const data = await res.json();
+                nlbRoutesCache = data.routes || [];
+                return nlbRoutesCache;
+            } catch (e) {
+                return [];
             }
         }
 
@@ -398,14 +389,14 @@
         const defaultBuses = [
             { company: "lwb", route: "E36A", dir: "inbound", stop: "TC188", origin_name: "東涌", dest_name: "往 元朗", offset: 0 },
             { company: "ctb", route: "E33", dir: "outbound", stop: "001854", origin_name: "屯門", dest_name: "往 機場/東涌", offset: 0 },
-            { company: "nlb", route: "23", dir: "outbound", stop: "昂坪", origin_name: "東涌", dest_name: "往 昂坪", offset: 0 }
+            { company: "nlb", route: "23", dir: "1", stop: "東涌達東路巴士總站", origin_name: "東涌", dest_name: "往 昂坪", offset: 0 }
         ];
 
         let currentBuses = [];
         let cachedRawEtas = {};
 
         function loadBusConfigs() {
-            const saved = localStorage.getItem('user_bus_configs_v9');
+            const saved = localStorage.getItem('user_bus_configs_v10');
             if (saved) {
                 try { currentBuses = JSON.parse(saved); } catch(e) { currentBuses = defaultBuses; }
             } else {
@@ -440,15 +431,26 @@
             } catch (e) { return []; }
         }
 
-        async function getNLBETA(route, stopName, dir) {
+        async function getNLBETA(route, stopIdOrName, dir) {
             try {
-                if (!stopName) return [];
-                const res = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=list`);
-                const data = await res.json();
-                const matchedStop = data.stops.find(s => s.stopName_c.includes(stopName));
-                if (!matchedStop) return [];
+                if (!stopIdOrName) return [];
+                let stopId = stopIdOrName;
+                
+                const allRoutes = await getNlbRoutes();
+                const matchedRoute = allRoutes.find(r => r.routeNo.toUpperCase() === route.toUpperCase() && (dir ? r.routeId == dir : true)) || allRoutes.find(r => r.routeNo.toUpperCase() === route.toUpperCase());
+                
+                if (!matchedRoute) return [];
 
-                const etaRes = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=estimatedArrivals&stopId=${matchedStop.stopId}&routeId=${route}`);
+                if (isNaN(stopId)) {
+                    const stopsRes = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=list&routeId=${matchedRoute.routeId}`);
+                    const stopsData = await stopsRes.json();
+                    const matchedStop = (stopsData.stops || []).find(s => s.stopName_c.includes(stopIdOrName) || stopIdOrName.includes(s.stopName_c));
+                    if (matchedStop) stopId = matchedStop.stopId;
+                }
+
+                if (!stopId || isNaN(stopId)) return [];
+
+                const etaRes = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=estimatedArrivals&stopId=${stopId}&routeId=${matchedRoute.routeId}`);
                 const etaData = await etaRes.json();
                 return (etaData.estimatedArrivals || []).map(i => ({ eta: i.estimatedArrivalAt }));
             } catch (e) { return []; }
@@ -564,7 +566,7 @@
                                 <option value="ctb" ${bus.company === 'ctb' ? 'selected' : ''}>城巴 (CTB)</option>
                                 <option value="nlb" ${bus.company === 'nlb' ? 'selected' : ''}>嶼巴 (NLB)</option>
                             </select>
-                            <input type="text" class="config-input bus-route" placeholder="路線 (例: E36A)" value="${bus.route}" onchange="onBusMetaChanged(${index})">
+                            <input type="text" class="config-input bus-route" placeholder="路線 (例: 23)" value="${bus.route}" onchange="onBusMetaChanged(${index})">
                             <select class="config-select bus-dir" onchange="onDirectionChanged(${index})">
                                 <option value="${busDir}" selected>方向載入中...</option>
                             </select>
@@ -572,10 +574,10 @@
                         </div>
                         <div class="config-row">
                             <select class="config-select bus-stop" onchange="handleStopChange(${index})">
-                                <option value="${bus.stop}" selected>${bus.stop ? '已選代碼: ' + bus.stop : '請選擇車站...'}</option>
+                                <option value="${bus.stop}" selected>${bus.stop ? '已選: ' + bus.stop : '請選擇車站...'}</option>
                             </select>
                             <input type="text" class="config-input bus-origin" placeholder="起點站名 (如 東涌)" value="${bus.origin_name || ''}">
-                            <input type="text" class="config-input bus-dest" placeholder="目的地 (如 往 元朗)" value="${bus.dest_name || ''}">
+                            <input type="text" class="config-input bus-dest" placeholder="目的地 (如 往 昂坪)" value="${bus.dest_name || ''}">
                             <select class="config-select bus-offset" title="時間微調">${generateOffsetOptions(busOffset)}</select>
                         </div>
                     </div>
@@ -636,11 +638,7 @@
                     } catch(e) {}
 
                     optionsHtml += `<option value="outbound">往 ${destO || '(去程終點)'}</option>`;
-                    if (destI) {
-                        optionsHtml += `<option value="inbound">往 ${destI}</option>`;
-                    } else {
-                        optionsHtml += `<option value="inbound">往 (回程終點)</option>`;
-                    }
+                    optionsHtml += `<option value="inbound">往 ${destI || '(回程終點)'}</option>`;
 
                 } else if (company === 'ctb') {
                     try {
@@ -661,22 +659,16 @@
                     }
 
                 } else if (company === 'nlb') {
-                    try {
-                        const res = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/route.php?action=list`);
-                        const data = await res.json();
-                        const nlbRoutes = data.routes.filter(r => r.routeNo === route);
-                        
-                        if (nlbRoutes.length > 0) {
-                            nlbRoutes.forEach((rInfo, idx) => {
-                                const valCode = idx === 0 ? 'outbound' : 'inbound';
-                                const locs = rInfo.routeName_c.split('>');
-                                const terminal = locs.length >= 2 ? locs[locs.length - 1].trim() : rInfo.routeName_c;
-                                optionsHtml += `<option value="${valCode}">往 ${terminal}</option>`;
-                            });
-                        }
-                    } catch(e) {}
-
-                    if (!optionsHtml) {
+                    const allRoutes = await getNlbRoutes();
+                    const nlbRoutes = allRoutes.filter(r => r.routeNo.toUpperCase() === route);
+                    
+                    if (nlbRoutes.length > 0) {
+                        nlbRoutes.forEach((rInfo) => {
+                            const locs = rInfo.routeName_c.split('>');
+                            const terminal = locs.length >= 2 ? locs[locs.length - 1].trim() : rInfo.routeName_c;
+                            optionsHtml += `<option value="${rInfo.routeId}">往 ${terminal}</option>`;
+                        });
+                    } else {
                         optionsHtml = `<option value="outbound">往 目的地</option>`;
                     }
                 }
@@ -775,21 +767,21 @@
                         optionsHtml = '<option value="">找不到該路線或方向</option>';
                     }
                 } else if (company === 'nlb') {
-                    const routeRes = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/route.php?action=list`);
-                    const routeData = await routeRes.json();
-                    const nlbRoutes = routeData.routes.filter(r => r.routeNo === route);
+                    const allRoutes = await getNlbRoutes();
+                    const matchedRoute = allRoutes.find(r => r.routeNo.toUpperCase() === route && (dir ? r.routeId == dir : true)) || allRoutes.find(r => r.routeNo.toUpperCase() === route);
                     
-                    const routeInfo = (dir === 'inbound' && nlbRoutes.length > 1) ? nlbRoutes[1] : nlbRoutes[0];
-                    if (routeInfo) {
-                        const res = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=estimatedArrivals&stopId=1&routeId=${routeInfo.routeId}`);
+                    if (matchedRoute) {
+                        const res = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=list&routeId=${matchedRoute.routeId}`);
                         const data = await res.json();
-                        if (data.stops) {
+                        if (data.stops && data.stops.length > 0) {
                             data.stops.forEach((s, idx) => {
-                                optionsHtml += `<option value="${s.stopName_c}">${idx + 1}. ${s.stopName_c}</option>`;
+                                optionsHtml += `<option value="${s.stopId}">${idx + 1}. ${s.stopName_c}</option>`;
                             });
+                        } else {
+                            optionsHtml = '<option value="">找不到車站資料</option>';
                         }
                     } else {
-                        optionsHtml = '<option value="">找不到該路線或方向</option>';
+                        optionsHtml = '<option value="">找不到該路線</option>';
                     }
                 }
             } catch (e) {
@@ -868,7 +860,7 @@
             });
 
             currentBuses = newConfigs;
-            localStorage.setItem('user_bus_configs_v9', JSON.stringify(currentBuses));
+            localStorage.setItem('user_bus_configs_v10', JSON.stringify(currentBuses));
             closeSettings();
             fetchBusData();
         }
