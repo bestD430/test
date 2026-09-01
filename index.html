@@ -29,31 +29,43 @@
             flex-shrink: 0;
         }
 
-        /* 時鐘與警告圖標容器 */
         .clock-container { 
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 16px;
+            gap: 12px;
         }
 
-        /* 時鐘左邊的天文台警告容器 */
+        /* 天文台警告標籤樣式 */
         .weather-warnings {
             display: flex;
             align-items: center;
-            gap: 8px;
-            min-height: 48px;
+            gap: 6px;
         }
 
-        .warning-icon {
-            height: 48px;
-            width: auto;
-            object-fit: contain;
-            border-radius: 4px;
+        .warning-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            white-space: nowrap;
         }
+
+        /* 各類警告顏色設定 */
+        .badge-none { background: #334155; color: #94a3b8; }
+        .badge-yellow-rain { background: #eab308; color: #000; }
+        .badge-red-rain { background: #dc2626; color: #fff; }
+        .badge-black-rain { background: #000000; color: #fff; border: 1px solid #475569; }
+        .badge-tc { background: #ea580c; color: #fff; }
+        .badge-ts { background: #7c3aed; color: #fff; }
 
         #clock {
-            font-size: 3.5rem;
+            font-size: 3.2rem;
             font-weight: 700;
             letter-spacing: 2px;
             color: #38bdf8;
@@ -184,7 +196,6 @@
 
         .loading-text { text-align: center; color: #94a3b8; padding: 20px; font-size: 0.9rem; }
 
-        /* Modal 樣式 */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -264,8 +275,10 @@
 
     <header>
         <div class="clock-container">
-            <!-- 時鐘左側的天文台警告圖標放置區 -->
-            <div class="weather-warnings" id="weather-warnings"></div>
+            <!-- 時鐘左側警告圖標區域 -->
+            <div class="weather-warnings" id="weather-warnings">
+                <span class="warning-badge badge-none">☀️ 晴朗</span>
+            </div>
             <div>
                 <div id="clock">00:00:00</div>
             </div>
@@ -336,61 +349,36 @@
                 if (!res.ok) return;
                 const data = await res.json();
                 
-                let iconsHtml = '';
-
-                // 天文台警告代碼對應的官方圖標檔名
-                const iconMapping = {
-                    "WRAIN": (action) => action === "ISSUE" || action === "REISSUE" ? "raina" : null, // 暴雨警告（系統會細分）
-                    "WRAINA": "raina", // 黃雨
-                    "WRAINR": "rainr", // 紅雨
-                    "WRAINB": "rainb", // 黑雨
-                    "WFOS": "frost",   // 霜凍
-                    "WHOT": "vhot",    // 酷熱
-                    "WCOLD": "cold",   // 寒冷
-                    "WMSGN": "msgn",   // 強烈季候風
-                    "WTCSGN1": "tc1",  // 一號風球
-                    "WTCSGN3": "tc3",  // 三號風球
-                    "WTCSGN8NE": "tc8ne",
-                    "WTCSGN8SE": "tc8se",
-                    "WTCSGN8NW": "tc8nw",
-                    "WTCSGN8SW": "tc8sw",
-                    "WTCSGN9": "tc9",  // 九號風球
-                    "WTCSGN10": "tc10",// 十號風球
-                    "WTS": "ts",       // 雷暴
-                    "WLANDS": "landslip" // 山泥傾瀉
-                };
+                let badges = [];
 
                 for (const key in data) {
                     if (data.hasOwnProperty(key)) {
                         const item = data[key];
                         if (item && item.actionCode !== "CANCEL") {
-                            let iconName = item.code ? item.code.toLowerCase() : '';
-                            
-                            // 修正暴雨警告與颱風信號的對應檔名
-                            if (key.startsWith("WTCSGN")) {
-                                iconName = key.replace("WTCSGN", "tc").toLowerCase();
-                            } else if (key === "WRAINA") iconName = "raina";
-                            else if (key === "WRAINR") iconName = "rainr";
-                            else if (key === "WRAINB") iconName = "rainb";
-                            else if (key === "WTS") iconName = "ts";
-                            else if (key === "WHOT") iconName = "vhot";
-                            else if (key === "WCOLD") iconName = "cold";
-                            else if (key === "WMSGN") iconName = "msgn";
-
-                            if (iconName) {
-                                iconsHtml += `<img class="warning-icon" src="https://www.hko.gov.hk/images/HKOWarningIcons/${iconName}.png" alt="${item.name || key}" title="${item.name || key}" onerror="this.style.display='none'">`;
+                            if (key === "WRAINA") badges.push('<span class="warning-badge badge-yellow-rain">🌧️ 黃雨</span>');
+                            else if (key === "WRAINR") badges.push('<span class="warning-badge badge-red-rain">🌧️ 紅雨</span>');
+                            else if (key === "WRAINB") badges.push('<span class="warning-badge badge-black-rain">🌧️ 黑雨</span>');
+                            else if (key.startsWith("WTCSGN")) {
+                                const tcNum = key.replace("WTCSGN", "");
+                                badges.push(`<span class="warning-badge badge-tc">🌀 ${tcNum}號風球</span>`);
+                            } else if (key === "WTS") {
+                                badges.push('<span class="warning-badge badge-ts">⛈️ 雷暴</span>');
                             }
                         }
                     }
                 }
 
-                container.innerHTML = iconsHtml;
+                if (badges.length > 0) {
+                    container.innerHTML = badges.join('');
+                } else {
+                    container.innerHTML = '<span class="warning-badge badge-none">☀️ 天氣良好</span>';
+                }
             } catch (e) {
-                container.innerHTML = '';
+                container.innerHTML = '<span class="warning-badge badge-none">☀️ 天氣良好</span>';
             }
         }
         fetchWeatherWarnings();
-        setInterval(fetchWeatherWarnings, 60000); // 每 60 秒更新一次警告資訊
+        setInterval(fetchWeatherWarnings, 60000);
 
         const defaultBuses = [
             { company: "kmb", route: "E36A", dir: "inbound", stop: "TC188", origin_name: "東涌", dest_name: "往 元朗", offset: 0 },
@@ -410,7 +398,6 @@
             }
         }
 
-        /* ------------------ 巴士 API 邏輯 ------------------ */
         async function getKMBSeta(route, stopCode, dir) {
             try {
                 if (!stopCode) return [];
@@ -522,7 +509,6 @@
         fetchBusData();
         setInterval(fetchBusData, 30000);
 
-        /* ------------------ 設定 Modal 邏輯 ------------------ */
         function openSettings() {
             loadBusConfigs();
             renderSettingsList();
@@ -775,7 +761,7 @@
                     
                     const routeInfo = (dir === 'inbound' && nlbRoutes.length > 1) ? nlbRoutes[1] : nlbRoutes[0];
                     if (routeInfo) {
-                        const res = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=list&routeId=${routeInfo.routeId}`);
+                        const res = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=estimatedArrivals&stopId=1&routeId=${routeInfo.routeId}`);
                         const data = await res.json();
                         if (data.stops) {
                             data.stops.forEach((s, idx) => {
