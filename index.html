@@ -10,37 +10,34 @@
             background-color: #0f172a;
             color: #f8fafc;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            width: 100vw;
             height: 100vh;
             display: flex;
-            flex-direction: row;
+            flex-direction: column;
             padding: 16px;
             overflow: hidden;
-            writing-mode: vertical-rl;
         }
 
-        /* 頂部區域（直式下改為右側側邊欄或頂部欄，此處適應直式佈局為縱向排列） */
+        /* 頂部區域 */
         header {
             display: flex;
-            flex-direction: row;
+            flex-direction: column;
             align-items: center;
-            padding-right: 12px;
-            border-right: 1px solid #334155;
-            margin-right: 12px;
-            gap: 12px;
-            writing-mode: vertical-rl;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #334155;
+            margin-bottom: 12px;
+            gap: 8px;
         }
 
         /* 政府停課特別消息顯示欄 */
         .school-closure-box {
             display: none;
-            height: 100%;
-            max-height: 800px;
+            width: 100%;
+            max-width: 800px;
             background: rgba(225, 29, 72, 0.2);
             border: 2px solid #f43f5e;
             border-radius: 10px;
-            padding: 14px 8px;
-            flex-direction: row;
+            padding: 8px 14px;
+            flex-direction: column;
             gap: 4px;
             box-shadow: 0 0 14px rgba(244, 63, 94, 0.3);
             animation: pulse-red 2s infinite;
@@ -58,238 +55,40 @@
             font-size: 0.85rem;
             color: #ffe4e6;
             line-height: 1.4;
-            max-width: 120px;
-            overflow-x: auto;
-        }
-
-        /* 天氣警報顯示欄 */
-        .weather-warning-box {
-            display: none;
-            height: 100%;
-            max-height: 800px;
-            background: rgba(225, 29, 72, 0.15);
-            border: 1px solid #f43f5e;
-            border-radius: 10px;
-            padding: 12px 8px;
-            flex-direction: row;
-            gap: 6px;
-        }
-        .weather-warning-box.active { display: flex; }
-        .warning-title {
-            font-size: 0.8rem;
-            font-weight: bold;
-            color: #fb7185;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .warning-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-        .warning-badge {
-            background: #9f1239;
-            color: #fff;
-            font-size: 0.75rem;
-            padding: 8px 3px;
-            border-radius: 6px;
-            font-weight: 600;
+            max-height: 80px;
+            overflow-y: auto;
         }
 
         .clock-container { text-align: center; }
         #clock {
-            font-size: 3rem;
+            font-size: 3.5rem;
             font-weight: 700;
             letter-spacing: 2px;
             color: #38bdf8;
             line-height: 1;
-            writing-mode: horizontal-tb;
         }
         #date {
             font-size: 1.05rem;
             color: #94a3b8;
             margin-top: 4px;
-            writing-mode: horizontal-tb;
         }
 
         main {
             display: flex;
             flex: 1;
             gap: 16px;
-            width: calc(100% - 110px);
-            writing-mode: vertical-rl;
+            height: calc(100% - 110px);
         }
 
         .left-panel {
             flex: 1.2;
             display: flex;
-            flex-direction: row;
+            flex-direction: column;
             gap: 12px;
-            overflow-x: auto;
-        }
-
-        .weather-grid { display: flex; gap: 10px; flex: 0 0 auto; min-width: 190px; flex-direction: row; }
-        .district-box {
-            flex: 1;
-            background: #1e293b;
-            border-radius: 12px;
-            padding: 14px;
-            border: 1px solid #334155;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            position: relative;
-        }
-        .district-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            border-bottom: 1px dashed #475569;
-            padding-bottom: 6px;
-            flex-direction: column;
-        }
-        .district-title {
-            font-size: 1rem;
-            font-weight: bold;
-            color: #38bdf8;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .weather-toggle-btn {
-            background: none;
-            border: none;
-            color: #94a3b8;
-            cursor: pointer;
-            font-size: 0.9rem;
-            padding: 2px 4px;
-        }
-        .weather-toggle-btn:hover { color: #f8fafc; }
-
-        .weather-settings-menu {
-            display: none;
-            position: absolute;
-            top: 10px; bottom: 10px; right: 40px;
-            background: #0f172a;
-            border: 1px solid #475569;
-            border-radius: 8px;
-            padding: 10px;
-            z-index: 10;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-            flex-direction: column;
-            gap: 8px;
-        }
-        .weather-settings-menu.active { display: flex; }
-        .menu-label { font-size: 0.75rem; color: #94a3b8; margin-bottom: -2px; }
-        .menu-input, .menu-select {
-            background: #1e293b;
-            color: #f8fafc;
-            border: 1px solid #475569;
-            padding: 5px 8px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            outline: none;
-            height: 100%;
-        }
-        .menu-save-btn {
-            background: #0284c7;
-            color: #fff;
-            border: none;
-            padding: 6px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 4px;
-        }
-
-        .day-weather { margin-bottom: 4px; }
-        .day-weather:last-child { margin-bottom: 0; }
-        .day-label { font-size: 0.8rem; color: #94a3b8; }
-        .temp-row { display: flex; justify-content: space-between; align-items: center; margin: 2px 0; flex-direction: column; }
-        .temp-val { font-size: 1.2rem; font-weight: bold; writing-mode: horizontal-tb; }
-        .weather-icon { width: 38px; height: 38px; object-fit: contain; }
-        .weather-desc { font-size: 0.8rem; color: #cbd5e1; line-height: 1.2; }
-
-        .traffic-panel {
-            background: #1e293b;
-            border-radius: 16px;
-            padding: 14px;
-            border: 1px solid #334155;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .traffic-header-actions { display: flex; gap: 6px; align-items: center; }
-        .route-display-header {
-            font-size: 0.95rem;
-            font-weight: bold;
-            color: #38bdf8;
-            background: rgba(56, 189, 248, 0.1);
-            padding: 8px 12px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
+            overflow-y: auto;
             justify-content: center;
-            gap: 8px;
-            border: 1px dashed rgba(56, 189, 248, 0.3);
-        }
-
-        .traffic-status-card {
-            background: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 10px;
-            padding: 12px 16px;
-            display: flex;
             align-items: center;
-            justify-content: space-between;
-            flex-direction: column;
         }
-        .traffic-status-title {
-            font-size: 0.85rem;
-            color: #94a3b8;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .traffic-status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-direction: column;
-        }
-        .status-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background-color: #94a3b8;
-            box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
-        }
-        .status-text {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #94a3b8;
-        }
-        .status-smooth .status-dot { background-color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.6); }
-        .status-smooth .status-text { color: #34d399; }
-        .status-busy .status-dot { background-color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.6); }
-        .status-busy .status-text { color: #fbbf24; }
-        .status-congested .status-dot { background-color: #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.6); }
-        .status-congested .status-text { color: #f87171; }
-
-        .map-container {
-            flex: 1;
-            height: 100%;
-            border-radius: 10px;
-            overflow: hidden;
-            border: 1px solid #475569;
-            background: #0f172a;
-            min-width: 200px;
-        }
-        .map-container.hidden { display: none !important; }
-        .map-iframe { width: 100%; height: 100%; border: 0; }
 
         @keyframes pulse-red {
             0% { border-color: #f43f5e; box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4); }
@@ -313,7 +112,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            writing-mode: horizontal-tb;
         }
         .settings-btn {
             background: #334155;
@@ -326,7 +124,7 @@
         }
         .settings-btn:active { background: #475569; }
 
-        .bus-list { display: flex; flex-direction: row; gap: 10px; overflow-x: auto; }
+        .bus-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
         .bus-item {
             background: #334155;
             border-radius: 12px;
@@ -340,8 +138,8 @@
         .bus-item.item-ctb { background: #eab308; color: #000000; }
         .bus-item.item-nlb { background: #15803d; color: #ffffff; }
 
-        .bus-header { display: flex; justify-content: space-between; align-items: baseline; flex-direction: column; }
-        .bus-title-group { display: flex; align-items: center; gap: 8px; flex-direction: column; }
+        .bus-header { display: flex; justify-content: space-between; align-items: baseline; }
+        .bus-title-group { display: flex; align-items: center; gap: 8px; }
         .bus-company-tag {
             font-size: 0.75rem;
             padding: 2px 6px;
@@ -352,7 +150,7 @@
         .tag-ctb { background: #713f12; color: #ffffff; }
         .tag-nlb { background: #166534; color: #bbf7d0; }
 
-        .bus-name { font-size: 1.8rem; font-weight: 800; letter-spacing: 1px; line-height: 1; writing-mode: horizontal-tb; }
+        .bus-name { font-size: 1.8rem; font-weight: 800; letter-spacing: 1px; line-height: 1; }
         .item-kmb .bus-name { color: #ffffff; }
         .item-ctb .bus-name { color: #000000; }
         .item-nlb .bus-name { color: #ffffff; }
@@ -365,7 +163,6 @@
             align-items: baseline;
             justify-content: flex-end;
             gap: 4px;
-            flex-direction: column;
         }
         .bus-origin-text { font-size: 1.15rem; font-weight: 800; }
         .bus-dest-text { font-size: 0.85rem; font-weight: 500; opacity: 0.9; }
@@ -374,7 +171,7 @@
         .item-ctb .bus-dest { color: #1e293b; }
         .item-nlb .bus-dest { color: #dcfce7; }
 
-        .eta-group { display: flex; gap: 8px; align-items: center; flex-direction: column; }
+        .eta-group { display: flex; gap: 8px; align-items: center; }
         .eta-badge {
             flex: 1;
             background: #0f172a;
@@ -385,7 +182,6 @@
             font-weight: bold;
             color: #94a3b8;
             border: 1px solid #475569;
-            writing-mode: horizontal-tb;
         }
         .eta-badge.first {
             flex: 1.6;
@@ -396,14 +192,12 @@
             font-weight: 900;
             padding: 6px 4px;
             box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
-            writing-mode: horizontal-tb;
         }
         .eta-badge.first.arr {
             background: #881337;
             color: #fb7185;
             border-color: #f43f5e;
             box-shadow: 0 0 10px rgba(244, 63, 94, 0.3);
-            writing-mode: horizontal-tb;
         }
 
         .loading-text { text-align: center; color: #94a3b8; padding: 20px; font-size: 0.9rem; }
@@ -417,7 +211,6 @@
             justify-content: center;
             align-items: center;
             z-index: 999;
-            writing-mode: horizontal-tb;
         }
         .modal-overlay.active { display: flex; }
         .modal-content {
@@ -483,6 +276,7 @@
         .action-btn { background: #0284c7; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .add-btn { background: #166534; color: #86efac; }
         .hint-text { font-size: 0.75rem; color: #94a3b8; }
+        .menu-label { font-size: 0.75rem; color: #94a3b8; margin-bottom: -2px; }
     </style>
 </head>
 <body>
@@ -493,11 +287,6 @@
             <div class="closure-content" id="closure-content">加載中...</div>
         </div>
 
-        <div class="weather-warning-box" id="weather-warning-box">
-            <div class="warning-title">⚠️ 天文台現正生效警告：</div>
-            <div class="warning-list" id="warning-list"></div>
-        </div>
-
         <div class="clock-container">
             <div id="clock">00:00:00</div>
             <div id="date">--年--月--日 星期-</div>
@@ -506,100 +295,7 @@
 
     <main>
         <div class="left-panel">
-            <div class="weather-grid">
-                <div class="district-box">
-                    <div class="district-header">
-                        <span class="district-title" id="d1-custom-title">📍 東涌</span>
-                        <button class="weather-toggle-btn" onclick="toggleWeatherMenu(1)">⚙️</button>
-                    </div>
-
-                    <div class="weather-settings-menu" id="weather-menu-1">
-                        <span class="menu-label">顯示名稱：</span>
-                        <input type="text" id="d1-input-name" class="menu-input" placeholder="例：屋企 / 東涌">
-                        <span class="menu-label">天文台分區：</span>
-                        <select id="district1-select" class="menu-select"></select>
-                        <button class="menu-save-btn" onclick="saveWeatherConfig(1)">保存</button>
-                    </div>
-
-                    <div class="day-weather">
-                        <div class="day-label">今天 (即時)</div>
-                        <div class="temp-row">
-                            <span class="temp-val" id="d1-today-temp">--°C</span>
-                            <img class="weather-icon" id="d1-today-icon" src="" alt="icon">
-                        </div>
-                        <div class="weather-desc" id="d1-today-desc">加載中...</div>
-                    </div>
-                    <div class="day-weather">
-                        <div class="day-label">明天</div>
-                        <div class="temp-row">
-                            <span class="temp-val" id="d1-tomorrow-temp">--°C</span>
-                            <img class="weather-icon" id="d1-tomorrow-icon" src="" alt="icon">
-                        </div>
-                        <div class="weather-desc" id="d1-tomorrow-desc">加載中...</div>
-                    </div>
-                </div>
-
-                <div class="district-box">
-                    <div class="district-header">
-                        <span class="district-title" id="d2-custom-title">📍 尖沙咀</span>
-                        <button class="weather-toggle-btn" onclick="toggleWeatherMenu(2)">⚙️</button>
-                    </div>
-
-                    <div class="weather-settings-menu" id="weather-menu-2">
-                        <span class="menu-label">顯示名稱：</span>
-                        <input type="text" id="d2-input-name" class="menu-input" placeholder="例：公司 / 尖沙咀">
-                        <span class="menu-label">天文台分區：</span>
-                        <select id="district2-select" class="menu-select"></select>
-                        <button class="menu-save-btn" onclick="saveWeatherConfig(2)">保存</button>
-                    </div>
-
-                    <div class="day-weather">
-                        <div class="day-label">今天 (即時)</div>
-                        <div class="temp-row">
-                            <span class="temp-val" id="d2-today-temp">--°C</span>
-                            <img class="weather-icon" id="d2-today-icon" src="" alt="icon">
-                        </div>
-                        <div class="weather-desc" id="d2-today-desc">加載中...</div>
-                    </div>
-                    <div class="day-weather">
-                        <div class="day-label">明天</div>
-                        <div class="temp-row">
-                            <span class="temp-val" id="d2-tomorrow-temp">--°C</span>
-                            <img class="weather-icon" id="d2-tomorrow-icon" src="" alt="icon">
-                        </div>
-                        <div class="weather-desc" id="d2-tomorrow-desc">加載中...</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 交通狀況板塊 -->
-            <div class="traffic-panel">
-                <div class="panel-title">
-                    <span>🚗 路線交通狀況</span>
-                    <div class="traffic-header-actions">
-                        <button class="settings-btn" id="toggle-map-btn" onclick="toggleMapVisibility()">🗺️ 隱藏地圖</button>
-                        <button class="settings-btn" onclick="openRouteModal()">⚙️ 路線設定</button>
-                    </div>
-                </div>
-
-                <div class="route-display-header">
-                    📍 <span id="disp-origin">逸東邨</span> ➔ <span id="disp-dest">滿東邨</span>
-                </div>
-
-                <div class="traffic-status-card" id="traffic-status-card">
-                    <div class="traffic-status-title">
-                        <span>🚦 途經路段交通情況</span>
-                    </div>
-                    <div class="traffic-status-indicator" id="status-indicator">
-                        <div class="status-dot"></div>
-                        <span class="status-text" id="status-text">檢測中...</span>
-                    </div>
-                </div>
-
-                <div class="map-container" id="map-container">
-                    <iframe id="traffic-map-iframe" class="map-iframe" loading="lazy" allowfullscreen src=""></iframe>
-                </div>
-            </div>
+            <div style="color: #64748b; font-size: 0.9rem; text-align: center;">已取消路況及天氣顯示欄</div>
         </div>
 
         <section class="bus-panel">
@@ -610,29 +306,6 @@
             <div class="bus-list" id="bus-list"></div>
         </section>
     </main>
-
-    <!-- 路線設定 Modal -->
-    <div class="modal-overlay" id="route-modal">
-        <div class="modal-content" style="max-width: 450px;">
-            <div class="modal-header">
-                <div class="modal-title">⚙️ 設定行車起點與終點</div>
-                <button class="modal-close" onclick="closeRouteModal()">&times;</button>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 12px; margin: 10px 0;">
-                <div>
-                    <label class="menu-label" style="display:block; margin-bottom: 4px;">起點名稱 / 地址：</label>
-                    <input type="text" id="modal-origin-input" class="menu-input" placeholder="例: 逸東邨">
-                </div>
-                <div>
-                    <label class="menu-label" style="display:block; margin-bottom: 4px;">終點名稱 / 地址：</label>
-                    <input type="text" id="modal-dest-input" class="menu-input" placeholder="例: 九龍志和街">
-                </div>
-            </div>
-            <div class="modal-footer" style="justify-content: flex-end;">
-                <button class="action-btn" onclick="saveRouteModalConfig()">💾 保存更新</button>
-            </div>
-        </div>
-    </div>
 
     <!-- 巴士設定 Modal -->
     <div class="modal-overlay" id="settings-modal">
@@ -655,22 +328,6 @@
     </div>
 
     <script>
-        const districtList = [
-            "東涌", "尖沙咀", "京士柏", "香港天文台", "黃大仙", "九龍城", 
-            "觀塘", "深水埗", "將軍澳", "沙田", "屯門", "元朗公園", 
-            "大埔", "荃灣", "青衣", "赤鱲角", "跑馬地", "香港公園"
-        ];
-
-        let weather1 = JSON.parse(localStorage.getItem('weather_cfg_1')) || { name: "東涌", district: "赤鱲角" };
-        let weather2 = JSON.parse(localStorage.getItem('weather_cfg_2')) || { name: "尖沙咀", district: "京士柏" };
-
-        let trafficConfig = JSON.parse(localStorage.getItem('traffic_cfg')) || {
-            origin: "逸東邨",
-            destination: "滿東邨"
-        };
-
-        let isMapHidden = localStorage.getItem('traffic_map_hidden') === 'true';
-
         let kmbStopsCacheMap = null;
         const ctbStopsCache = {};
 
@@ -683,179 +340,6 @@
                 return kmbStopsCacheMap;
             } catch (e) {
                 return new Map();
-            }
-        }
-
-        function cleanHongKongText(text) {
-            if (!text) return '';
-            return text.replace(/,?\s*香港/g, '').trim();
-        }
-
-        function initTrafficUI() {
-            document.getElementById('disp-origin').innerText = cleanHongKongText(trafficConfig.origin);
-            document.getElementById('disp-dest').innerText = cleanHongKongText(trafficConfig.destination);
-            
-            const mapContainer = document.getElementById('map-container');
-            const toggleBtn = document.getElementById('toggle-map-btn');
-            
-            if (isMapHidden) {
-                mapContainer.classList.add('hidden');
-                toggleBtn.innerText = "🗺️ 顯示地圖";
-            } else {
-                mapContainer.classList.remove('hidden');
-                toggleBtn.innerText = "🗺️ 隱藏地圖";
-                updateTrafficMap();
-            }
-            checkTrafficStatus();
-        }
-
-        function toggleMapVisibility() {
-            const mapContainer = document.getElementById('map-container');
-            const toggleBtn = document.getElementById('toggle-map-btn');
-            
-            isMapHidden = !isMapHidden;
-            localStorage.setItem('traffic_map_hidden', isMapHidden);
-
-            if (isMapHidden) {
-                mapContainer.classList.add('hidden');
-                toggleBtn.innerText = "🗺️ 顯示地圖";
-            } else {
-                mapContainer.classList.remove('hidden');
-                toggleBtn.innerText = "🗺️ 隱藏地圖";
-                updateTrafficMap();
-            }
-        }
-
-        function updateTrafficMap() {
-            if (isMapHidden) return;
-            const originStr = trafficConfig.origin.includes('香港') ? trafficConfig.origin : `${trafficConfig.origin}, 香港`;
-            const destStr = trafficConfig.destination.includes('香港') ? trafficConfig.destination : `${trafficConfig.destination}, 香港`;
-
-            const mapUrl = `https://maps.google.com/maps?saddr=${encodeURIComponent(originStr)}&daddr=${encodeURIComponent(destStr)}&dirflg=d&output=embed`;
-            document.getElementById('traffic-map-iframe').src = mapUrl;
-        }
-
-        function openRouteModal() {
-            document.getElementById('modal-origin-input').value = cleanHongKongText(trafficConfig.origin);
-            document.getElementById('modal-dest-input').value = cleanHongKongText(trafficConfig.destination);
-            document.getElementById('route-modal').classList.add('active');
-        }
-
-        function closeRouteModal() {
-            document.getElementById('route-modal').classList.remove('active');
-        }
-
-        function saveRouteModalConfig() {
-            const origin = document.getElementById('modal-origin-input').value.trim();
-            const destination = document.getElementById('modal-dest-input').value.trim();
-
-            if (origin && destination) {
-                trafficConfig = { origin, destination };
-                localStorage.setItem('traffic_cfg', JSON.stringify(trafficConfig));
-                
-                document.getElementById('disp-origin').innerText = cleanHongKongText(origin);
-                document.getElementById('disp-dest').innerText = cleanHongKongText(destination);
-                
-                closeRouteModal();
-                updateTrafficMap();
-                checkTrafficStatus();
-            }
-        }
-
-        async function checkTrafficStatus() {
-            const card = document.getElementById('traffic-status-card');
-            const statusText = document.getElementById('status-text');
-            
-            card.className = 'traffic-status-card';
-            statusText.innerText = '檢測中...';
-
-            try {
-                const origin = trafficConfig.origin;
-                const destination = trafficConfig.destination;
-
-                const speedRes = await fetch('https://rt.data.gov.hk/v1/transport/traffic-speed-map');
-                const speedData = await speedRes.json();
-                
-                if (Array.isArray(speedData)) {
-                    const relevantRoads = speedData.filter(r => {
-                        const locationStr = (r.ROAD_SECTION || r.LOCATION || '').toString();
-                        return locationStr.includes(origin) || locationStr.includes(destination) || 
-                               origin.includes(locationStr) || destination.includes(locationStr);
-                    });
-
-                    const targetList = relevantRoads.length > 0 ? relevantRoads : speedData;
-                    const congestedCount = targetList.filter(r => r.TRAFFIC_SPEED_LEVEL === 'S' || r.TRAFFIC_SPEED_LEVEL === 'M').length;
-
-                    if (congestedCount > (relevantRoads.length > 0 ? 1 : 30)) {
-                        card.classList.add('status-congested');
-                        statusText.innerText = '交通擠塞';
-                    } else if (congestedCount > 0) {
-                        card.classList.add('status-busy');
-                        statusText.innerText = '交通繁忙';
-                    } else {
-                        card.classList.add('status-smooth');
-                        statusText.innerText = '交通暢順';
-                    }
-                } else {
-                    card.classList.add('status-smooth');
-                    statusText.innerText = '交通暢順';
-                }
-            } catch(e) {
-                card.classList.add('status-smooth');
-                statusText.innerText = '交通暢順';
-            }
-        }
-
-        function initDistrictSelects() {
-            const select1 = document.getElementById('district1-select');
-            const select2 = document.getElementById('district2-select');
-            
-            select1.innerHTML = districtList.map(d => `<option value="${d}" ${d === weather1.district ? 'selected' : ''}>${d}</option>`).join('');
-            select2.innerHTML = districtList.map(d => `<option value="${d}" ${d === weather2.district ? 'selected' : ''}>${d}</option>`).join('');
-
-            document.getElementById('d1-input-name').value = weather1.name;
-            document.getElementById('d2-input-name').value = weather2.name;
-            document.getElementById('d1-custom-title').innerText = `📍 ${weather1.name}`;
-            document.getElementById('d2-custom-title').innerText = `📍 ${weather2.name}`;
-        }
-
-        function toggleWeatherMenu(index) {
-            document.getElementById(`weather-menu-${index}`).classList.toggle('active');
-        }
-
-        function saveWeatherConfig(index) {
-            if (index === 1) {
-                const name = document.getElementById('d1-input-name').value.trim() || "區域一";
-                const district = document.getElementById('district1-select').value;
-                weather1 = { name, district };
-                localStorage.setItem('weather_cfg_1', JSON.stringify(weather1));
-                document.getElementById('d1-custom-title').innerText = `📍 ${name}`;
-            } else {
-                const name = document.getElementById('d2-input-name').value.trim() || "區域二";
-                const district = document.getElementById('district2-select').value;
-                weather2 = { name, district };
-                localStorage.setItem('weather_cfg_2', JSON.stringify(weather2));
-                document.getElementById('d2-custom-title').innerText = `📍 ${name}`;
-            }
-            toggleWeatherMenu(index);
-            fetchWeather();
-        }
-
-        const defaultBuses = [
-            { company: "kmb", route: "E36A", dir: "inbound", stop: "TC188", origin_name: "東涌", dest_name: "往 元朗", offset: 0 },
-            { company: "ctb", route: "E33", dir: "outbound", stop: "001854", origin_name: "屯門", dest_name: "往 機場/東涌", offset: 0 },
-            { company: "nlb", route: "23", dir: "outbound", stop: "昂坪", origin_name: "東涌", dest_name: "往 昂坪", offset: 0 }
-        ];
-
-        let currentBuses = [];
-        let cachedRawEtas = {};
-
-        function loadBusConfigs() {
-            const saved = localStorage.getItem('user_bus_configs_v7');
-            if (saved) {
-                try { currentBuses = JSON.parse(saved); } catch(e) { currentBuses = defaultBuses; }
-            } else {
-                currentBuses = defaultBuses;
             }
         }
 
@@ -888,64 +372,26 @@
             } catch (err) { box.classList.remove('active'); }
         }
 
-        async function fetchWeather() {
-            try {
-                const [fndRes, rhrreadRes, warnRes] = await Promise.all([
-                    fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=fnd&lang=tc'),
-                    fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=tc'),
-                    fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=tc')
-                ]);
-                const fndData = await fndRes.json();
-                const rhrData = await rhrreadRes.json();
-                const warnData = await warnRes.json();
-
-                const warningBox = document.getElementById('weather-warning-box');
-                const activeWarnings = Object.values(warnData || {}).map(w => w.name).filter(Boolean);
-
-                if (activeWarnings.length > 0) {
-                    document.getElementById('warning-list').innerHTML = activeWarnings.map(w => `<span class="warning-badge">${w}</span>`).join('');
-                    warningBox.classList.add('active');
-                } else {
-                    warningBox.classList.remove('active');
-                }
-
-                const getIconUrl = (code) => `https://www.hko.gov.hk/images/HKOWxIconOutline/pic${code}.png`;
-                const getTempForDistrict = (distName) => {
-                    const match = rhrData.temperature?.data?.find(t => t.place.includes(distName) || distName.includes(t.place));
-                    return match ? `${match.value}°C` : '--°C';
-                };
-
-                const todayIcon = rhrData.icon ? rhrData.icon[0] : 60;
-                const todayDesc = rhrData.forecastMessage || "大致多雲";
-                const tomorrow = fndData.weatherForecast?.[1];
-
-                document.getElementById('d1-today-temp').innerText = getTempForDistrict(weather1.district);
-                document.getElementById('d1-today-desc').innerText = todayDesc;
-                document.getElementById('d1-today-icon').src = getIconUrl(todayIcon);
-                
-                document.getElementById('d2-today-temp').innerText = getTempForDistrict(weather2.district);
-                document.getElementById('d2-today-desc').innerText = todayDesc;
-                document.getElementById('d2-today-icon').src = getIconUrl(todayIcon);
-
-                if (tomorrow) {
-                    document.getElementById('d1-tomorrow-temp').innerText = `${tomorrow.forecastMintemp.value}°C - ${tomorrow.forecastMaxtemp.value}°C`;
-                    document.getElementById('d1-tomorrow-desc').innerText = tomorrow.forecastWeather || tomorrow.forecastForecast;
-                    document.getElementById('d1-tomorrow-icon').src = getIconUrl(tomorrow.ForecastIcon);
-                    
-                    document.getElementById('d2-tomorrow-temp').innerText = `${tomorrow.forecastMintemp.value}°C - ${tomorrow.forecastMaxtemp.value}°C`;
-                    document.getElementById('d2-tomorrow-desc').innerText = tomorrow.forecastWeather || tomorrow.forecastForecast;
-                    document.getElementById('d2-tomorrow-icon').src = getIconUrl(tomorrow.ForecastIcon);
-                }
-            } catch (err) {}
-        }
-
-        initDistrictSelects();
-        fetchWeather();
         fetchGovSchoolClosureNotice();
-        initTrafficUI();
-        setInterval(fetchWeather, 60000);
         setInterval(fetchGovSchoolClosureNotice, 60000);
-        setInterval(checkTrafficStatus, 120000);
+
+        const defaultBuses = [
+            { company: "kmb", route: "E36A", dir: "inbound", stop: "TC188", origin_name: "東涌", dest_name: "往 元朗", offset: 0 },
+            { company: "ctb", route: "E33", dir: "outbound", stop: "001854", origin_name: "屯門", dest_name: "往 機場/東涌", offset: 0 },
+            { company: "nlb", route: "23", dir: "outbound", stop: "昂坪", origin_name: "東涌", dest_name: "往 昂坪", offset: 0 }
+        ];
+
+        let currentBuses = [];
+        let cachedRawEtas = {};
+
+        function loadBusConfigs() {
+            const saved = localStorage.getItem('user_bus_configs_v7');
+            if (saved) {
+                try { currentBuses = JSON.parse(saved); } catch(e) { currentBuses = defaultBuses; }
+            } else {
+                currentBuses = defaultBuses;
+            }
+        }
 
         /* ------------------ 巴士 API 邏輯 ------------------ */
         async function getKMBSeta(route, stopCode, dir) {
@@ -1382,7 +828,7 @@
             renderSettingsList();
         }
 
-        function saveBusCardConfig() {
+        function saveBusConfig() {
             const items = document.querySelectorAll('.config-item');
             const newConfigs = [];
 
