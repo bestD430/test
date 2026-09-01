@@ -28,37 +28,6 @@
             gap: 8px;
         }
 
-        /* 政府停課特別消息顯示欄 */
-        .school-closure-box {
-            display: none;
-            width: 100%;
-            max-width: 800px;
-            background: rgba(225, 29, 72, 0.2);
-            border: 2px solid #f43f5e;
-            border-radius: 10px;
-            padding: 8px 14px;
-            flex-direction: column;
-            gap: 4px;
-            box-shadow: 0 0 14px rgba(244, 63, 94, 0.3);
-            animation: pulse-red 2s infinite;
-        }
-        .school-closure-box.active { display: flex; }
-        .closure-title {
-            font-size: 0.85rem;
-            font-weight: bold;
-            color: #fb7185;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .closure-content {
-            font-size: 0.85rem;
-            color: #ffe4e6;
-            line-height: 1.4;
-            max-height: 80px;
-            overflow-y: auto;
-        }
-
         .clock-container { text-align: center; }
         #clock {
             font-size: 3.5rem;
@@ -88,12 +57,6 @@
             overflow-y: auto;
             justify-content: center;
             align-items: center;
-        }
-
-        @keyframes pulse-red {
-            0% { border-color: #f43f5e; box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4); }
-            70% { border-color: #e11d48; box-shadow: 0 0 0 6px rgba(244, 63, 94, 0); }
-            100% { border-color: #f43f5e; box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
         }
 
         .bus-panel {
@@ -282,11 +245,6 @@
 <body>
 
     <header>
-        <div class="school-closure-box" id="school-closure-box">
-            <div class="closure-title">🚨 政府特別公告（停課消息）：</div>
-            <div class="closure-content" id="closure-content">加載中...</div>
-        </div>
-
         <div class="clock-container">
             <div id="clock">00:00:00</div>
             <div id="date">--年--月--日 星期-</div>
@@ -351,29 +309,6 @@
         }
         setInterval(updateClock, 1000);
         updateClock();
-
-        async function fetchGovSchoolClosureNotice() {
-            const box = document.getElementById('school-closure-box');
-            const content = document.getElementById('closure-content');
-            try {
-                const feedUrl = encodeURIComponent('https://www.info.gov.hk/gia/rss/general_zh.xml');
-                const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${feedUrl}`);
-                const data = await res.json();
-                if (data.status === 'ok' && data.items && data.items.length > 0) {
-                    const keywords = ['停課', '教育局特別宣布', '中小學', '幼稚園'];
-                    const matchedItems = data.items.filter(item => keywords.some(kw => (item.title + ' ' + item.description).toLowerCase().includes(kw)));
-                    if (matchedItems.length > 0) {
-                        content.innerHTML = `<b>${matchedItems[0].title}</b><br>${matchedItems[0].description || ''}`;
-                        box.classList.add('active');
-                        return;
-                    }
-                }
-                box.classList.remove('active');
-            } catch (err) { box.classList.remove('active'); }
-        }
-
-        fetchGovSchoolClosureNotice();
-        setInterval(fetchGovSchoolClosureNotice, 60000);
 
         const defaultBuses = [
             { company: "kmb", route: "E36A", dir: "inbound", stop: "TC188", origin_name: "東涌", dest_name: "往 元朗", offset: 0 },
