@@ -9,7 +9,7 @@
             box-sizing: border-box; 
             margin: 0; 
             padding: 0; 
-            -webkit-tap-highlight-color: transparent; /* 移除 iOS 點擊閃爍 */
+            -webkit-tap-highlight-color: transparent;
         }
         body {
             background-color: #0f172a;
@@ -115,14 +115,7 @@
             margin-bottom: 12px;
             border: 2px solid #f87171;
             box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
-            animation: pulse-notice 2s infinite;
             flex-shrink: 0;
-        }
-
-        @keyframes pulse-notice {
-            0% { border-color: #f87171; }
-            50% { border-color: #ffffff; }
-            100% { border-color: #f87171; }
         }
 
         main {
@@ -161,7 +154,6 @@
             font-size: 0.85rem;
             cursor: pointer;
         }
-        .settings-btn:active { background: #475569; }
 
         .bus-list { 
             display: flex; 
@@ -170,7 +162,7 @@
             overflow-y: auto; 
             flex: 1; 
             padding-right: 4px; 
-            -webkit-overflow-scrolling: touch; /* iOS 順滑滾動 */
+            -webkit-overflow-scrolling: touch;
         }
         .bus-item {
             border-radius: 12px;
@@ -232,13 +224,11 @@
             font-size: 1.5rem;
             font-weight: 900;
             padding: 6px 4px;
-            box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
         }
         .eta-badge.first.arr {
             background: #881337;
             color: #fb7185;
             border-color: #f43f5e;
-            box-shadow: 0 0 10px rgba(244, 63, 94, 0.3);
         }
 
         .loading-text { text-align: center; color: #94a3b8; padding: 20px; font-size: 0.9rem; }
@@ -324,44 +314,31 @@
         .add-btn { background: #166534; color: #86efac; }
         .hint-text { font-size: 0.8rem; color: #94a3b8; }
 
-        /* =========================================
-           iPad (Tablet) 特有排版 - 專為 iPad Mini 2 等級解析度最佳化
-           ========================================= */
         @media (min-width: 768px) {
             body { padding: 24px; gap: 8px; }
-            
             header { padding-bottom: 20px; gap: 10px; border-bottom: 2px solid #334155; }
             #clock { font-size: 5.5rem; letter-spacing: 4px; }
             #date { font-size: 1.4rem; margin-top: 4px; }
-            
             .weather-sub-bar { gap: 20px; margin-top: 8px; }
             .weather-info-box { padding: 6px 16px; border-radius: 30px; gap: 10px; }
             .weather-icon { width: 36px; height: 36px; }
             .weather-emoji { font-size: 1.6rem; }
             .weather-temp { font-size: 1.5rem; }
-            
             .warning-badge { padding: 8px 16px; font-size: 1.1rem; border-radius: 20px; }
             .school-notice { font-size: 1.3rem; padding: 16px; border-radius: 16px; margin-bottom: 16px; }
-            
             .bus-panel { padding: 24px; border-radius: 24px; }
             .panel-title { font-size: 1.4rem; margin-bottom: 20px; }
             .settings-btn { font-size: 1.1rem; padding: 10px 20px; }
-            
             .bus-list { gap: 16px; padding-right: 8px; }
             .bus-item { padding: 20px 24px; border-radius: 16px; gap: 16px; }
-            
             .bus-company-tag { font-size: 1rem; padding: 4px 10px; border-radius: 6px; }
             .bus-name { font-size: 4.8rem; letter-spacing: 3px; }
-            
             .bus-dest { gap: 8px; }
             .bus-origin-text { font-size: 1.8rem; }
             .bus-dest-text { font-size: 1.3rem; }
-            
             .eta-group { gap: 12px; }
             .eta-badge { font-size: 1.3rem; padding: 14px 8px; border-radius: 12px; }
             .eta-badge.first { font-size: 2.4rem; padding: 12px 8px; border-radius: 12px; }
-
-            /* 設定視窗平板優化 (加大點擊範圍) */
             .modal-content { max-width: 800px; padding: 24px; gap: 16px; }
             .modal-title { font-size: 1.4rem; }
             .modal-close { font-size: 2.2rem; }
@@ -422,78 +399,100 @@
         </div>
     </div>
 
-    <!-- JavaScript 保持原樣不變，只處理介面顯示 -->
     <script>
-        let kmbStopsCacheMap = null;
-        const ctbStopsCache = {};
+        var kmbStopsCacheMap = null;
+        var ctbStopsCache = {};
 
-        async function getKmbStopsMap() {
-            if (kmbStopsCacheMap) return kmbStopsCacheMap;
-            try {
-                const stopsRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop`);
-                const stopsData = await stopsRes.json();
-                kmbStopsCacheMap = new Map(stopsData.data.map(s => [s.stop, s.name_tc]));
-                return kmbStopsCacheMap;
-            } catch (e) {
-                return new Map();
+        function getKmbStopsMap(callback) {
+            if (kmbStopsCacheMap) {
+                callback(kmbStopsCacheMap);
+                return;
             }
+            fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop')
+                .then(function(res) { return res.json(); })
+                .then(function(stopsData) {
+                    kmbStopsCacheMap = {};
+                    if (stopsData && stopsData.data) {
+                        for (var i = 0; i < stopsData.data.length; i++) {
+                            kmbStopsCacheMap[stopsData.data[i].stop] = stopsData.data[i].name_tc;
+                        }
+                    }
+                    callback(kmbStopsCacheMap);
+                })
+                .catch(function(e) {
+                    callback({});
+                });
         }
 
         function updateClock() {
-            const now = new Date();
-            document.getElementById('clock').innerText = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-            const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-            document.getElementById('date').innerText = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${weekDays[now.getDay()]}`;
+            var now = new Date();
+            var h = String(now.getHours()); if (h.length < 2) h = '0' + h;
+            var m = String(now.getMinutes()); if (m.length < 2) m = '0' + m;
+            var s = String(now.getSeconds()); if (s.length < 2) s = '0' + s;
+            
+            var clockEl = document.getElementById('clock');
+            if (clockEl) clockEl.innerText = h + ':' + m + ':' + s;
+
+            var weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+            var dateEl = document.getElementById('date');
+            if (dateEl) {
+                dateEl.innerText = now.getFullYear() + '年' + (now.getMonth() + 1) + '月' + now.getDate() + '日 ' + weekDays[now.getDay()];
+            }
         }
         setInterval(updateClock, 1000);
         updateClock();
 
-        async function fetchWeatherData() {
-            const container = document.getElementById('weather-warnings');
-            const weatherBox = document.getElementById('weather-info-box');
-            const weatherIcon = document.getElementById('weather-icon');
-            const emojiFallback = document.getElementById('weather-emoji-fallback');
-            const weatherTemp = document.getElementById('weather-temp');
+        function fetchWeatherData() {
+            var container = document.getElementById('weather-warnings');
+            var weatherBox = document.getElementById('weather-info-box');
+            var weatherIcon = document.getElementById('weather-icon');
+            var emojiFallback = document.getElementById('weather-emoji-fallback');
+            var weatherTemp = document.getElementById('weather-temp');
 
-            try {
-                const rhrRes = await fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=tc');
-                if (rhrRes.ok) {
-                    const rhrData = await rhrRes.json();
-                    if (rhrData.icon && rhrData.icon.length > 0) {
-                        const iconId = rhrData.icon[0];
-                        
-                        weatherIcon.style.display = 'block';
-                        emojiFallback.style.display = 'none';
-                        weatherIcon.src = `weather-icons/pic${iconId}.png`;
-
-                        weatherIcon.onerror = function() {
-                            this.style.display = 'none';
-                            emojiFallback.style.display = 'inline';
-                        };
-
-                        weatherBox.style.display = 'flex';
+            fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=tc')
+                .then(function(res) { return res.json(); })
+                .then(function(rhrData) {
+                    if (rhrData && rhrData.icon && rhrData.icon.length > 0) {
+                        var iconId = rhrData.icon[0];
+                        if (weatherIcon) {
+                            weatherIcon.style.display = 'block';
+                            if (emojiFallback) emojiFallback.style.display = 'none';
+                            weatherIcon.src = 'weather-icons/pic' + iconId + '.png';
+                            weatherIcon.onerror = function() {
+                                this.style.display = 'none';
+                                if (emojiFallback) emojiFallback.style.display = 'inline';
+                            };
+                        }
+                        if (weatherBox) weatherBox.style.display = 'flex';
                     }
-                    if (rhrData.temperature && rhrData.temperature.data && rhrData.temperature.data.length > 0) {
-                        const hkoTemp = rhrData.temperature.data.find(t => t.place === "香港天文台") || rhrData.temperature.data[0];
-                        weatherTemp.innerText = `${hkoTemp.value}°C`;
+                    if (rhrData && rhrData.temperature && rhrData.temperature.data) {
+                        var temps = rhrData.temperature.data;
+                        var val = '--';
+                        for (var i = 0; i < temps.length; i++) {
+                            if (temps[i].place === "香港天文台") {
+                                val = temps[i].value;
+                                break;
+                            }
+                        }
+                        if (val === '--' && temps.length > 0) val = temps[0].value;
+                        if (weatherTemp) weatherTemp.innerText = val + '°C';
                     }
-                }
+                }).catch(function(e) {});
 
-                const res = await fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=tc');
-                if (res.ok) {
-                    const data = await res.json();
-                    let badges = [];
-
-                    for (const key in data) {
+            fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=tc')
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    var badges = [];
+                    for (var key in data) {
                         if (data.hasOwnProperty(key)) {
-                            const item = data[key];
+                            var item = data[key];
                             if (item && item.actionCode !== "CANCEL") {
                                 if (key === "WRAINA") badges.push('<span class="warning-badge badge-yellow-rain">🌧️ 黃雨</span>');
                                 else if (key === "WRAINR") badges.push('<span class="warning-badge badge-red-rain">🌧️ 紅雨</span>');
                                 else if (key === "WRAINB") badges.push('<span class="warning-badge badge-black-rain">🌧️ 黑雨</span>');
-                                else if (key.startsWith("WTCSGN")) {
-                                    const code = key.replace("WTCSGN", "");
-                                    let tcText = "";
+                                else if (key.indexOf("WTCSGN") === 0) {
+                                    var code = key.replace("WTCSGN", "");
+                                    var tcText = code + "號風球";
                                     if (code === "L") tcText = "1號戒備";
                                     else if (code === "M") tcText = "3號強風";
                                     else if (code === "8NE") tcText = "8號東北";
@@ -502,9 +501,7 @@
                                     else if (code === "8SW") tcText = "8號西南";
                                     else if (code === "9") tcText = "9號烈風";
                                     else if (code === "10") tcText = "10號颶風";
-                                    else tcText = `${code}號風球`;
-
-                                    badges.push(`<span class="warning-badge badge-tc">🌀 ${tcText}</span>`);
+                                    badges.push('<span class="warning-badge badge-tc">🌀 ' + tcText + '</span>');
                                 } else if (key === "WTS") {
                                     badges.push('<span class="warning-badge badge-ts">⛈️ 雷暴</span>');
                                 } else if (key === "SMS") {
@@ -513,192 +510,241 @@
                             }
                         }
                     }
-
-                    if (badges.length > 0) {
-                        container.innerHTML = badges.join('');
-                    } else {
-                        container.innerHTML = '<span class="warning-badge badge-none">☀️ 天氣良好</span>';
-                    }
-                }
-            } catch (e) {
-                container.innerHTML = '<span class="warning-badge badge-none">☀️ 天氣良好</span>';
-            }
-        }
-
-        async function fetchGovPressRelease() {
-            const schoolNoticeBox = document.getElementById('school-closure-notice');
-            const targetRssUrl = 'https://www.info.gov.hk/gia/rss/general_zh.xml';
-            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetRssUrl)}`;
-
-            try {
-                const response = await fetch(proxyUrl);
-                if (!response.ok) throw new Error('新聞網絡查詢失敗');
-                
-                const responseData = await response.json();
-                const parser = new DOMParser();
-                const xmlDoc = parser.parseFromString(responseData.contents, "text/xml");
-                const items = xmlDoc.querySelectorAll("item");
-
-                let matchedNotice = "";
-
-                for (let i = 0; i < Math.min(items.length, 25); i++) {
-                    const title = items[i].querySelector("title")?.textContent || "";
-                    const description = items[i].querySelector("description")?.textContent || "";
-                    const combinedText = title + " " + description;
-
-                    if ((combinedText.includes("停課") || combinedText.includes("所有學校")) &&
-                        (combinedText.includes("教育局") || combinedText.includes("幼稚園") || combinedText.includes("中小學") || combinedText.includes("特殊學校"))) {
-                        
-                        let cleanText = title.replace(/<\/?[^>]+(>|$)/g, "").trim();
-                        matchedNotice = cleanText;
-                        break; 
-                    }
-                }
-
-                if (matchedNotice) {
-                    schoolNoticeBox.innerHTML = `📢 <b>政府新聞公佈：</b> ${matchedNotice}`;
-                    schoolNoticeBox.style.display = 'block';
-                } else {
-                    schoolNoticeBox.style.display = 'none';
-                }
-
-            } catch (e) {
-                try {
-                    const flwRes = await fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=flw&lang=tc');
-                    if (flwRes.ok) {
-                        const flwData = await flwRes.json();
-                        if (flwData.specialNotice && (flwData.specialNotice.includes("停課") || flwData.specialNotice.includes("中小學"))) {
-                            schoolNoticeBox.innerHTML = `📢 <b>特別通告：</b> ${flwData.specialNotice}`;
-                            schoolNoticeBox.style.display = 'block';
-                            return;
+                    if (container) {
+                        if (badges.length > 0) {
+                            container.innerHTML = badges.join('');
+                        } else {
+                            container.innerHTML = '<span class="warning-badge badge-none">☀️ 天氣良好</span>';
                         }
                     }
-                } catch(err) {}
-                
-                schoolNoticeBox.style.display = 'none';
-            }
+                }).catch(function(e) {
+                    if (container) container.innerHTML = '<span class="warning-badge badge-none">☀️ 天氣良好</span>';
+                });
+        }
+
+        function fetchGovPressRelease() {
+            var schoolNoticeBox = document.getElementById('school-closure-notice');
+            if (!schoolNoticeBox) return;
+            var targetRssUrl = 'https://www.info.gov.hk/gia/rss/general_zh.xml';
+            var proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetRssUrl);
+
+            fetch(proxyUrl)
+                .then(function(response) { return response.json(); })
+                .then(function(responseData) {
+                    var parser = new DOMParser();
+                    var xmlDoc = parser.parseFromString(responseData.contents, "text/xml");
+                    var items = xmlDoc.querySelectorAll("item");
+                    var matchedNotice = "";
+
+                    var limit = items.length > 25 ? 25 : items.length;
+                    for (var i = 0; i < limit; i++) {
+                        var titleEl = items[i].querySelector("title");
+                        var descEl = items[i].querySelector("description");
+                        var title = titleEl ? titleEl.textContent : "";
+                        var description = descEl ? descEl.textContent : "";
+                        var combinedText = title + " " + description;
+
+                        if ((combinedText.indexOf("停課") !== -1 || combinedText.indexOf("所有學校") !== -1) &&
+                            (combinedText.indexOf("教育局") !== -1 || combinedText.indexOf("幼稚園") !== -1 || combinedText.indexOf("中小學") !== -1)) {
+                            matchedNotice = title.replace(/<\/?[^>]+(>|$)/g, "").trim();
+                            break;
+                        }
+                    }
+
+                    if (matchedNotice) {
+                        schoolNoticeBox.innerHTML = '📢 <b>政府新聞公佈：</b> ' + matchedNotice;
+                        schoolNoticeBox.style.display = 'block';
+                    } else {
+                        schoolNoticeBox.style.display = 'none';
+                    }
+                })
+                .catch(function(e) {
+                    schoolNoticeBox.style.display = 'none';
+                });
         }
 
         fetchWeatherData();
         fetchGovPressRelease();
-        
         setInterval(fetchWeatherData, 60000);
         setInterval(fetchGovPressRelease, 60000);
 
-        const defaultBuses = [
+        var defaultBuses = [
             { company: "lwb", route: "E36A", dir: "inbound", stop: "TC188", origin_name: "東涌", dest_name: "往 元朗", offset: 0 },
             { company: "ctb", route: "E33", dir: "outbound", stop: "001854", origin_name: "屯門", dest_name: "往 機場/東涌", offset: 0 }
         ];
 
-        let currentBuses = [];
-        let cachedRawEtas = {};
+        var currentBuses = [];
+        var cachedRawEtas = {};
 
         function loadBusConfigs() {
-            const saved = localStorage.getItem('user_bus_configs_v11');
+            var saved = localStorage.getItem('user_bus_configs_v11');
             if (saved) {
-                try { 
-                    currentBuses = JSON.parse(saved).filter(bus => bus.company !== 'nlb'); 
-                } catch(e) { 
-                    currentBuses = defaultBuses; 
+                try {
+                    var parsed = JSON.parse(saved);
+                    currentBuses = [];
+                    for (var i = 0; i < parsed.length; i++) {
+                        if (parsed[i].company !== 'nlb') {
+                            currentBuses.push(parsed[i]);
+                        }
+                    }
+                } catch(e) {
+                    currentBuses = defaultBuses;
                 }
             } else {
                 currentBuses = defaultBuses;
             }
         }
 
-        async function getKMBSeta(route, stopCode, dir) {
-            try {
-                if (!stopCode) return [];
-                const etaRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${stopCode}`);
-                const etaData = await etaRes.json();
-                const kmbDir = dir === 'inbound' ? 'I' : 'O';
-                return (etaData.data || []).filter(i => i.route.toUpperCase() === route.toUpperCase() && (!i.dir || i.dir === kmbDir));
-            } catch (e) { return []; }
+        function getKMBSeta(route, stopCode, dir, callback) {
+            if (!stopCode) { callback([]); return; }
+            fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/' + stopCode)
+                .then(function(res) { return res.json(); })
+                .then(function(etaData) {
+                    var kmbDir = dir === 'inbound' ? 'I' : 'O';
+                    var list = [];
+                    var data = etaData.data || [];
+                    for (var i = 0; i < data.length; i++) {
+                        if (data[i].route.toUpperCase() === route.toUpperCase() && (!data[i].dir || data[i].dir === kmbDir)) {
+                            list.push(data[i]);
+                        }
+                    }
+                    callback(list);
+                })
+                .catch(function(e) { callback([]); });
         }
 
-        async function getCTBETA(route, stopIdOrName, dir) {
-            try {
-                if (!stopIdOrName) return [];
-                const ctbDir = dir === 'inbound' ? 'inbound' : 'outbound';
-                let stopId = stopIdOrName;
-                
-                if (/[\u4e00-\u9fa5]/.test(stopIdOrName)) {
-                    const stopsRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${route.toUpperCase()}/${ctbDir}`);
-                    const stopsData = await stopsRes.json();
-                    if (stopsData.data && stopsData.data.length > 0) stopId = stopsData.data[0].stop;
-                }
-                const etaRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/${stopId}/${route.toUpperCase()}`);
-                const etaData = await etaRes.json();
-                return (etaData.data || []).filter(i => i.dir === (ctbDir === 'inbound' ? 'I' : 'O'));
-            } catch (e) { return []; }
+        function getCTBETA(route, stopIdOrName, dir, callback) {
+            if (!stopIdOrName) { callback([]); return; }
+            var ctbDir = dir === 'inbound' ? 'inbound' : 'outbound';
+            var stopId = stopIdOrName;
+            
+            function fetchEta(finalStopId) {
+                fetch('https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/' + finalStopId + '/' + route.toUpperCase())
+                    .then(function(res) { return res.json(); })
+                    .then(function(etaData) {
+                        var list = [];
+                        var data = etaData.data || [];
+                        var targetDirCode = ctbDir === 'inbound' ? 'I' : 'O';
+                        for (var i = 0; i < data.length; i++) {
+                            if (data[i].dir === targetDirCode) {
+                                list.push(data[i]);
+                            }
+                        }
+                        callback(list);
+                    })
+                    .catch(function(e) { callback([]); });
+            }
+
+            if (/[\u4e00-\u9fa5]/.test(stopIdOrName)) {
+                fetch('https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/' + route.toUpperCase() + '/' + ctbDir)
+                    .then(function(res) { return res.json(); })
+                    .then(function(stopsData) {
+                        if (stopsData.data && stopsData.data.length > 0) {
+                            stopId = stopsData.data[0].stop;
+                        }
+                        fetchEta(stopId);
+                    })
+                    .catch(function(e) { fetchEta(stopId); });
+            } else {
+                fetchEta(stopId);
+            }
         }
 
-        async function fetchBusData() {
+        function fetchBusData() {
             loadBusConfigs();
-            const busListContainer = document.getElementById('bus-list');
+            var busListContainer = document.getElementById('bus-list');
+            if (!busListContainer) return;
 
             if (currentBuses.length === 0) {
                 busListContainer.innerHTML = '<div class="loading-text">尚未設定任何路線</div>';
                 return;
             }
 
-            const companyOrder = { kmb: 1, lwb: 2, ctb: 3 };
-            const sortedBuses = [...currentBuses].sort((a, b) => (companyOrder[a.company] || 99) - (companyOrder[b.company] || 99));
-            const now = new Date();
+            var companyOrder = { kmb: 1, lwb: 2, ctb: 3 };
+            currentBuses.sort(function(a, b) {
+                var oA = companyOrder[a.company] || 99;
+                var oB = companyOrder[b.company] || 99;
+                return oA - oB;
+            });
 
-            const busResults = await Promise.all(sortedBuses.map(async (bus) => {
-                const busDir = bus.dir || 'outbound';
-                const busOffset = parseFloat(bus.offset || 0);
-                const busKey = `${bus.company}_${bus.route}_${busDir}_${bus.stop}`;
-                let rawEtas = [];
+            var now = new Date();
+            var completedCount = 0;
+            var busResults = new Array(currentBuses.length);
 
-                try {
-                    if (bus.company === 'kmb' || bus.company === 'lwb') rawEtas = await getKMBSeta(bus.route, bus.stop, busDir);
-                    else if (bus.company === 'ctb') rawEtas = await getCTBETA(bus.route, bus.stop, busDir);
-                } catch(e) {}
+            function checkDone() {
+                completedCount++;
+                if (completedCount === currentBuses.length) {
+                    busListContainer.innerHTML = busResults.join('');
+                }
+            }
 
-                if (rawEtas && rawEtas.length > 0) cachedRawEtas[busKey] = rawEtas;
-                else if (cachedRawEtas[busKey]) rawEtas = cachedRawEtas[busKey];
+            var loopFn = function(index) {
+                var bus = currentBuses[index];
+                var busDir = bus.dir || 'outbound';
+                var busOffset = parseFloat(bus.offset || 0);
+                var busKey = bus.company + '_' + bus.route + '_' + busDir + '_' + bus.stop;
 
-                let etas = (rawEtas || []).map(item => {
-                    if (!item || !item.eta) return null;
-                    let totalDiffSeconds = Math.round((new Date(item.eta) - now) / 1000) + (busOffset * 60);
-                    if (bus.company === 'kmb' || bus.company === 'lwb') totalDiffSeconds -= 60;
-                    if (totalDiffSeconds < 0) return null;
-                    if (totalDiffSeconds <= 90) return '即將到站';
-                    return `${Math.round(totalDiffSeconds / 60)} 分鐘`;
-                }).filter(Boolean).slice(0, 3);
+                var processEtas = function(rawEtas) {
+                    if (rawEtas && rawEtas.length > 0) {
+                        cachedRawEtas[busKey] = rawEtas;
+                    } else if (cachedRawEtas[busKey]) {
+                        rawEtas = cachedRawEtas[busKey];
+                    }
 
-                while (etas.length < 3) etas.push('-');
+                    var etas = [];
+                    for (var j = 0; j < (rawEtas || []).length; j++) {
+                        var item = rawEtas[j];
+                        if (!item || !item.eta) continue;
+                        var totalDiffSeconds = Math.round((new Date(item.eta) - now) / 1000) + (busOffset * 60);
+                        if (bus.company === 'kmb' || bus.company === 'lwb') totalDiffSeconds -= 60;
+                        if (totalDiffSeconds < 0) continue;
+                        if (totalDiffSeconds <= 90) {
+                            etas.push('即將到站');
+                        } else {
+                            etas.push(Math.round(totalDiffSeconds / 60) + ' 分鐘');
+                        }
+                    }
 
-                const isArr = etas[0] === '即將到站';
-                const companyTag = bus.company === 'kmb' ? '<span class="bus-company-tag tag-kmb">九巴</span>' : 
-                                   bus.company === 'lwb' ? '<span class="bus-company-tag tag-lwb">龍運</span>' : 
-                                   '<span class="bus-company-tag tag-ctb">城巴</span>';
-                
-                const itemClass = bus.company === 'kmb' ? 'item-kmb' : 
-                                  bus.company === 'lwb' ? 'item-lwb' : 'item-ctb';
-                
-                const originText = bus.origin_name ? `<span class="bus-origin-text">${bus.origin_name}</span>` : '';
-                const destText = bus.dest_name ? `<span class="bus-dest-text">${bus.dest_name}</span>` : '';
-                const routeDirectionHtml = (originText && destText) ? `${originText} <span style="font-size: 0.8rem; opacity: 0.7;">➔</span> ${destText}` : (originText || destText);
+                    while (etas.length < 3) { etas.push('-'); }
 
-                return `
-                    <div class="bus-item ${itemClass}">
-                        <div class="bus-header">
-                            <div class="bus-title-group">${companyTag}<div class="bus-name">${bus.route.toUpperCase()}</div></div>
-                            <div class="bus-dest">${routeDirectionHtml}</div>
-                        </div>
-                        <div class="eta-group">
-                            <div class="eta-badge first ${isArr ? 'arr' : ''}">${etas[0]}</div>
-                            <div class="eta-badge">${etas[1]}</div>
-                            <div class="eta-badge">${etas[2]}</div>
-                        </div>
-                    </div>
-                `;
-            }));
+                    var isArr = (etas[0] === '即將到站');
+                    var companyTag = '';
+                    if (bus.company === 'kmb') companyTag = '<span class="bus-company-tag tag-kmb">九巴</span>';
+                    else if (bus.company === 'lwb') companyTag = '<span class="bus-company-tag tag-lwb">龍運</span>';
+                    else companyTag = '<span class="bus-company-tag tag-ctb">城巴</span>';
 
-            busListContainer.innerHTML = busResults.join('');
+                    var itemClass = bus.company === 'kmb' ? 'item-kmb' : (bus.company === 'lwb' ? 'item-lwb' : 'item-ctb');
+                    var originText = bus.origin_name ? '<span class="bus-origin-text">' + bus.origin_name + '</span>' : '';
+                    var destText = bus.dest_name ? '<span class="bus-dest-text">' + bus.dest_name + '</span>' : '';
+                    var routeDirectionHtml = (originText && destText) ? originText + ' <span style="font-size: 0.8rem; opacity: 0.7;">➔</span> ' + destText : (originText || destText);
+
+                    busResults[index] = '<div class="bus-item ' + itemClass + '">' +
+                        '<div class="bus-header">' +
+                            '<div class="bus-title-group">' + companyTag + '<div class="bus-name">' + bus.route.toUpperCase() + '</div></div>' +
+                            '<div class="bus-dest">' + routeDirectionHtml + '</div>' +
+                        '</div>' +
+                        '<div class="eta-group">' +
+                            '<div class="eta-badge first ' + (isArr ? 'arr' : '') + '">' + etas[0] + '</div>' +
+                            '<div class="eta-badge">' + etas[1] + '</div>' +
+                            '<div class="eta-badge">' + etas[2] + '</div>' +
+                        '</div>' +
+                    '</div>';
+
+                    checkDone();
+                };
+
+                if (bus.company === 'kmb' || bus.company === 'lwb') {
+                    getKMBSeta(bus.route, bus.stop, busDir, processEtas);
+                } else if (bus.company === 'ctb') {
+                    getCTBETA(bus.route, bus.stop, busDir, processEtas);
+                } else {
+                    processEtas([]);
+                }
+            };
+
+            for (var i = 0; i < currentBuses.length; i++) {
+                loopFn(i);
+            }
         }
 
         fetchBusData();
@@ -707,269 +753,311 @@
         function openSettings() {
             loadBusConfigs();
             renderSettingsList();
-            document.getElementById('settings-modal').classList.add('active');
+            var modal = document.getElementById('settings-modal');
+            if (modal) modal.classList.add('active');
         }
 
         function closeSettings() {
-            document.getElementById('settings-modal').classList.remove('active');
+            var modal = document.getElementById('settings-modal');
+            if (modal) modal.classList.remove('active');
         }
 
         function renderSettingsList() {
-            const container = document.getElementById('config-list');
+            var container = document.getElementById('config-list');
+            if (!container) return;
             container.innerHTML = '';
 
-            const generateOffsetOptions = (selectedVal) => {
-                let options = '';
-                for (let sec = -180; sec <= 180; sec += 30) {
-                    const val = sec / 60;
-                    options += `<option value="${val}" ${parseFloat(selectedVal) === val ? 'selected' : ''}>${val === 0 ? '無微調 (0分)' : (val > 0 ? `+${val} 分鐘 (+${sec}秒)` : `${val} 分鐘 (${sec}秒)`)}</option>`;
+            var generateOffsetOptions = function(selectedVal) {
+                var options = '';
+                for (var sec = -180; sec <= 180; sec += 30) {
+                    var val = sec / 60;
+                    var label = val === 0 ? '無微調 (0分)' : (val > 0 ? '+' + val + ' 分鐘 (+' + sec + '秒)' : val + ' 分鐘 (' + sec + '秒)');
+                    var selected = (parseFloat(selectedVal) === val) ? 'selected' : '';
+                    options += '<option value="' + val + '" ' + selected + '>' + label + '</option>';
                 }
                 return options;
             };
 
-            currentBuses.forEach((bus, index) => {
-                const busDir = bus.dir || 'outbound';
-                const busOffset = bus.offset !== undefined ? bus.offset : 0;
+            for (var i = 0; i < currentBuses.length; i++) {
+                var bus = currentBuses[i];
+                var busDir = bus.dir || 'outbound';
+                var busOffset = bus.offset !== undefined ? bus.offset : 0;
 
-                const itemHtml = `
-                    <div class="config-item" data-index="${index}" data-current-stop="${bus.stop}" data-current-dir="${busDir}">
-                        <div class="config-row">
-                            <select class="config-select bus-company" onchange="onBusMetaChanged(${index})">
-                                <option value="kmb" ${bus.company === 'kmb' ? 'selected' : ''}>九巴 (KMB)</option>
-                                <option value="lwb" ${bus.company === 'lwb' ? 'selected' : ''}>龍運 (LWB)</option>
-                                <option value="ctb" ${bus.company === 'ctb' ? 'selected' : ''}>城巴 (CTB)</option>
-                            </select>
-                            <input type="text" class="config-input bus-route" placeholder="路線 (例: E33)" value="${bus.route}" onchange="onBusMetaChanged(${index})">
-                            <select class="config-select bus-dir" onchange="onDirectionChanged(${index})">
-                                <option value="${busDir}" selected>方向載入中...</option>
-                            </select>
-                            <button class="delete-btn" onclick="deleteBusConfig(${index})">刪除</button>
-                        </div>
-                        <div class="config-row">
-                            <select class="config-select bus-stop" onchange="handleStopChange(${index})">
-                                <option value="${bus.stop}" selected>${bus.stop ? '已選代碼: ' + bus.stop : '請選擇車站...'}</option>
-                            </select>
-                            <input type="text" class="config-input bus-origin" placeholder="起點站名 (如 屯門)" value="${bus.origin_name || ''}">
-                            <input type="text" class="config-input bus-dest" placeholder="目的地 (如 往 機場)" value="${bus.dest_name || ''}">
-                            <select class="config-select bus-offset" title="時間微調">${generateOffsetOptions(busOffset)}</select>
-                        </div>
-                    </div>
-                `;
+                var itemHtml = '<div class="config-item" data-index="' + i + '" data-current-stop="' + bus.stop + '" data-current-dir="' + busDir + '">' +
+                    '<div class="config-row">' +
+                        '<select class="config-select bus-company" onchange="onBusMetaChanged(' + i + ')">' +
+                            '<option value="kmb" ' + (bus.company === 'kmb' ? 'selected' : '') + '>九巴 (KMB)</option>' +
+                            '<option value="lwb" ' + (bus.company === 'lwb' ? 'selected' : '') + '>龍運 (LWB)</option>' +
+                            '<option value="ctb" ' + (bus.company === 'ctb' ? 'selected' : '') + '>城巴 (CTB)</option>' +
+                        '</select>' +
+                        '<input type="text" class="config-input bus-route" placeholder="路線 (例: E33)" value="' + bus.route + '" onchange="onBusMetaChanged(' + i + ')">' +
+                        '<select class="config-select bus-dir" onchange="onDirectionChanged(' + i + ')">' +
+                            '<option value="' + busDir + '" selected>方向載入中...</option>' +
+                        '</select>' +
+                        '<button class="delete-btn" onclick="deleteBusConfig(' + i + ')">刪除</button>' +
+                    '</div>' +
+                    '<div class="config-row">' +
+                        '<select class="config-select bus-stop" onchange="handleStopChange(' + i + ')">' +
+                            '<option value="' + bus.stop + '" selected>' + (bus.stop ? '已選代碼: ' + bus.stop : '請選擇車站...') + '</option>' +
+                        '</select>' +
+                        '<input type="text" class="config-input bus-origin" placeholder="起點站名" value="' + (bus.origin_name || '') + '">' +
+                        '<input type="text" class="config-input bus-dest" placeholder="目的地" value="' + (bus.dest_name || '') + '">' +
+                        '<select class="config-select bus-offset" title="時間微調">' + generateOffsetOptions(busOffset) + '</select>' +
+                    '</div>' +
+                '</div>';
                 container.innerHTML += itemHtml;
-                if (bus.route) loadStopOptions(index, false);
+                if (bus.route) {
+                    loadStopOptions(i, false);
+                }
+            }
+        }
+
+        function onBusMetaChanged(index) {
+            updateDirectionOptions(index, true, function() {
+                loadStopOptions(index, true);
             });
         }
 
-        async function onBusMetaChanged(index) {
-            await updateDirectionOptions(index, true);
-            loadStopOptions(index, true);
-        }
-
-        async function onDirectionChanged(index) {
-            const items = document.querySelectorAll('.config-item');
-            const item = items[index];
+        function onDirectionChanged(index) {
+            var items = document.querySelectorAll('.config-item');
+            var item = items[index];
             if (!item) return;
-            const dirSelect = item.querySelector('.bus-dir');
-            item.dataset.currentDir = dirSelect.value;
-            const selectedOpt = dirSelect.options[dirSelect.selectedIndex];
-            const destInput = item.querySelector('.bus-dest');
+            var dirSelect = item.querySelector('.bus-dir');
+            item.setAttribute('data-current-dir', dirSelect.value);
+            var selectedOpt = dirSelect.options[dirSelect.selectedIndex];
+            var destInput = item.querySelector('.bus-dest');
             if (selectedOpt && selectedOpt.text) {
                 destInput.value = selectedOpt.text;
             }
-            await loadStopOptions(index, false);
+            loadStopOptions(index, false);
         }
 
-        async function updateDirectionOptions(index, isUserAction = false) {
-            const items = document.querySelectorAll('.config-item');
-            const item = items[index];
-            if (!item) return;
+        function updateDirectionOptions(index, isUserAction, callback) {
+            var items = document.querySelectorAll('.config-item');
+            var item = items[index];
+            if (!item) { if (callback) callback(); return; }
 
-            const company = item.querySelector('.bus-company').value;
-            const route = item.querySelector('.bus-route').value.trim().toUpperCase();
-            const dirSelect = item.querySelector('.bus-dir');
-            const currentDir = item.dataset.currentDir || 'outbound';
-            const destInput = item.querySelector('.bus-dest');
+            var company = item.querySelector('.bus-company').value;
+            var route = item.querySelector('.bus-route').value.trim().toUpperCase();
+            var dirSelect = item.querySelector('.bus-dir');
+            var currentDir = item.getAttribute('data-current-dir') || 'outbound';
+            var destInput = item.querySelector('.bus-dest');
 
             if (!route) {
                 dirSelect.innerHTML = '<option value="outbound">請先輸入路線...</option>';
+                if (callback) callback();
                 return;
             }
 
-            dirSelect.innerHTML = `<option value="${currentDir}">方向載入中...</option>`;
-            let optionsHtml = '';
+            dirSelect.innerHTML = '<option value="' + currentDir + '">方向載入中...</option>';
 
-            try {
-                if (company === 'kmb' || company === 'lwb') {
-                    let destO = '', destI = '';
-                    try {
-                        const resO = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route/${route}/outbound/1`);
-                        if (resO.ok) { const d = await resO.json(); if (d?.data?.dest_tc) destO = d.data.dest_tc; }
-                    } catch(e) {}
-                    try {
-                        const resI = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route/${route}/inbound/1`);
-                        if (resI.ok) { const d = await resI.json(); if (d?.data?.dest_tc) destI = d.data.dest_tc; }
-                    } catch(e) {}
-
-                    optionsHtml += `<option value="outbound">往 ${destO || '(去程終點)'}</option>`;
-                    optionsHtml += `<option value="inbound">往 ${destI || '(回程終點)'}</option>`;
-
-                } else if (company === 'ctb') {
-                    try {
-                        const res = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/route/CTB/${route}`);
-                        if (res.ok) {
-                            const data = await res.json();
-                            if (data.data) {
-                                const destO = data.data.dest_tc || '去程終點';
-                                const destI = data.data.orig_tc || '回程終點';
-                                optionsHtml += `<option value="outbound">往 ${destO}</option>`;
-                                optionsHtml += `<option value="inbound">往 ${destI}</option>`;
-                            }
+            if (company === 'kmb' || company === 'lwb') {
+                var destO = '', destI = '';
+                fetch('https://data.etabus.gov.hk/v1/transport/kmb/route/' + route + '/outbound/1')
+                    .then(function(res) { return res.json(); })
+                    .then(function(d) {
+                        if (d && d.data && d.data.dest_tc) destO = d.data.dest_tc;
+                        return fetch('https://data.etabus.gov.hk/v1/transport/kmb/route/' + route + '/inbound/1');
+                    })
+                    .then(function(res) { return res.json(); })
+                    .then(function(d) {
+                        if (d && d.data && d.data.dest_tc) destI = d.data.dest_tc;
+                        var html = '<option value="outbound">往 ' + (destO || '去程終點') + '</option>' +
+                                   '<option value="inbound">往 ' + (destI || '回程終點') + '</option>';
+                        dirSelect.innerHTML = html;
+                        finalizeDir(dirSelect, item, currentDir, isUserAction, destInput, callback);
+                    })
+                    .catch(function(e) {
+                        dirSelect.innerHTML = '<option value="outbound">往 去程</option><option value="inbound">往 回程</option>';
+                        finalizeDir(dirSelect, item, currentDir, isUserAction, destInput, callback);
+                    });
+            } else if (company === 'ctb') {
+                fetch('https://rt.data.gov.hk/v2/transport/citybus/route/CTB/' + route)
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        var html = '';
+                        if (data && data.data) {
+                            var destO = data.data.dest_tc || '去程終點';
+                            var destI = data.data.orig_tc || '回程終點';
+                            html = '<option value="outbound">往 ' + destO + '</option>' +
+                                   '<option value="inbound">往 ' + destI + '</option>';
+                        } else {
+                            html = '<option value="outbound">往 去程</option><option value="inbound">往 回程</option>';
                         }
-                    } catch(e) {}
-
-                    if (!optionsHtml) {
-                        optionsHtml = `<option value="outbound">往 去程</option><option value="inbound">往 回程</option>`;
-                    }
-                }
-            } catch (e) {
-                optionsHtml = `<option value="outbound">往 去程</option><option value="inbound">往 回程</option>`;
+                        dirSelect.innerHTML = html;
+                        finalizeDir(dirSelect, item, currentDir, isUserAction, destInput, callback);
+                    })
+                    .catch(function(e) {
+                        dirSelect.innerHTML = '<option value="outbound">往 去程</option><option value="inbound">往 回程</option>';
+                        finalizeDir(dirSelect, item, currentDir, isUserAction, destInput, callback);
+                    });
+            } else {
+                dirSelect.innerHTML = '<option value="outbound">往 去程</option><option value="inbound">往 回程</option>';
+                finalizeDir(dirSelect, item, currentDir, isUserAction, destInput, callback);
             }
+        }
 
-            dirSelect.innerHTML = optionsHtml;
-            
+        function finalizeDir(dirSelect, item, currentDir, isUserAction, destInput, callback) {
             if (!isUserAction && currentDir) {
                 dirSelect.value = currentDir;
             } else {
                 dirSelect.selectedIndex = 0;
-                item.dataset.currentDir = dirSelect.value;
+                item.setAttribute('data-current-dir', dirSelect.value);
             }
-
             if (isUserAction && dirSelect.options[dirSelect.selectedIndex]) {
                 destInput.value = dirSelect.options[dirSelect.selectedIndex].text;
             }
+            if (callback) callback();
         }
 
-        async function loadStopOptions(index, isUserAction = false) {
-            const items = document.querySelectorAll('.config-item');
-            const item = items[index];
+        function loadStopOptions(index, isUserAction) {
+            var items = document.querySelectorAll('.config-item');
+            var item = items[index];
             if (!item) return;
 
-            if (isUserAction || item.querySelector('.bus-dir').options.length <= 1) {
-                await updateDirectionOptions(index, isUserAction);
-            }
+            updateDirectionOptions(index, isUserAction, function() {
+                var company = item.querySelector('.bus-company').value;
+                var route = item.querySelector('.bus-route').value.trim().toUpperCase();
+                var dirSelect = item.querySelector('.bus-dir');
+                var dir = dirSelect.value || 'outbound';
+                item.setAttribute('data-current-dir', dir);
 
-            const company = item.querySelector('.bus-company').value;
-            const route = item.querySelector('.bus-route').value.trim().toUpperCase();
-            const dirSelect = item.querySelector('.bus-dir');
-            const dir = dirSelect.value || 'outbound';
-            item.dataset.currentDir = dir;
+                var stopSelect = item.querySelector('.bus-stop');
+                var originInput = item.querySelector('.bus-origin');
 
-            const stopSelect = item.querySelector('.bus-stop');
-            const originInput = item.querySelector('.bus-origin');
-
-            if (!route) {
-                stopSelect.innerHTML = '<option value="">請先輸入路線...</option>';
-                return;
-            }
-
-            const initialStop = item.dataset.currentStop || '';
-            stopSelect.innerHTML = `<option value="${initialStop}">載入車站中...</option>`;
-            let optionsHtml = '<option value="">請選擇車站...</option>';
-
-            try {
-                if (company === 'kmb' || company === 'lwb') {
-                    const dirCode = dir === 'inbound' ? 'inbound' : 'outbound';
-                    
-                    let res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${dirCode}/1`);
-                    let data = await res.json();
-                    
-                    if (!data.data || data.data.length === 0) {
-                        res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${dirCode}/2`);
-                        data = await res.json();
-                    }
-
-                    if (data.data && data.data.length > 0) {
-                        const stopMap = await getKmbStopsMap();
-                        data.data.forEach((s, idx) => {
-                            const name = stopMap.get(s.stop) || s.stop;
-                            optionsHtml += `<option value="${s.stop}">${idx + 1}. ${name}</option>`;
-                        });
-                    } else {
-                        optionsHtml = '<option value="">找不到該路線或方向</option>';
-                    }
-
-                } else if (company === 'ctb') {
-                    const ctbDir = dir === 'inbound' ? 'inbound' : 'outbound';
-                    const res = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${route}/${ctbDir}`);
-                    const data = await res.json();
-
-                    if (data.data && data.data.length > 0) {
-                        const stopPromises = data.data.map(async (s) => {
-                            if (ctbStopsCache[s.stop]) return ctbStopsCache[s.stop];
-                            try {
-                                const r = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/stop/${s.stop}`);
-                                const d = await r.json();
-                                if (d?.data?.name_tc) {
-                                    ctbStopsCache[s.stop] = d.data.name_tc;
-                                    return d.data.name_tc;
-                                }
-                            } catch(e) {}
-                            return s.stop;
-                        });
-                        
-                        const stopNames = await Promise.all(stopPromises);
-                        data.data.forEach((s, idx) => {
-                            const name = stopNames[idx] || `代碼: ${s.stop}`;
-                            optionsHtml += `<option value="${s.stop}">${idx + 1}. ${name}</option>`;
-                        });
-                    } else {
-                        optionsHtml = '<option value="">找不到該路線或方向</option>';
-                    }
+                if (!route) {
+                    stopSelect.innerHTML = '<option value="">請先輸入路線...</option>';
+                    return;
                 }
-            } catch (e) {
-                optionsHtml = '<option value="">載入失敗，請檢查網路</option>';
-            }
 
-            stopSelect.innerHTML = optionsHtml;
-            const currentStop = item.dataset.currentStop;
-            if (!isUserAction && currentStop) {
-                stopSelect.value = currentStop;
+                var initialStop = item.getAttribute('data-current-stop') || '';
+                stopSelect.innerHTML = '<option value="' + initialStop + '">載入車站中...</option>';
+                var optionsHtml = '<option value="">請選擇車站...</option>';
+
+                if (company === 'kmb' || company === 'lwb') {
+                    var dirCode = dir === 'inbound' ? 'inbound' : 'outbound';
+                    fetch('https://data.etabus.gov.hk/v1/transport/kmb/route-stop/' + route + '/' + dirCode + '/1')
+                        .then(function(res) { return res.json(); })
+                        .then(function(data) {
+                            if (!data.data || data.data.length === 0) {
+                                return fetch('https://data.etabus.gov.hk/v1/transport/kmb/route-stop/' + route + '/' + dirCode + '/2')
+                                    .then(function(r) { return r.json(); });
+                            }
+                            return data;
+                        })
+                        .then(function(data) {
+                            if (data && data.data && data.data.length > 0) {
+                                getKmbStopsMap(function(stopMap) {
+                                    for (var i = 0; i < data.data.length; i++) {
+                                        var sId = data.data[i].stop;
+                                        var name = stopMap[sId] || sId;
+                                        optionsHtml += '<option value="' + sId + '">' + (i + 1) + '. ' + name + '</option>';
+                                    }
+                                    stopSelect.innerHTML = optionsHtml;
+                                    applyStopSelection(item, stopSelect, initialStop, isUserAction, originInput);
+                                });
+                            } else {
+                                stopSelect.innerHTML = '<option value="">找不到該路線或方向</option>';
+                            }
+                        })
+                        .catch(function(e) {
+                            stopSelect.innerHTML = '<option value="">載入失敗</option>';
+                        });
+                } else if (company === 'ctb') {
+                    var ctbDir = dir === 'inbound' ? 'inbound' : 'outbound';
+                    fetch('https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/' + route + '/' + ctbDir)
+                        .then(function(res) { return res.json(); })
+                        .then(function(data) {
+                            if (data && data.data && data.data.length > 0) {
+                                var stops = data.data;
+                                var count = 0;
+                                var stopNames = new Array(stops.length);
+
+                                var fetchStopName = function(idx) {
+                                    if (idx >= stops.length) {
+                                        for (var j = 0; j < stops.length; j++) {
+                                            var sId = stops[j].stop;
+                                            var name = stopNames[j] || ('代碼: ' + sId);
+                                            optionsHtml += '<option value="' + sId + '">' + (j + 1) + '. ' + name + '</option>';
+                                        }
+                                        stopSelect.innerHTML = optionsHtml;
+                                        applyStopSelection(item, stopSelect, initialStop, isUserAction, originInput);
+                                        return;
+                                    }
+                                    var sId = stops[idx].stop;
+                                    if (ctbStopsCache[sId]) {
+                                        stopNames[idx] = ctbStopsCache[sId];
+                                        fetchStopName(idx + 1);
+                                    } else {
+                                        fetch('https://rt.data.gov.hk/v2/transport/citybus/stop/' + sId)
+                                            .then(function(r) { return r.json(); })
+                                            .then(function(d) {
+                                                if (d && d.data && d.data.name_tc) {
+                                                    ctbStopsCache[sId] = d.data.name_tc;
+                                                    stopNames[idx] = d.data.name_tc;
+                                                } else {
+                                                    stopNames[idx] = sId;
+                                                }
+                                                fetchStopName(idx + 1);
+                                            })
+                                            .catch(function(e) {
+                                                stopNames[idx] = sId;
+                                                fetchStopName(idx + 1);
+                                            });
+                                    }
+                                };
+                                fetchStopName(0);
+                            } else {
+                                stopSelect.innerHTML = '<option value="">找不到該路線或方向</option>';
+                            }
+                        })
+                        .catch(function(e) {
+                            stopSelect.innerHTML = '<option value="">載入失敗</option>';
+                        });
+                }
+            });
+        }
+
+        function applyStopSelection(item, stopSelect, initialStop, isUserAction, originInput) {
+            if (!isUserAction && initialStop) {
+                stopSelect.value = initialStop;
             } else if (isUserAction) {
-                originInput.value = '';
-                item.dataset.currentStop = '';
+                if (originInput) originInput.value = '';
+                item.setAttribute('data-current-stop', '');
             }
         }
 
         function handleStopChange(index) {
-            const items = document.querySelectorAll('.config-item');
-            const item = items[index];
+            var items = document.querySelectorAll('.config-item');
+            var item = items[index];
             if (!item) return;
 
-            const stopSelect = item.querySelector('.bus-stop');
-            const originInput = item.querySelector('.bus-origin');
-            const selectedOption = stopSelect.options[stopSelect.selectedIndex];
+            var stopSelect = item.querySelector('.bus-stop');
+            var originInput = item.querySelector('.bus-origin');
+            var selectedOption = stopSelect.options[stopSelect.selectedIndex];
             
             if (selectedOption && selectedOption.value) {
-                originInput.value = selectedOption.text.replace(/^\d+\.\s*/, '');
+                if (originInput) originInput.value = selectedOption.text.replace(/^\d+\.\s*/, '');
             } else {
-                originInput.value = '';
+                if (originInput) originInput.value = '';
             }
-            item.dataset.currentStop = selectedOption.value;
+            item.setAttribute('data-current-stop', selectedOption ? selectedOption.value : '');
         }
 
         function syncCurrentDOMToBuses() {
-            const items = document.querySelectorAll('.config-item');
-            const tempConfigs = [];
-            items.forEach(item => {
-                const company = item.querySelector('.bus-company').value;
-                const route = item.querySelector('.bus-route').value.trim();
-                const dir = item.querySelector('.bus-dir').value;
-                const stop = item.querySelector('.bus-stop').value;
-                const origin_name = item.querySelector('.bus-origin').value.trim();
-                const dest_name = item.querySelector('.bus-dest').value.trim();
-                const offset = parseFloat(item.querySelector('.bus-offset').value);
-                tempConfigs.push({ company, route, dir, stop: stop || '', origin_name, dest_name, offset });
-            });
+            var items = document.querySelectorAll('.config-item');
+            var tempConfigs = [];
+            for (var i = 0; i < items.length; i++) {
+                var item = items[i];
+                var company = item.querySelector('.bus-company').value;
+                var route = item.querySelector('.bus-route').value.trim();
+                var dir = item.querySelector('.bus-dir').value;
+                var stop = item.querySelector('.bus-stop').value;
+                var origin_name = item.querySelector('.bus-origin').value.trim();
+                var dest_name = item.querySelector('.bus-dest').value.trim();
+                var offset = parseFloat(item.querySelector('.bus-offset').value);
+                tempConfigs.push({ company: company, route: route, dir: dir, stop: stop || '', origin_name: origin_name, dest_name: dest_name, offset: offset });
+            }
             return tempConfigs;
         }
 
@@ -986,20 +1074,23 @@
         }
 
         function saveBusConfig() {
-            const items = document.querySelectorAll('.config-item');
-            const newConfigs = [];
+            var items = document.querySelectorAll('.config-item');
+            var newConfigs = [];
 
-            items.forEach(item => {
-                const company = item.querySelector('.bus-company').value;
-                const route = item.querySelector('.bus-route').value.trim();
-                const dir = item.querySelector('.bus-dir').value;
-                const stop = item.querySelector('.bus-stop').value;
-                const origin_name = item.querySelector('.bus-origin').value.trim();
-                const dest_name = item.querySelector('.bus-dest').value.trim();
-                const offset = parseFloat(item.querySelector('.bus-offset').value);
+            for (var i = 0; i < items.length; i++) {
+                var item = items[i];
+                var company = item.querySelector('.bus-company').value;
+                var route = item.querySelector('.bus-route').value.trim();
+                var dir = item.querySelector('.bus-dir').value;
+                var stop = item.querySelector('.bus-stop').value;
+                var origin_name = item.querySelector('.bus-origin').value.trim();
+                var dest_name = item.querySelector('.bus-dest').value.trim();
+                var offset = parseFloat(item.querySelector('.bus-offset').value);
 
-                if (route) newConfigs.push({ company, route, dir, stop: stop || '', origin_name, dest_name, offset });
-            });
+                if (route) {
+                    newConfigs.push({ company: company, route: route, dir: dir, stop: stop || '', origin_name: origin_name, dest_name: dest_name, offset: offset });
+                }
+            }
 
             currentBuses = newConfigs;
             localStorage.setItem('user_bus_configs_v11', JSON.stringify(currentBuses));
