@@ -24,40 +24,53 @@
 
         header {
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
             align-items: center;
             padding-bottom: 10px;
             border-bottom: 1px solid #334155;
             margin-bottom: 10px;
-            gap: 4px;
             flex-shrink: 0;
+            gap: 10px;
+        }
+
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            align-items: flex-start;
+        }
+
+        .header-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
         }
 
         .clock-container { 
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-end;
         }
 
         #clock {
-            font-size: 3.5rem;
+            font-size: 3.2rem;
             font-weight: 700;
             letter-spacing: 2px;
             color: #38bdf8;
             line-height: 1;
         }
         #date {
-            font-size: 1.05rem;
+            font-size: 1rem;
             color: #94a3b8;
-            text-align: center;
+            text-align: right;
         }
 
         .weather-sub-bar {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 4px;
+            justify-content: flex-start;
+            gap: 8px;
             flex-wrap: wrap;
         }
 
@@ -315,10 +328,10 @@
 
         @media (min-width: 768px) {
             body { padding: 24px; gap: 8px; }
-            header { padding-bottom: 16px; gap: 6px; border-bottom: 2px solid #334155; }
-            #clock { font-size: 5.5rem; letter-spacing: 4px; }
-            #date { font-size: 1.3rem; }
-            .weather-sub-bar { gap: 16px; margin-top: 6px; }
+            header { padding-bottom: 16px; border-bottom: 2px solid #334155; }
+            #clock { font-size: 5.2rem; letter-spacing: 4px; }
+            #date { font-size: 1.2rem; }
+            .weather-sub-bar { gap: 12px; }
             .weather-info-box { padding: 4px 14px; border-radius: 30px; gap: 8px; }
             .weather-icon { width: 32px; height: 32px; }
             .weather-emoji { font-size: 1.4rem; }
@@ -352,20 +365,23 @@
 <body>
 
     <header>
-        <div class="clock-container">
-            <div id="clock">00:00:00</div>
+        <div class="header-left">
+            <div class="weather-sub-bar">
+                <div class="weather-info-box" id="weather-info-box" style="display: none;">
+                    <img id="weather-icon" class="weather-icon" src="" alt="weather icon" />
+                    <span id="weather-emoji-fallback" class="weather-emoji" style="display: none;">🌤️</span>
+                    <span id="weather-temp" class="weather-temp">--°C</span>
+                </div>
+                <div class="weather-warnings" id="weather-warnings">
+                    <span class="warning-badge badge-none">☀️ 天氣良好</span>
+                </div>
+            </div>
         </div>
-        <div id="date">--年--月--日 星期-</div>
-        
-        <div class="weather-sub-bar">
-            <div class="weather-info-box" id="weather-info-box" style="display: none;">
-                <img id="weather-icon" class="weather-icon" src="" alt="weather icon" />
-                <span id="weather-emoji-fallback" class="weather-emoji" style="display: none;">🌤️</span>
-                <span id="weather-temp" class="weather-temp">--°C</span>
+        <div class="header-right">
+            <div class="clock-container">
+                <div id="clock">00:00:00</div>
             </div>
-            <div class="weather-warnings" id="weather-warnings">
-                <span class="warning-badge badge-none">☀️ 天氣良好</span>
-            </div>
+            <div id="date">--年--月--日 星期-</div>
         </div>
     </header>
 
@@ -1121,4 +1137,3 @@
     </script>
 </body>
 </html>
-
