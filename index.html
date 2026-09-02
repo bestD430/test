@@ -404,7 +404,7 @@
                 <button class="modal-close" onclick="closeSettings()">&times;</button>
             </div>
             <div class="hint-text">
-                💡 當某路線無有效班次（或回傳空資料）時，該卡片會自動隱藏。
+                💡 當某路線無有效班次時，將顯示「暫無班次」。
             </div>
             <div class="config-list" id="config-list"></div>
             <div class="modal-footer">
@@ -592,7 +592,7 @@
         var cachedRawEtas = {};
 
         function loadBusConfigs() {
-            var saved = localStorage.getItem('user_bus_configs_v11');
+            var saved = localStorage.getItem('user_bus_configs_v12');
             if (saved) {
                 try {
                     var parsed = JSON.parse(saved);
@@ -695,11 +695,7 @@
                             finalHtml += busResults[k];
                         }
                     }
-                    if (finalHtml === '') {
-                        busListContainer.innerHTML = '<div class="loading-text">目前所有設定路線皆無班次資料</div>';
-                    } else {
-                        busListContainer.innerHTML = finalHtml;
-                    }
+                    busListContainer.innerHTML = finalHtml;
                 }
             }
 
@@ -716,33 +712,27 @@
                         rawEtas = cachedRawEtas[busKey];
                     }
 
-                    if (!rawEtas || rawEtas.length === 0) {
-                        busResults[index] = '';
-                        checkDone();
-                        return;
-                    }
-
                     var etas = [];
-                    for (var j = 0; j < rawEtas.length; j++) {
-                        var item = rawEtas[j];
-                        if (!item || !item.eta) continue;
-                        var totalDiffSeconds = Math.round((new Date(item.eta) - now) / 1000) + (busOffset * 60);
-                        if (bus.company === 'kmb' || bus.company === 'lwb') totalDiffSeconds -= 60;
-                        if (totalDiffSeconds < 0) continue;
-                        if (totalDiffSeconds <= 90) {
-                            etas.push('即將到站');
-                        } else {
-                            etas.push(Math.round(totalDiffSeconds / 60) + ' 分鐘');
+                    if (rawEtas && rawEtas.length > 0) {
+                        for (var j = 0; j < rawEtas.length; j++) {
+                            var item = rawEtas[j];
+                            if (!item || !item.eta) continue;
+                            var totalDiffSeconds = Math.round((new Date(item.eta) - now) / 1000) + (busOffset * 60);
+                            if (bus.company === 'kmb' || bus.company === 'lwb') totalDiffSeconds -= 60;
+                            if (totalDiffSeconds < 0) continue;
+                            if (totalDiffSeconds <= 90) {
+                                etas.push('即將到站');
+                            } else {
+                                etas.push(Math.round(totalDiffSeconds / 60) + ' 分鐘');
+                            }
                         }
                     }
 
                     if (etas.length === 0) {
-                        busResults[index] = '';
-                        checkDone();
-                        return;
+                        etas = ['暫無班次', '-', '-'];
+                    } else {
+                        while (etas.length < 3) { etas.push('-'); }
                     }
-
-                    while (etas.length < 3) { etas.push('-'); }
 
                     var isArr = (etas[0] === '即將到站');
                     var companyTag = '';
@@ -1130,7 +1120,7 @@
             }
 
             currentBuses = newConfigs;
-            localStorage.setItem('user_bus_configs_v11', JSON.stringify(currentBuses));
+            localStorage.setItem('user_bus_configs_v12', JSON.stringify(currentBuses));
             closeSettings();
             fetchBusData();
         }
