@@ -208,29 +208,50 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        /* 所有卡片樣式改用灰色底 */
+        /* 卡片基礎樣式 */
         .bus-item {
-            background: #334155;
-            color: #ffffff;
             border-radius: 12px;
             padding: 12px;
             display: flex;
             flex-direction: column;
             gap: 10px;
             width: 100%;
-            border: 1px solid #475569;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
         }
+
+        /* 公司/港鐵路線卡片專屬底色 */
+        .card-kmb { background-color: #8a1a1a; }
+        .card-lwb { background-color: #b44c12; }
+        .card-ctb { background-color: #9a730c; }
+        
+        /* 港鐵各路線底色 */
+        .card-mtr-KTL { background-color: #007a3d; } /* 觀塘綫: 綠色 */
+        .card-mtr-ISL { background-color: #0072ce; } /* 港島綫: 藍色 */
+        .card-mtr-TWL { background-color: #e60012; } /* 荃灣綫: 紅色 */
+        .card-mtr-SIL { background-color: #b6bd00; } /* 南港島綫: 黃綠色 */
+        .card-mtr-TCL { background-color: #f38200; } /* 東涌綫: 橘色 */
+        .card-mtr-AEL { background-color: #008088; } /* 機場快綫: 青綠色 */
+        .card-mtr-TKL { background-color: #a35ebf; } /* 將軍澳綫: 紫色 */
+        .card-mtr-TML { background-color: #923011; } /* 屯馬綫: 棕色 */
+        .card-mtr-EAL { background-color: #53b7e8; } /* 東鐵綫: 天藍色 */
+        .card-mtr-default { background-color: #61132e; } /* 港鐵預設紅 */
 
         .bus-header { display: flex; justify-content: space-between; align-items: baseline; }
         .bus-title-group { display: flex; align-items: center; gap: 8px; }
         
-        .bus-company-tag { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; color: #ffffff; }
-        .tag-kmb { background: #cc1c1c; }
-        .tag-lwb { background: #ea580c; }
-        .tag-ctb { background: #eab308; color: #000000; }
-        .tag-mtr { background: #990000; }
+        .bus-company-tag { 
+            font-size: 0.75rem; 
+            padding: 2px 8px; 
+            border-radius: 4px; 
+            font-weight: bold; 
+            color: #ffffff; 
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
 
-        .bus-name { font-size: 2.835rem; font-weight: 700; letter-spacing: 2px; line-height: 1; color: #ffffff; }
+        .bus-name { font-size: 2.835rem; font-weight: 700; letter-spacing: 2px; line-height: 1; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
 
         .bus-dest { 
             font-size: 0.85rem; 
@@ -240,26 +261,28 @@
             align-items: baseline;
             justify-content: flex-end;
             gap: 4px;
-            color: #cbd5e1;
+            color: #f1f5f9;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
         }
         .bus-origin-text { font-size: 1.15rem; font-weight: 800; color: #ffffff; }
-        .bus-dest-text { font-size: 0.85rem; font-weight: 500; opacity: 0.9; }
+        .bus-dest-text { font-size: 0.85rem; font-weight: 500; opacity: 0.95; }
 
         .eta-group { display: flex; gap: 8px; align-items: center; }
         .eta-badge {
             flex: 1;
-            background: #0f172a;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(4px);
             border-radius: 6px;
             padding: 8px 4px;
             text-align: center;
             font-size: 0.85rem;
             font-weight: bold;
-            color: #94a3b8;
-            border: 1px solid #475569;
+            color: #e2e8f0;
+            border: 1px solid rgba(255, 255, 255, 0.15);
         }
         .eta-badge.first {
             flex: 1.6;
-            background: #064e3b;
+            background: rgba(6, 78, 59, 0.9);
             color: #34d399;
             border-color: #10b981;
             font-size: 1.5rem;
@@ -267,7 +290,7 @@
             padding: 6px 4px;
         }
         .eta-badge.first.arr {
-            background: #881337;
+            background: rgba(136, 19, 55, 0.95);
             color: #fb7185;
             border-color: #f43f5e;
         }
@@ -980,21 +1003,33 @@
 
                     var isArr = (etas[0] === '即將到站');
                     var companyTag = '';
-                    if (bus.company === 'kmb') companyTag = '<span class="bus-company-tag tag-kmb">九巴</span>';
-                    else if (bus.company === 'lwb') companyTag = '<span class="bus-company-tag tag-lwb">龍運</span>';
-                    else if (bus.company === 'ctb') companyTag = '<span class="bus-company-tag tag-ctb">城巴</span>';
-                    else if (bus.company === 'mtr') companyTag = '<span class="bus-company-tag tag-mtr">港鐵</span>';
+                    var cardClass = 'card-kmb';
+
+                    if (bus.company === 'kmb') {
+                        companyTag = '<span class="bus-company-tag">九巴</span>';
+                        cardClass = 'card-kmb';
+                    } else if (bus.company === 'lwb') {
+                        companyTag = '<span class="bus-company-tag">龍運</span>';
+                        cardClass = 'card-lwb';
+                    } else if (bus.company === 'ctb') {
+                        companyTag = '<span class="bus-company-tag">城巴</span>';
+                        cardClass = 'card-ctb';
+                    } else if (bus.company === 'mtr') {
+                        companyTag = '<span class="bus-company-tag">港鐵</span>';
+                        var lineCode = bus.route.toUpperCase();
+                        cardClass = 'card-mtr-' + (mtrRoutesData[lineCode] ? lineCode : 'default');
+                    }
 
                     var originText = bus.origin_name ? '<span class="bus-origin-text">' + bus.origin_name + '</span>' : '';
                     var destText = bus.dest_name ? '<span class="bus-dest-text">' + bus.dest_name + '</span>' : '';
-                    var routeDirectionHtml = (originText && destText) ? originText + ' <span style="font-size: 0.8rem; opacity: 0.7;">➔</span> ' + destText : (originText || destText);
+                    var routeDirectionHtml = (originText && destText) ? originText + ' <span style="font-size: 0.8rem; opacity: 0.8;">➔</span> ' + destText : (originText || destText);
 
                     var displayRoute = bus.route.toUpperCase();
                     if (bus.company === 'mtr' && mtrRoutesData[displayRoute]) {
                         displayRoute = mtrRoutesData[displayRoute].name;
                     }
 
-                    busResults[index] = '<div class="bus-item">' +
+                    busResults[index] = '<div class="bus-item ' + cardClass + '">' +
                         '<div class="bus-header">' +
                             '<div class="bus-title-group">' + companyTag + '<div class="bus-name">' + displayRoute + '</div></div>' +
                             '<div class="bus-dest">' + routeDirectionHtml + '</div>' +
@@ -1091,7 +1126,6 @@
             }
         }
 
-        // 根據機構渲染「下拉選單（港鐵）」或「文字輸入框（巴士）」
         function renderRouteControl(company, currentRoute, index) {
             if (company === 'mtr') {
                 var optionsHtml = '<select class="config-select bus-route" onchange="onBusMetaChanged(' + index + ')">';
