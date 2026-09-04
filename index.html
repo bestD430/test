@@ -221,17 +221,17 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
         }
 
-        /* 公司/港鐵路線卡片專屬底色 */
-        .card-kmb { background-color: #8a1a1a; }
-        .card-lwb { background-color: #b44c12; }
-        .card-ctb { background-color: #9a730c; }
+        /* 各巴士公司 House Color */
+        .card-kmb { background-color: #d8121a; } /* 九巴: 經典紅 */
+        .card-lwb { background-color: #f37021; } /* 龍運: 活力橙 */
+        .card-ctb { background-color: #0056a8; } /* 城巴: 企業藍 */
         
-        /* 港鐵各路線底色 */
+        /* 港鐵各路線底色 (微調防止與巴士撞色) */
         .card-mtr-KTL { background-color: #007a3d; } /* 觀塘綫: 綠色 */
-        .card-mtr-ISL { background-color: #0072ce; } /* 港島綫: 藍色 */
-        .card-mtr-TWL { background-color: #e60012; } /* 荃灣綫: 紅色 */
+        .card-mtr-ISL { background-color: #0099e6; } /* 港島綫: 明亮藍 (避免與城巴藍色撞色) */
+        .card-mtr-TWL { background-color: #a80010; } /* 荃灣綫: 深紅 (避免與九巴鮮紅撞色) */
         .card-mtr-SIL { background-color: #b6bd00; } /* 南港島綫: 黃綠色 */
-        .card-mtr-TCL { background-color: #f38200; } /* 東涌綫: 橘色 */
+        .card-mtr-TCL { background-color: #c85a00; } /* 東涌綫: 深橘 (避免與龍運橙色撞色) */
         .card-mtr-AEL { background-color: #008088; } /* 機場快綫: 青綠色 */
         .card-mtr-TKL { background-color: #a35ebf; } /* 將軍澳綫: 紫色 */
         .card-mtr-TML { background-color: #923011; } /* 屯馬綫: 棕色 */
@@ -910,20 +910,36 @@
 
         function getMTRETA(line, station, dir, callback) {
             if (!line || !station) { callback([]); return; }
-            var url = 'https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php?line=' + line.toUpperCase() + '&sta=' + station.toUpperCase();
+            var lineUpper = line.toUpperCase();
+            var staUpper = station.toUpperCase();
+
+            // 處理開放數據格式相容性（東涌綫 TCL、南港島綫 SIL、港島綫 ISL 等）
+            var url = 'https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php?line=' + lineUpper + '&sta=' + staUpper;
             fetch(url)
                 .then(function(res) { return res.json(); })
                 .then(function(data) {
                     var list = [];
-                    var key = line.toUpperCase() + '-' + station.toUpperCase();
-                    if (data && data.data && data.data[key]) {
+                    if (data && data.status === 1 && data.data) {
+                        var key = lineUpper + '-' + staUpper;
                         var trainData = data.data[key];
-                        var targetDir = dir || 'UP';
-                        var trains = trainData[targetDir] || [];
-                        for (var i = 0; i < trains.length; i++) {
-                            if (trains[i].time) {
-                                var tStr = trains[i].time.replace(/-/g, '/');
-                                list.push({ eta: tStr });
+                        if (trainData) {
+                            var targetDir = dir || 'UP';
+                            var trains = trainData[targetDir] || [];
+                            // 若指定方向無資料，自動嘗試備用方向（處理單向或特例路線）
+                            if (trains.length === 0) {
+                                var altDir = (targetDir === 'UP') ? 'DN' : 'UP';
+                                trains = trainData[altDir] || [];
+                            }
+                            for (var i = 0; i < trains.length; i++) {
+                                var tItem = trains[i];
+                                // 相容 API 返回的 time 或 ttnt (Time To Next Train) 格式
+                                if (tItem.time) {
+                                    var tStr = tItem.time.replace(/-/g, '/');
+                                    list.push({ eta: tStr });
+                                } else if (tItem.ttnt !== undefined) {
+                                    var etaDate = new Date(Date.now() + parseInt(tItem.ttnt, 10) * 60000);
+                                    list.push({ eta: etaDate.toISOString() });
+                                }
                             }
                         }
                     }
