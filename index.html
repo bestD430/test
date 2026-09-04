@@ -452,7 +452,7 @@
             outline: none;
         }
         .config-input, .config-route-container { flex: 1; min-width: 110px; }
-        .config-select.bus-stop, .config-select.bus-origin-select, .config-select.bus-dest-select { flex: 1; min-width: 120px; }
+        .config-select.bus-stop { flex: 1; min-width: 120px; }
         .delete-btn {
             background: #991b1b;
             color: #fca5a5;
@@ -582,7 +582,7 @@
                 <button class="modal-close" onclick="closeSettings()">&times;</button>
             </div>
             <div class="hint-text">
-                💡 選擇輕鐵時，起點站、終點站與行車方向將依據路線自動切換為下拉選單。
+                💡 選擇路線與車站後，可設定時間微調。
             </div>
             <div class="config-list" id="config-list"></div>
             <div class="modal-footer">
@@ -1220,12 +1220,8 @@
                         '<select class="config-select bus-stop" onchange="handleStopChange(' + i + ')">' +
                             '<option value="' + bus.stop + '" selected>' + (bus.stop ? '已選代碼: ' + bus.stop : '請選擇上車車站...') + '</option>' +
                         '</select>' +
-                        '<div class="config-origin-container" style="flex:1;">' +
-                            renderOriginControl(bus.company, bus.origin_name || '', i) +
-                        '</div>' +
-                        '<div class="config-dest-container" style="flex:1;">' +
-                            renderDestControl(bus.company, bus.dest_name || '', i) +
-                        '</div>' +
+                        (bus.company !== 'lrt' ? '<div class="config-origin-container" style="flex:1;">' + renderOriginControl(bus.company, bus.origin_name || '', i) + '</div>' : '') +
+                        (bus.company !== 'lrt' ? '<div class="config-dest-container" style="flex:1;">' + renderDestControl(bus.company, bus.dest_name || '', i) + '</div>' : '') +
                         '<select class="config-select bus-offset" title="時間微調">' + generateOffsetOptions(busOffset) + '</select>' +
                     '</div>' +
                 '</div>';
@@ -1257,37 +1253,15 @@
         }
 
         function renderOriginControl(company, currentValue, index) {
-            if (company === 'lrt') {
-                return '<select class="config-select bus-origin-select"><option value="">選擇起點站...</option></select>';
-            } else {
-                return '<input type="text" class="config-input bus-origin" placeholder="起點站名" value="' + currentValue + '">';
-            }
+            return '<input type="text" class="config-input bus-origin" placeholder="起點站名" value="' + currentValue + '">';
         }
 
         function renderDestControl(company, currentValue, index) {
-            if (company === 'lrt') {
-                return '<select class="config-select bus-dest-select"><option value="">選擇目的地...</option></select>';
-            } else {
-                return '<input type="text" class="config-input bus-dest" placeholder="目的地" value="' + currentValue + '">';
-            }
+            return '<input type="text" class="config-input bus-dest" placeholder="目的地" value="' + currentValue + '">';
         }
 
         function onCompanyChanged(index) {
-            var items = document.querySelectorAll('.config-item');
-            var item = items[index];
-            if (!item) return;
-
-            var company = item.querySelector('.bus-company').value;
-            var routeContainer = item.querySelector('.config-route-container');
-            var originContainer = item.querySelector('.config-origin-container');
-            var destContainer = item.querySelector('.config-dest-container');
-
-            var defaultRoute = (company === 'mtr') ? 'TCL' : ((company === 'lrt') ? '610' : '');
-            routeContainer.innerHTML = renderRouteControl(company, defaultRoute, index);
-            originContainer.innerHTML = renderOriginControl(company, '', index);
-            destContainer.innerHTML = renderDestControl(company, '', index);
-
-            onBusMetaChanged(index);
+            renderSettingsList();
         }
 
         function onBusMetaChanged(index) {
@@ -1443,25 +1417,15 @@
                 if (company === 'lrt') {
                     var lrtInfo = lrtRoutesData[routeInputVal];
                     var optionsHtml = '<option value="">請選擇上車車站...</option>';
-                    var originSelect = item.querySelector('.bus-origin-select');
-                    var destSelect = item.querySelector('.bus-dest-select');
-
-                    var originHtml = '<option value="">請選擇起點站...</option>';
-                    var destHtml = '<option value="">請選擇目的地...</option>';
 
                     if (lrtInfo && lrtInfo.stops) {
                         for (var s = 0; s < lrtInfo.stops.length; s++) {
                             var st = lrtInfo.stops[s];
                             optionsHtml += '<option value="' + st.code + '">' + st.name + ' (' + st.code + ')</option>';
-                            originHtml += '<option value="' + st.name + '">' + st.name + '</option>';
-                            destHtml += '<option value="往 ' + st.name + '">往 ' + st.name + '</option>';
                         }
                     }
 
                     stopSelect.innerHTML = optionsHtml;
-                    if (originSelect) originSelect.innerHTML = originHtml;
-                    if (destSelect) destSelect.innerHTML = destHtml;
-
                     var initialStop = item.getAttribute('data-current-stop') || '';
                     applyStopSelection(item, stopSelect, initialStop, isUserAction, null);
                     return;
@@ -1594,13 +1558,7 @@
             var stopSelect = item.querySelector('.bus-stop');
             var selectedOption = stopSelect.options[stopSelect.selectedIndex];
             
-            if (company === 'lrt') {
-                var originSelect = item.querySelector('.bus-origin-select');
-                if (originSelect && selectedOption && selectedOption.value) {
-                    var stopName = selectedOption.text.replace(/\s*\([A-Z0-9]+\)$/, '');
-                    originSelect.value = stopName;
-                }
-            } else {
+            if (company !== 'lrt') {
                 var originInput = item.querySelector('.bus-origin');
                 if (selectedOption && selectedOption.value) {
                     if (originInput) originInput.value = selectedOption.text.replace(/^\d+\.\s*/, '').replace(/\s*\([A-Z0-9]+\)$/, '');
@@ -1624,12 +1582,7 @@
                 var origin_name = '';
                 var dest_name = '';
 
-                if (company === 'lrt') {
-                    var originSelect = item.querySelector('.bus-origin-select');
-                    var destSelect = item.querySelector('.bus-dest-select');
-                    origin_name = originSelect ? originSelect.value : '';
-                    dest_name = destSelect ? destSelect.value : '';
-                } else {
+                if (company !== 'lrt') {
                     var originInput = item.querySelector('.bus-origin');
                     var destInput = item.querySelector('.bus-dest');
                     origin_name = originInput ? originInput.value.trim() : '';
@@ -1668,12 +1621,7 @@
                 var origin_name = '';
                 var dest_name = '';
 
-                if (company === 'lrt') {
-                    var originSelect = item.querySelector('.bus-origin-select');
-                    var destSelect = item.querySelector('.bus-dest-select');
-                    origin_name = originSelect ? originSelect.value : '';
-                    dest_name = destSelect ? destSelect.value : '';
-                } else {
+                if (company !== 'lrt') {
                     var originInput = item.querySelector('.bus-origin');
                     var destInput = item.querySelector('.bus-dest');
                     origin_name = originInput ? originInput.value.trim() : '';
