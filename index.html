@@ -992,7 +992,7 @@
 
         function getLRTETA(route, stopCode, targetDest, callback) {
             if (!stopCode) { callback([]); return; }
-            // 修正輕鐵車站代碼，自動補齊 3 位數
+            // 自動補齊 3 位數輕鐵車站代碼 (如 1 -> 001)
             var formattedStop = ('000' + stopCode).slice(-3);
             var url = 'https://rt.data.gov.hk/v1/transport/mtr/lrt/getSchedule.php?station_id=' + formattedStop;
 
@@ -1007,12 +1007,17 @@
                             for (var r = 0; r < routeList.length; r++) {
                                 var rt = routeList[r];
                                 // 比對路線編號 (例: "610")
-                                if (String(rt.route_no) === String(route)) {
+                                if (String(rt.route_no).toUpperCase() === String(route).toUpperCase()) {
                                     // 驗證目的地，如果未設限或匹配目的地字串
-                                    if (!targetDest || targetDest === '全方向' || (rt.dest_ch && targetDest.indexOf(rt.dest_ch) !== -1) || (rt.dest_ch && rt.dest_ch.indexOf(targetDest) !== -1)) {
-                                        var timeStr = rt.time_en || rt.time_ch || "";
+                                    var destMatch = !targetDest || targetDest === '全方向' || 
+                                        (rt.dest_ch && targetDest.indexOf(rt.dest_ch) !== -1) || 
+                                        (rt.dest_ch && rt.dest_ch.indexOf(targetDest) !== -1);
+                                    
+                                    if (destMatch) {
+                                        var timeStr = rt.time_ch || rt.time_en || "";
                                         var minutes = 0;
-                                        if (timeStr.indexOf("Arriving") !== -1 || timeStr.indexOf("Departing") !== -1 || timeStr.indexOf("即將") !== -1 || timeStr.indexOf("正在") !== -1) {
+                                        if (timeStr.indexOf("Arriving") !== -1 || timeStr.indexOf("Departing") !== -1 || 
+                                            timeStr.indexOf("即將") !== -1 || timeStr.indexOf("正在") !== -1) {
                                             minutes = 0;
                                         } else {
                                             var match = timeStr.match(/\d+/);
@@ -1025,6 +1030,10 @@
                             }
                         }
                     }
+                    // 排序抵達時間
+                    list.sort(function(a, b) {
+                        return new Date(a.eta) - new Date(b.eta);
+                    });
                     callback(list);
                 })
                 .catch(function(e) { callback([]); });
@@ -1520,12 +1529,12 @@
                                                     ctbStopsCache[sId] = d.data.name_tc;
                                                     stopNames[idx] = d.data.name_tc;
                                                 } else {
-                                                    stopNames[idx] = sId;
+                                                    stopNames[idx] = '代碼: ' + sId;
                                                 }
                                                 fetchStopName(idx + 1);
                                             })
                                             .catch(function(e) {
-                                                stopNames[idx] = sId;
+                                                stopNames[idx] = '代碼: ' + sId;
                                                 fetchStopName(idx + 1);
                                             });
                                     }
@@ -1545,9 +1554,18 @@
         function applyStopSelection(item, stopSelect, initialStop, isUserAction, originInput) {
             if (!isUserAction && initialStop) {
                 stopSelect.value = initialStop;
-            } else if (isUserAction) {
-                if (originInput) originInput.value = '';
-                item.setAttribute('data-current-stop', '');
+            } else {
+                if (stopSelect.options.length > 1) {
+                    stopSelect.selectedIndex = 1;
+                } else {
+                    stopSelect.selectedIndex = 0;
+                }
+            }
+            item.setAttribute('data-current-stop', stopSelect.value);
+            if (isUserAction && originInput && stopSelect.options[stopSelect.selectedIndex]) {
+                var text = stopSelect.options[stopSelect.selectedIndex].text;
+                text = text.replace(/^\d+\.\s*/, '').replace(/\s*\([^\)]+\)$/, '');
+                originInput.value = text;
             }
         }
 
@@ -1555,78 +1573,33 @@
             var items = document.querySelectorAll('.config-item');
             var item = items[index];
             if (!item) return;
-
-            var company = item.querySelector('.bus-company').value;
             var stopSelect = item.querySelector('.bus-stop');
-            var selectedOption = stopSelect.options[stopSelect.selectedIndex];
-            
-            if (company === 'lrt') {
-                var routeNo = item.querySelector('.bus-route').value.trim();
-                var lrtInfo = lrtRoutesData[routeNo];
-                if (selectedOption && selectedOption.value && lrtInfo && lrtInfo.stops) {
-                    for (var s = 0; s < lrtInfo.stops.length; s++) {
-                        if (lrtInfo.stops[s].code === selectedOption.value) {
-                            item.setAttribute('data-origin-name', lrtInfo.stops[s].name);
-                            break;
-                        }
-                    }
-                }
-            } else {
+            item.setAttribute('data-current-stop', stopSelect.value);
+            var company = item.querySelector('.bus-company').value;
+            if (company !== 'lrt') {
                 var originInput = item.querySelector('.bus-origin');
-                if (selectedOption && selectedOption.value) {
-                    if (originInput) originInput.value = selectedOption.text.replace(/^\d+\.\s*/, '').replace(/\s*\([A-Z0-9]+\)$/, '');
-                } else {
-                    if (originInput) originInput.value = '';
+                if (originInput && stopSelect.options[stopSelect.selectedIndex]) {
+                    var text = stopSelect.options[stopSelect.selectedIndex].text;
+                    text = text.replace(/^\d+\.\s*/, '').replace(/\s*\([^\)]+\)$/, '');
+                    originInput.value = text;
                 }
             }
-            item.setAttribute('data-current-stop', selectedOption ? selectedOption.value : '');
-        }
-
-        function syncCurrentDOMToBuses() {
-            var items = document.querySelectorAll('.config-item');
-            var tempConfigs = [];
-            for (var i = 0; i < items.length; i++) {
-                var item = items[i];
-                var company = item.querySelector('.bus-company').value;
-                var route = item.querySelector('.bus-route').value.trim();
-                var dir = item.querySelector('.bus-dir').value;
-                var stop = item.querySelector('.bus-stop').value;
-
-                var origin_name = '';
-                var dest_name = '';
-
-                if (company === 'lrt') {
-                    var lrtInfo = lrtRoutesData[route];
-                    if (lrtInfo && lrtInfo.stops) {
-                        for (var s = 0; s < lrtInfo.stops.length; s++) {
-                            if (lrtInfo.stops[s].code === stop) {
-                                origin_name = lrtInfo.stops[s].name;
-                                break;
-                            }
-                        }
-                    }
-                    dest_name = '往 ' + dir;
-                } else {
-                    var originInput = item.querySelector('.bus-origin');
-                    var destInput = item.querySelector('.bus-dest');
-                    origin_name = originInput ? originInput.value.trim() : '';
-                    dest_name = destInput ? destInput.value.trim() : '';
-                }
-
-                var offset = parseFloat(item.querySelector('.bus-offset').value);
-                tempConfigs.push({ company: company, route: route, dir: dir, stop: stop || '', origin_name: origin_name, dest_name: dest_name, offset: offset });
-            }
-            return tempConfigs;
         }
 
         function addNewBusConfig() {
-            currentBuses = syncCurrentDOMToBuses();
-            currentBuses.push({ company: "lrt", route: "610", dir: "元朗", stop: "001", origin_name: "屯門碼頭", dest_name: "往 元朗", offset: 0 });
+            currentBuses.push({
+                company: "lrt",
+                route: "610",
+                dir: "元朗",
+                stop: "001",
+                origin_name: "屯門碼頭",
+                dest_name: "往 元朗",
+                offset: 0
+            });
             renderSettingsList();
         }
 
         function deleteBusConfig(index) {
-            currentBuses = syncCurrentDOMToBuses();
             currentBuses.splice(index, 1);
             renderSettingsList();
         }
@@ -1639,34 +1612,39 @@
                 var item = items[i];
                 var company = item.querySelector('.bus-company').value;
                 var route = item.querySelector('.bus-route').value.trim();
-                var dir = item.querySelector('.bus-dir').value;
-                var stop = item.querySelector('.bus-stop').value;
-
-                var origin_name = '';
-                var dest_name = '';
+                var dirSelect = item.querySelector('.bus-dir');
+                var dir = dirSelect ? dirSelect.value : '';
+                var dirText = (dirSelect && dirSelect.options[dirSelect.selectedIndex]) ? dirSelect.options[dirSelect.selectedIndex].text : '';
+                
+                var stopSelect = item.querySelector('.bus-stop');
+                var stop = stopSelect ? stopSelect.value : '';
+                
+                var originInput = item.querySelector('.bus-origin');
+                var origin_name = originInput ? originInput.value.trim() : '';
+                
+                var destInput = item.querySelector('.bus-dest');
+                var dest_name = destInput ? destInput.value.trim() : '';
 
                 if (company === 'lrt') {
-                    var lrtInfo = lrtRoutesData[route];
-                    if (lrtInfo && lrtInfo.stops) {
-                        for (var s = 0; s < lrtInfo.stops.length; s++) {
-                            if (lrtInfo.stops[s].code === stop) {
-                                origin_name = lrtInfo.stops[s].name;
-                                break;
-                            }
-                        }
+                    if (stopSelect && stopSelect.options[stopSelect.selectedIndex]) {
+                        origin_name = stopSelect.options[stopSelect.selectedIndex].text.replace(/\s*\([^\)]+\)$/, '');
                     }
-                    dest_name = '往 ' + dir;
-                } else {
-                    var originInput = item.querySelector('.bus-origin');
-                    var destInput = item.querySelector('.bus-dest');
-                    origin_name = originInput ? originInput.value.trim() : '';
-                    dest_name = destInput ? destInput.value.trim() : '';
+                    dest_name = dirText;
                 }
 
-                var offset = parseFloat(item.querySelector('.bus-offset').value);
+                var offsetInput = item.querySelector('.bus-offset');
+                var offset = offsetInput ? parseFloat(offsetInput.value) : 0;
 
-                if (route) {
-                    newConfigs.push({ company: company, route: route, dir: dir, stop: stop || '', origin_name: origin_name, dest_name: dest_name, offset: offset });
+                if (route && stop) {
+                    newConfigs.push({
+                        company: company,
+                        route: route,
+                        dir: dir,
+                        stop: stop,
+                        origin_name: origin_name,
+                        dest_name: dest_name,
+                        offset: offset
+                    });
                 }
             }
 
