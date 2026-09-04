@@ -222,7 +222,6 @@
         .card-kmb { background-color: #d8121a; }
         .card-lwb { background-color: #f37021; }
         
-        /* 城巴卡片更新為經典黃色風格 */
         .card-ctb { 
             background-color: #eab308; 
             color: #0f172a; 
@@ -993,6 +992,7 @@
 
         function getLRTETA(route, stopCode, targetDest, callback) {
             if (!stopCode) { callback([]); return; }
+            // 修正輕鐵車站代碼，自動補齊 3 位數
             var formattedStop = ('000' + stopCode).slice(-3);
             var url = 'https://rt.data.gov.hk/v1/transport/mtr/lrt/getSchedule.php?station_id=' + formattedStop;
 
@@ -1006,11 +1006,13 @@
                             var routeList = pf.route_list || [];
                             for (var r = 0; r < routeList.length; r++) {
                                 var rt = routeList[r];
-                                if (rt.route_no === route) {
-                                    if (!targetDest || targetDest === '全方向' || (rt.dest_ch && targetDest.indexOf(rt.dest_ch) !== -1)) {
+                                // 比對路線編號 (例: "610")
+                                if (String(rt.route_no) === String(route)) {
+                                    // 驗證目的地，如果未設限或匹配目的地字串
+                                    if (!targetDest || targetDest === '全方向' || (rt.dest_ch && targetDest.indexOf(rt.dest_ch) !== -1) || (rt.dest_ch && rt.dest_ch.indexOf(targetDest) !== -1)) {
                                         var timeStr = rt.time_en || rt.time_ch || "";
                                         var minutes = 0;
-                                        if (timeStr.indexOf("Arriving") !== -1 || timeStr.indexOf("Departing") !== -1 || timeStr.indexOf("即將") !== -1) {
+                                        if (timeStr.indexOf("Arriving") !== -1 || timeStr.indexOf("Departing") !== -1 || timeStr.indexOf("即將") !== -1 || timeStr.indexOf("正在") !== -1) {
                                             minutes = 0;
                                         } else {
                                             var match = timeStr.match(/\d+/);
@@ -1152,7 +1154,7 @@
                 } else if (bus.company === 'mtr') {
                     getMTRETA(bus.route, bus.stop, busDir, processEtas);
                 } else if (bus.company === 'lrt') {
-                    getLRTETA(bus.route, bus.stop, busDir, processEtas);
+                    getLRTETA(bus.route, bus.stop, bus.dir, processEtas);
                 } else {
                     processEtas([]);
                 }
@@ -1558,7 +1560,18 @@
             var stopSelect = item.querySelector('.bus-stop');
             var selectedOption = stopSelect.options[stopSelect.selectedIndex];
             
-            if (company !== 'lrt') {
+            if (company === 'lrt') {
+                var routeNo = item.querySelector('.bus-route').value.trim();
+                var lrtInfo = lrtRoutesData[routeNo];
+                if (selectedOption && selectedOption.value && lrtInfo && lrtInfo.stops) {
+                    for (var s = 0; s < lrtInfo.stops.length; s++) {
+                        if (lrtInfo.stops[s].code === selectedOption.value) {
+                            item.setAttribute('data-origin-name', lrtInfo.stops[s].name);
+                            break;
+                        }
+                    }
+                }
+            } else {
                 var originInput = item.querySelector('.bus-origin');
                 if (selectedOption && selectedOption.value) {
                     if (originInput) originInput.value = selectedOption.text.replace(/^\d+\.\s*/, '').replace(/\s*\([A-Z0-9]+\)$/, '');
@@ -1582,7 +1595,18 @@
                 var origin_name = '';
                 var dest_name = '';
 
-                if (company !== 'lrt') {
+                if (company === 'lrt') {
+                    var lrtInfo = lrtRoutesData[route];
+                    if (lrtInfo && lrtInfo.stops) {
+                        for (var s = 0; s < lrtInfo.stops.length; s++) {
+                            if (lrtInfo.stops[s].code === stop) {
+                                origin_name = lrtInfo.stops[s].name;
+                                break;
+                            }
+                        }
+                    }
+                    dest_name = '往 ' + dir;
+                } else {
                     var originInput = item.querySelector('.bus-origin');
                     var destInput = item.querySelector('.bus-dest');
                     origin_name = originInput ? originInput.value.trim() : '';
@@ -1621,7 +1645,18 @@
                 var origin_name = '';
                 var dest_name = '';
 
-                if (company !== 'lrt') {
+                if (company === 'lrt') {
+                    var lrtInfo = lrtRoutesData[route];
+                    if (lrtInfo && lrtInfo.stops) {
+                        for (var s = 0; s < lrtInfo.stops.length; s++) {
+                            if (lrtInfo.stops[s].code === stop) {
+                                origin_name = lrtInfo.stops[s].name;
+                                break;
+                            }
+                        }
+                    }
+                    dest_name = '往 ' + dir;
+                } else {
                     var originInput = item.querySelector('.bus-origin');
                     var destInput = item.querySelector('.bus-dest');
                     origin_name = originInput ? originInput.value.trim() : '';
