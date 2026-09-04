@@ -77,7 +77,6 @@
             font-weight: 600;
             line-height: 1.1;
             display: block;
-            writing-mode: horizontal-tb !important;
             white-space: nowrap !important;
         }
 
@@ -208,7 +207,6 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        /* 卡片基礎樣式 */
         .bus-item {
             border-radius: 12px;
             padding: 12px;
@@ -221,22 +219,21 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
         }
 
-        /* 各巴士公司 House Color */
-        .card-kmb { background-color: #d8121a; } /* 九巴: 經典紅 */
-        .card-lwb { background-color: #f37021; } /* 龍運: 活力橙 */
-        .card-ctb { background-color: #0056a8; } /* 城巴: 企業藍 */
+        .card-kmb { background-color: #d8121a; }
+        .card-lwb { background-color: #f37021; }
+        .card-ctb { background-color: #0056a8; }
+        .card-lrt { background-color: #d97706; } /* 輕鐵橙金色 */
         
-        /* 港鐵各路線底色 (微調防止與巴士撞色) */
-        .card-mtr-KTL { background-color: #007a3d; } /* 觀塘綫: 綠色 */
-        .card-mtr-ISL { background-color: #0099e6; } /* 港島綫: 明亮藍 (避免與城巴藍色撞色) */
-        .card-mtr-TWL { background-color: #a80010; } /* 荃灣綫: 深紅 (避免與九巴鮮紅撞色) */
-        .card-mtr-SIL { background-color: #b6bd00; } /* 南港島綫: 黃綠色 */
-        .card-mtr-TCL { background-color: #c85a00; } /* 東涌綫: 深橘 (避免與龍運橙色撞色) */
-        .card-mtr-AEL { background-color: #008088; } /* 機場快綫: 青綠色 */
-        .card-mtr-TKL { background-color: #a35ebf; } /* 將軍澳綫: 紫色 */
-        .card-mtr-TML { background-color: #923011; } /* 屯馬綫: 棕色 */
-        .card-mtr-EAL { background-color: #53b7e8; } /* 東鐵綫: 天藍色 */
-        .card-mtr-default { background-color: #61132e; } /* 港鐵預設紅 */
+        .card-mtr-KTL { background-color: #007a3d; }
+        .card-mtr-ISL { background-color: #0099e6; }
+        .card-mtr-TWL { background-color: #a80010; }
+        .card-mtr-SIL { background-color: #b6bd00; }
+        .card-mtr-TCL { background-color: #c85a00; }
+        .card-mtr-AEL { background-color: #008088; }
+        .card-mtr-TKL { background-color: #a35ebf; }
+        .card-mtr-TML { background-color: #923011; }
+        .card-mtr-EAL { background-color: #53b7e8; }
+        .card-mtr-default { background-color: #61132e; }
 
         .bus-header { display: flex; justify-content: space-between; align-items: baseline; }
         .bus-title-group { display: flex; align-items: center; gap: 8px; }
@@ -310,9 +307,7 @@
             padding: 24px;
             gap: 16px;
         }
-        #night-screen.active {
-            display: flex;
-        }
+        #night-screen.active { display: flex; }
 
         .night-date {
             font-size: 4vw;
@@ -372,8 +367,8 @@
         .modal-content {
             background: #1e293b;
             border-radius: 16px;
-            width: 90%;
-            max-width: 650px;
+            width: 95%;
+            max-width: 750px;
             max-height: 85vh;
             padding: 16px;
             border: 1px solid #475569;
@@ -396,7 +391,7 @@
             flex-direction: column; 
             gap: 10px; 
             overflow-y: auto; 
-            max-height: 50vh; 
+            max-height: 55vh; 
             -webkit-overflow-scrolling: touch;
         }
         .config-item {
@@ -408,7 +403,7 @@
             flex-direction: column;
             gap: 8px;
         }
-        .config-row { display: flex; gap: 8px; align-items: center; }
+        .config-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         .config-input, .config-select {
             background: #1e293b;
             border: 1px solid #475569;
@@ -418,8 +413,8 @@
             font-size: 0.9rem;
             outline: none;
         }
-        .config-input, .config-route-container { flex: 1; }
-        .config-select.bus-stop { flex: 1.5; }
+        .config-input, .config-route-container { flex: 1; min-width: 110px; }
+        .config-select.bus-stop, .config-select.bus-origin-select, .config-select.bus-dest-select { flex: 1; min-width: 120px; }
         .delete-btn {
             background: #991b1b;
             color: #fca5a5;
@@ -466,7 +461,7 @@
             .eta-group { gap: 12px; }
             .eta-badge { font-size: 1.3rem; padding: 14px 8px; border-radius: 12px; }
             .eta-badge.first { font-size: 2.4rem; padding: 12px 8px; border-radius: 12px; }
-            .modal-content { max-width: 800px; padding: 24px; gap: 16px; }
+            .modal-content { max-width: 850px; padding: 24px; gap: 16px; }
             .modal-title { font-size: 1.4rem; }
             .modal-close { font-size: 2.2rem; }
             .config-item { padding: 16px; gap: 14px; border-radius: 12px; }
@@ -549,7 +544,7 @@
                 <button class="modal-close" onclick="closeSettings()">&times;</button>
             </div>
             <div class="hint-text">
-                💡 當某路線無有效班次時，將顯示「暫無班次」。
+                💡 選擇輕鐵時，起點站、終點站與行車方向將依據路線自動切換為下拉選單。
             </div>
             <div class="config-list" id="config-list"></div>
             <div class="modal-footer">
@@ -575,6 +570,22 @@
             "EAL": { name: "東鐵綫", stops: [ {code:"ADM", name:"金鐘"}, {code:"EXC", name:"會展"}, {code:"HUH", name:"紅磡"}, {code:"MKK", name:"旺角東"}, {code:"KOT", name:"九龍塘"}, {code:"TAI", name:"大圍"}, {code:"SHT", name:"沙田"}, {code:"FOT", name:"火炭"}, {code:"RAC", name:"馬場"}, {code:"UNI", name:"大學"}, {code:"TAP", name:"大埔墟"}, {code:"TWO", name:"太和"}, {code:"FAN", name:"粉嶺"}, {code:"SHS", name:"上水"}, {code:"LOW", name:"羅湖"}, {code:"LKM", name:"落馬洲"} ] }
         };
 
+        // 輕鐵完整路線資料數據
+        var lrtRoutesData = {
+            "505": { name: "505 綫", destinations: ["三聖", "兆康"], stops: [ {code:"001", name:"屯門碼頭"}, {code:"010", name:"兆禧"}, {code:"020", name:"屯門泳池"}, {code:"030", name:"豐景園"}, {code:"040", name:"三聖"}, {code:"050", name:"兆麟"}, {code:"060", name:"安定"}, {code:"070", name:"市中心"}, {code:"080", name:"屯門"}, {code:"090", name:"杯渡"}, {code:"100", name:"景峰"}, {code:"110", name:"新圍"}, {code:"120", name:"良景"}, {code:"130", name:"田景"}, {code:"140", name:"建生"}, {code:"150", name:"震寰路"}, {code:"200", name:"兆康"} ] },
+            "507": { name: "507 綫", destinations: ["屯門碼頭", "田景"], stops: [ {code:"001", name:"屯門碼頭"}, {code:"010", name:"兆禧"}, {code:"020", name:"屯門泳池"}, {code:"030", name:"豐景園"}, {code:"050", name:"兆麟"}, {code:"060", name:"安定"}, {code:"070", name:"市中心"}, {code:"080", name:"屯門"}, {code:"160", name:"河田"}, {code:"170", name:"蔡意橋"}, {code:"180", name:"澤豐"}, {code:"130", name:"田景"} ] },
+            "610": { name: "610 綫", destinations: ["屯門碼頭", "元朗"], stops: [ {code:"001", name:"屯門碼頭"}, {code:"015", name:"美樂"}, {code:"025", name:"蝴蝶"}, {code:"035", name:"輕鐵車廠"}, {code:"045", name:"龍門"}, {code:"070", name:"市中心"}, {code:"080", name:"屯門"}, {code:"160", name:"河田"}, {code:"170", name:"蔡意橋"}, {code:"180", name:"澤豐"}, {code:"200", name:"兆康"}, {code:"210", name:"藍地"}, {code:"220", name:"泥圍"}, {code:"230", name:"鍾屋村"}, {code:"240", name:"洪水橋"}, {code:"250", name:"塘坊村"}, {code:"260", name:"屏山"}, {code:"270", name:"水邊圍"}, {code:"280", name:"豐年路"}, {code:"290", name:"康樂路"}, {code:"300", name:"大棠路"}, {code:"360", name:"元朗"} ] },
+            "614": { name: "614 綫", destinations: ["屯門碼頭", "元朗"], stops: [ {code:"001", name:"屯門碼頭"}, {code:"010", name:"兆禧"}, {code:"020", name:"屯門泳池"}, {code:"030", name:"豐景園"}, {code:"050", name:"兆麟"}, {code:"090", name:"杯渡"}, {code:"100", name:"景峰"}, {code:"105", name:"鳳地"}, {code:"200", name:"兆康"}, {code:"210", name:"藍地"}, {code:"220", name:"泥圍"}, {code:"230", name:"鍾屋村"}, {code:"240", name:"洪水橋"}, {code:"250", name:"塘坊村"}, {code:"260", name:"屏山"}, {code:"270", name:"水邊圍"}, {code:"280", name:"豐年路"}, {code:"290", name:"康樂路"}, {code:"300", name:"大棠路"}, {code:"360", name:"元朗"} ] },
+            "614P": { name: "614P 綫", destinations: ["屯門碼頭", "兆康"], stops: [ {code:"001", name:"屯門碼頭"}, {code:"010", name:"兆禧"}, {code:"020", name:"屯門泳池"}, {code:"030", name:"豐景園"}, {code:"050", name:"兆麟"}, {code:"090", name:"杯渡"}, {code:"100", name:"景峰"}, {code:"105", name:"鳳地"}, {code:"200", name:"兆康"} ] },
+            "615": { name: "615 綫", destinations: ["屯門碼頭", "元朗"], stops: [ {code:"001", name:"屯門碼頭"}, {code:"015", name:"美樂"}, {code:"025", name:"蝴蝶"}, {code:"035", name:"輕鐵車廠"}, {code:"045", name:"龍門"}, {code:"110", name:"新圍"}, {code:"120", name:"良景"}, {code:"130", name:"田景"}, {code:"140", name:"建生"}, {code:"150", name:"震寰路"}, {code:"200", name:"兆康"}, {code:"210", name:"藍地"}, {code:"220", name:"泥圍"}, {code:"230", name:"鍾屋村"}, {code:"240", name:"洪水橋"}, {code:"250", name:"塘坊村"}, {code:"260", name:"屏山"}, {code:"270", name:"水邊圍"}, {code:"280", name:"豐年路"}, {code:"290", name:"康樂路"}, {code:"300", name:"大棠路"}, {code:"360", name:"元朗"} ] },
+            "615P": { name: "615P 綫", destinations: ["屯門碼頭", "兆康"], stops: [ {code:"001", name:"屯門碼頭"}, {code:"015", name:"美樂"}, {code:"025", name:"蝴蝶"}, {code:"035", name:"輕鐵車廠"}, {code:"045", name:"龍門"}, {code:"110", name:"新圍"}, {code:"120", name:"良景"}, {code:"130", name:"田景"}, {code:"140", name:"建生"}, {code:"150", name:"震寰路"}, {code:"200", name:"兆康"} ] },
+            "705": { name: "705 綫 (天水圍循環綫 - 逆時針)", destinations: ["天水圍循環綫"], stops: [ {code:"430", name:"天水圍"}, {code:"440", name:"天慈"}, {code:"450", name:"天祥"}, {code:"460", name:"天榮"}, {code:"470", name:"天悅"}, {code:"480", name:"天秀"}, {code:"490", name:"濕地公園"}, {code:"500", name:"天恒"}, {code:"510", name:"天逸"}, {code:"520", name:"天富"}, {code:"530", name:"頌富"}, {code:"540", name:"天瑞"}, {code:"550", name:"天耀"} ] },
+            "706": { name: "706 綫 (天水圍循環綫 - 順時針)", destinations: ["天水圍循環綫"], stops: [ {code:"430", name:"天水圍"}, {code:"550", name:"天耀"}, {code:"540", name:"天瑞"}, {code:"530", name:"頌富"}, {code:"520", name:"天富"}, {code:"510", name:"天逸"}, {code:"500", name:"天恒"}, {code:"490", name:"濕地公園"}, {code:"480", name:"天秀"}, {code:"470", name:"天悅"}, {code:"460", name:"天榮"}, {code:"450", name:"天祥"}, {code:"440", name:"天慈"} ] },
+            "751": { name: "751 綫", destinations: ["友愛", "天逸"], stops: [ {code:"060", name:"友愛"}, {code:"070", name:"市中心"}, {code:"080", name:"屯門"}, {code:"160", name:"河田"}, {code:"170", name:"蔡意橋"}, {code:"180", name:"澤豐"}, {code:"200", name:"兆康"}, {code:"210", name:"藍地"}, {code:"220", name:"泥圍"}, {code:"230", name:"鍾屋村"}, {code:"240", name:"洪水橋"}, {code:"430", name:"天水圍"}, {code:"435", name:"翠湖"}, {code:"460", name:"天榮"}, {code:"510", name:"天逸"} ] },
+            "751P": { name: "751P 綫", destinations: ["天水圍", "天逸"], stops: [ {code:"430", name:"天水圍"}, {code:"435", name:"翠湖"}, {code:"460", name:"天榮"}, {code:"510", name:"天逸"} ] },
+            "761P": { name: "761P 綫", destinations: ["天逸", "元朗"], stops: [ {code:"510", name:"天逸"}, {code:"520", name:"天富"}, {code:"530", name:"頌富"}, {code:"540", name:"天瑞"}, {code:"550", name:"天耀"}, {code:"240", name:"洪水橋"}, {code:"250", name:"塘坊村"}, {code:"260", name:"屏山"}, {code:"270", name:"水邊圍"}, {code:"280", name:"豐年路"}, {code:"290", name:"康樂路"}, {code:"300", name:"大棠路"}, {code:"360", name:"元朗"} ] }
+        };
+
         var nightWakeTimer = null;
         var isManuallyWoken = false;
 
@@ -594,9 +605,7 @@
                     }
                     callback(kmbStopsCacheMap);
                 })
-                .catch(function(e) {
-                    callback({});
-                });
+                .catch(function(e) { callback({}); });
         }
 
         function updateClock() {
@@ -826,8 +835,8 @@
         setInterval(fetchGovPressRelease, 60000);
 
         var defaultBuses = [
+            { company: "lrt", route: "610", dir: "元朗", stop: "001", origin_name: "屯門碼頭", dest_name: "往 元朗", offset: 0 },
             { company: "lwb", route: "E36A", dir: "inbound", stop: "TC188", origin_name: "東涌", dest_name: "往 元朗", offset: 0 },
-            { company: "ctb", route: "E33", dir: "outbound", stop: "001854", origin_name: "屯門", dest_name: "往 機場/東涌", offset: 0 },
             { company: "mtr", route: "TCL", dir: "UP", stop: "TUC", origin_name: "東涌", dest_name: "往 香港", offset: 0 }
         ];
 
@@ -835,7 +844,7 @@
         var cachedRawEtas = {};
 
         function loadBusConfigs() {
-            var saved = localStorage.getItem('user_bus_configs_v12');
+            var saved = localStorage.getItem('user_bus_configs_v13');
             if (saved) {
                 try {
                     var parsed = JSON.parse(saved);
@@ -913,7 +922,6 @@
             var lineUpper = line.toUpperCase();
             var staUpper = station.toUpperCase();
 
-            // 處理開放數據格式相容性（東涌綫 TCL、南港島綫 SIL、港島綫 ISL 等）
             var url = 'https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php?line=' + lineUpper + '&sta=' + staUpper;
             fetch(url)
                 .then(function(res) { return res.json(); })
@@ -925,20 +933,58 @@
                         if (trainData) {
                             var targetDir = dir || 'UP';
                             var trains = trainData[targetDir] || [];
-                            // 若指定方向無資料，自動嘗試備用方向（處理單向或特例路線）
                             if (trains.length === 0) {
                                 var altDir = (targetDir === 'UP') ? 'DN' : 'UP';
                                 trains = trainData[altDir] || [];
                             }
                             for (var i = 0; i < trains.length; i++) {
                                 var tItem = trains[i];
-                                // 相容 API 返回的 time 或 ttnt (Time To Next Train) 格式
                                 if (tItem.time) {
                                     var tStr = tItem.time.replace(/-/g, '/');
                                     list.push({ eta: tStr });
                                 } else if (tItem.ttnt !== undefined) {
                                     var etaDate = new Date(Date.now() + parseInt(tItem.ttnt, 10) * 60000);
                                     list.push({ eta: etaDate.toISOString() });
+                                }
+                            }
+                        }
+                    }
+                    callback(list);
+                })
+                .catch(function(e) { callback([]); });
+        }
+
+        // 獲取輕鐵即時到站資料
+        function getLRTETA(route, stopCode, targetDest, callback) {
+            if (!stopCode) { callback([]); return; }
+            // API 需要補齊 3 位整數數字格式 (例如 001)
+            var formattedStop = ('000' + stopCode).slice(-3);
+            var url = 'https://rt.data.gov.hk/v1/transport/mtr/lrt/getSchedule.php?station_id=' + formattedStop;
+
+            fetch(url)
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    var list = [];
+                    if (data && data.status === 1 && data.platform_list) {
+                        for (var i = 0; i < data.platform_list.length; i++) {
+                            var pf = data.platform_list[i];
+                            var routeList = pf.route_list || [];
+                            for (var r = 0; r < routeList.length; r++) {
+                                var rt = routeList[r];
+                                // 比對路線號碼與終點站名稱（若有設定目的地）
+                                if (rt.route_no === route) {
+                                    if (!targetDest || targetDest === '全方向' || (rt.dest_ch && targetDest.indexOf(rt.dest_ch) !== -1)) {
+                                        var timeStr = rt.time_en || rt.time_ch || "";
+                                        var minutes = 0;
+                                        if (timeStr.indexOf("Arriving") !== -1 || timeStr.indexOf("Departing") !== -1 || timeStr.indexOf("即將") !== -1) {
+                                            minutes = 0;
+                                        } else {
+                                            var match = timeStr.match(/\d+/);
+                                            minutes = match ? parseInt(match[0], 10) : 0;
+                                        }
+                                        var etaDate = new Date(Date.now() + minutes * 60000);
+                                        list.push({ eta: etaDate.toISOString() });
+                                    }
                                 }
                             }
                         }
@@ -958,7 +1004,7 @@
                 return;
             }
 
-            var companyOrder = { mtr: 1, kmb: 2, lwb: 3, ctb: 4 };
+            var companyOrder = { lrt: 1, mtr: 2, kmb: 3, lwb: 4, ctb: 5 };
             currentBuses.sort(function(a, b) {
                 var oA = companyOrder[a.company] || 99;
                 var oB = companyOrder[b.company] || 99;
@@ -1034,6 +1080,9 @@
                         companyTag = '<span class="bus-company-tag">港鐵</span>';
                         var lineCode = bus.route.toUpperCase();
                         cardClass = 'card-mtr-' + (mtrRoutesData[lineCode] ? lineCode : 'default');
+                    } else if (bus.company === 'lrt') {
+                        companyTag = '<span class="bus-company-tag">輕鐵</span>';
+                        cardClass = 'card-lrt';
                     }
 
                     var originText = bus.origin_name ? '<span class="bus-origin-text">' + bus.origin_name + '</span>' : '';
@@ -1043,6 +1092,8 @@
                     var displayRoute = bus.route.toUpperCase();
                     if (bus.company === 'mtr' && mtrRoutesData[displayRoute]) {
                         displayRoute = mtrRoutesData[displayRoute].name;
+                    } else if (bus.company === 'lrt') {
+                        displayRoute = bus.route + ' 綫';
                     }
 
                     busResults[index] = '<div class="bus-item ' + cardClass + '">' +
@@ -1066,6 +1117,8 @@
                     getCTBETA(bus.route, bus.stop, busDir, processEtas);
                 } else if (bus.company === 'mtr') {
                     getMTRETA(bus.route, bus.stop, busDir, processEtas);
+                } else if (bus.company === 'lrt') {
+                    getLRTETA(bus.route, bus.stop, busDir, processEtas);
                 } else {
                     processEtas([]);
                 }
@@ -1115,6 +1168,7 @@
                 var itemHtml = '<div class="config-item" data-index="' + i + '" data-current-stop="' + bus.stop + '" data-current-dir="' + busDir + '">' +
                     '<div class="config-row">' +
                         '<select class="config-select bus-company" onchange="onCompanyChanged(' + i + ')">' +
+                            '<option value="lrt" ' + (bus.company === 'lrt' ? 'selected' : '') + '>輕鐵 (LRT)</option>' +
                             '<option value="mtr" ' + (bus.company === 'mtr' ? 'selected' : '') + '>港鐵 (MTR)</option>' +
                             '<option value="kmb" ' + (bus.company === 'kmb' ? 'selected' : '') + '>九巴 (KMB)</option>' +
                             '<option value="lwb" ' + (bus.company === 'lwb' ? 'selected' : '') + '>龍運 (LWB)</option>' +
@@ -1130,10 +1184,14 @@
                     '</div>' +
                     '<div class="config-row">' +
                         '<select class="config-select bus-stop" onchange="handleStopChange(' + i + ')">' +
-                            '<option value="' + bus.stop + '" selected>' + (bus.stop ? '已選代碼: ' + bus.stop : '請選擇車站...') + '</option>' +
+                            '<option value="' + bus.stop + '" selected>' + (bus.stop ? '已選代碼: ' + bus.stop : '請選擇上車車站...') + '</option>' +
                         '</select>' +
-                        '<input type="text" class="config-input bus-origin" placeholder="起點站名" value="' + (bus.origin_name || '') + '">' +
-                        '<input type="text" class="config-input bus-dest" placeholder="目的地" value="' + (bus.dest_name || '') + '">' +
+                        '<div class="config-origin-container" style="flex:1;">' +
+                            renderOriginControl(bus.company, bus.origin_name || '', i) +
+                        '</div>' +
+                        '<div class="config-dest-container" style="flex:1;">' +
+                            renderDestControl(bus.company, bus.dest_name || '', i) +
+                        '</div>' +
                         '<select class="config-select bus-offset" title="時間微調">' + generateOffsetOptions(busOffset) + '</select>' +
                     '</div>' +
                 '</div>';
@@ -1151,8 +1209,32 @@
                 }
                 optionsHtml += '</select>';
                 return optionsHtml;
+            } else if (company === 'lrt') {
+                var optionsHtml = '<select class="config-select bus-route" onchange="onBusMetaChanged(' + index + ')">';
+                for (var rNo in lrtRoutesData) {
+                    var selected = (currentRoute === rNo) ? 'selected' : '';
+                    optionsHtml += '<option value="' + rNo + '" ' + selected + '>' + lrtRoutesData[rNo].name + '</option>';
+                }
+                optionsHtml += '</select>';
+                return optionsHtml;
             } else {
                 return '<input type="text" class="config-input bus-route" placeholder="路線 (例: E33)" value="' + currentRoute + '" onchange="onBusMetaChanged(' + index + ')">';
+            }
+        }
+
+        function renderOriginControl(company, currentValue, index) {
+            if (company === 'lrt') {
+                return '<select class="config-select bus-origin-select"><option value="">選擇起點站...</option></select>';
+            } else {
+                return '<input type="text" class="config-input bus-origin" placeholder="起點站名" value="' + currentValue + '">';
+            }
+        }
+
+        function renderDestControl(company, currentValue, index) {
+            if (company === 'lrt') {
+                return '<select class="config-select bus-dest-select"><option value="">選擇目的地...</option></select>';
+            } else {
+                return '<input type="text" class="config-input bus-dest" placeholder="目的地" value="' + currentValue + '">';
             }
         }
 
@@ -1163,9 +1245,13 @@
 
             var company = item.querySelector('.bus-company').value;
             var routeContainer = item.querySelector('.config-route-container');
-            
-            var defaultRoute = (company === 'mtr') ? 'TCL' : '';
+            var originContainer = item.querySelector('.config-origin-container');
+            var destContainer = item.querySelector('.config-dest-container');
+
+            var defaultRoute = (company === 'mtr') ? 'TCL' : ((company === 'lrt') ? '610' : '');
             routeContainer.innerHTML = renderRouteControl(company, defaultRoute, index);
+            originContainer.innerHTML = renderOriginControl(company, '', index);
+            destContainer.innerHTML = renderDestControl(company, '', index);
 
             onBusMetaChanged(index);
         }
@@ -1183,9 +1269,13 @@
             var dirSelect = item.querySelector('.bus-dir');
             item.setAttribute('data-current-dir', dirSelect.value);
             var selectedOpt = dirSelect.options[dirSelect.selectedIndex];
-            var destInput = item.querySelector('.bus-dest');
-            if (selectedOpt && selectedOpt.text) {
-                destInput.value = selectedOpt.text;
+            
+            var company = item.querySelector('.bus-company').value;
+            if (company !== 'lrt') {
+                var destInput = item.querySelector('.bus-dest');
+                if (destInput && selectedOpt && selectedOpt.text) {
+                    destInput.value = selectedOpt.text;
+                }
             }
             loadStopOptions(index, false);
         }
@@ -1200,7 +1290,20 @@
             var route = routeInput.value.trim().toUpperCase();
             var dirSelect = item.querySelector('.bus-dir');
             var currentDir = item.getAttribute('data-current-dir') || (company === 'mtr' ? 'UP' : 'outbound');
-            var destInput = item.querySelector('.bus-dest');
+
+            if (company === 'lrt') {
+                var lrtInfo = lrtRoutesData[routeInput.value.trim()];
+                var html = '';
+                if (lrtInfo && lrtInfo.destinations) {
+                    for (var d = 0; d < lrtInfo.destinations.length; d++) {
+                        var destName = lrtInfo.destinations[d];
+                        html += '<option value="' + destName + '">往 ' + destName + '</option>';
+                    }
+                }
+                dirSelect.innerHTML = html || '<option value="全方向">全方向</option>';
+                finalizeDir(dirSelect, item, currentDir, isUserAction, null, callback);
+                return;
+            }
 
             if (company === 'mtr') {
                 if (!route || !mtrRoutesData[route]) route = "TCL";
@@ -1214,6 +1317,7 @@
                 } else {
                     dirSelect.innerHTML = '<option value="UP">往 上行方向</option><option value="DN">往 下行方向</option>';
                 }
+                var destInput = item.querySelector('.bus-dest');
                 finalizeDir(dirSelect, item, currentDir, isUserAction, destInput, callback);
                 return;
             }
@@ -1225,6 +1329,8 @@
             }
 
             dirSelect.innerHTML = '<option value="' + currentDir + '">方向載入中...</option>';
+
+            var destInputNonLrt = item.querySelector('.bus-dest');
 
             if (company === 'kmb' || company === 'lwb') {
                 var destO = '', destI = '';
@@ -1240,11 +1346,11 @@
                         var html = '<option value="outbound">往 ' + (destO || '去程終點') + '</option>' +
                                    '<option value="inbound">往 ' + (destI || '回程終點') + '</option>';
                         dirSelect.innerHTML = html;
-                        finalizeDir(dirSelect, item, currentDir, isUserAction, destInput, callback);
+                        finalizeDir(dirSelect, item, currentDir, isUserAction, destInputNonLrt, callback);
                     })
                     .catch(function(e) {
                         dirSelect.innerHTML = '<option value="outbound">往 去程</option><option value="inbound">往 回程</option>';
-                        finalizeDir(dirSelect, item, currentDir, isUserAction, destInput, callback);
+                        finalizeDir(dirSelect, item, currentDir, isUserAction, destInputNonLrt, callback);
                     });
             } else if (company === 'ctb') {
                 fetch('https://rt.data.gov.hk/v2/transport/citybus/route/CTB/' + route)
@@ -1260,15 +1366,15 @@
                             html = '<option value="outbound">往 去程</option><option value="inbound">往 回程</option>';
                         }
                         dirSelect.innerHTML = html;
-                        finalizeDir(dirSelect, item, currentDir, isUserAction, destInput, callback);
+                        finalizeDir(dirSelect, item, currentDir, isUserAction, destInputNonLrt, callback);
                     })
                     .catch(function(e) {
                         dirSelect.innerHTML = '<option value="outbound">往 去程</option><option value="inbound">往 回程</option>';
-                        finalizeDir(dirSelect, item, currentDir, isUserAction, destInput, callback);
+                        finalizeDir(dirSelect, item, currentDir, isUserAction, destInputNonLrt, callback);
                     });
             } else {
                 dirSelect.innerHTML = '<option value="outbound">往 去程</option><option value="inbound">往 回程</option>';
-                finalizeDir(dirSelect, item, currentDir, isUserAction, destInput, callback);
+                finalizeDir(dirSelect, item, currentDir, isUserAction, destInputNonLrt, callback);
             }
         }
 
@@ -1279,7 +1385,7 @@
                 dirSelect.selectedIndex = 0;
                 item.setAttribute('data-current-dir', dirSelect.value);
             }
-            if (isUserAction && dirSelect.options[dirSelect.selectedIndex]) {
+            if (isUserAction && destInput && dirSelect.options[dirSelect.selectedIndex]) {
                 destInput.value = dirSelect.options[dirSelect.selectedIndex].text;
             }
             if (callback) callback();
@@ -1292,12 +1398,41 @@
 
             updateDirectionOptions(index, isUserAction, function() {
                 var company = item.querySelector('.bus-company').value;
-                var route = item.querySelector('.bus-route').value.trim().toUpperCase();
+                var routeInputVal = item.querySelector('.bus-route').value.trim();
+                var route = routeInputVal.toUpperCase();
                 var dirSelect = item.querySelector('.bus-dir');
                 var dir = dirSelect.value || (company === 'mtr' ? 'UP' : 'outbound');
                 item.setAttribute('data-current-dir', dir);
 
                 var stopSelect = item.querySelector('.bus-stop');
+
+                if (company === 'lrt') {
+                    var lrtInfo = lrtRoutesData[routeInputVal];
+                    var optionsHtml = '<option value="">請選擇上車車站...</option>';
+                    var originSelect = item.querySelector('.bus-origin-select');
+                    var destSelect = item.querySelector('.bus-dest-select');
+
+                    var originHtml = '<option value="">請選擇起點站...</option>';
+                    var destHtml = '<option value="">請選擇目的地...</option>';
+
+                    if (lrtInfo && lrtInfo.stops) {
+                        for (var s = 0; s < lrtInfo.stops.length; s++) {
+                            var st = lrtInfo.stops[s];
+                            optionsHtml += '<option value="' + st.code + '">' + st.name + ' (' + st.code + ')</option>';
+                            originHtml += '<option value="' + st.name + '">' + st.name + '</option>';
+                            destHtml += '<option value="往 ' + st.name + '">往 ' + st.name + '</option>';
+                        }
+                    }
+
+                    stopSelect.innerHTML = optionsHtml;
+                    if (originSelect) originSelect.innerHTML = originHtml;
+                    if (destSelect) destSelect.innerHTML = destHtml;
+
+                    var initialStop = item.getAttribute('data-current-stop') || '';
+                    applyStopSelection(item, stopSelect, initialStop, isUserAction, null);
+                    return;
+                }
+
                 var originInput = item.querySelector('.bus-origin');
 
                 if (company === 'mtr') {
@@ -1421,14 +1556,23 @@
             var item = items[index];
             if (!item) return;
 
+            var company = item.querySelector('.bus-company').value;
             var stopSelect = item.querySelector('.bus-stop');
-            var originInput = item.querySelector('.bus-origin');
             var selectedOption = stopSelect.options[stopSelect.selectedIndex];
             
-            if (selectedOption && selectedOption.value) {
-                if (originInput) originInput.value = selectedOption.text.replace(/^\d+\.\s*/, '').replace(/\s*\([A-Z0-9]+\)$/, '');
+            if (company === 'lrt') {
+                var originSelect = item.querySelector('.bus-origin-select');
+                if (originSelect && selectedOption && selectedOption.value) {
+                    var stopName = selectedOption.text.replace(/\s*\([A-Z0-9]+\)$/, '');
+                    originSelect.value = stopName;
+                }
             } else {
-                if (originInput) originInput.value = '';
+                var originInput = item.querySelector('.bus-origin');
+                if (selectedOption && selectedOption.value) {
+                    if (originInput) originInput.value = selectedOption.text.replace(/^\d+\.\s*/, '').replace(/\s*\([A-Z0-9]+\)$/, '');
+                } else {
+                    if (originInput) originInput.value = '';
+                }
             }
             item.setAttribute('data-current-stop', selectedOption ? selectedOption.value : '');
         }
@@ -1442,8 +1586,22 @@
                 var route = item.querySelector('.bus-route').value.trim();
                 var dir = item.querySelector('.bus-dir').value;
                 var stop = item.querySelector('.bus-stop').value;
-                var origin_name = item.querySelector('.bus-origin').value.trim();
-                var dest_name = item.querySelector('.bus-dest').value.trim();
+
+                var origin_name = '';
+                var dest_name = '';
+
+                if (company === 'lrt') {
+                    var originSelect = item.querySelector('.bus-origin-select');
+                    var destSelect = item.querySelector('.bus-dest-select');
+                    origin_name = originSelect ? originSelect.value : '';
+                    dest_name = destSelect ? destSelect.value : '';
+                } else {
+                    var originInput = item.querySelector('.bus-origin');
+                    var destInput = item.querySelector('.bus-dest');
+                    origin_name = originInput ? originInput.value.trim() : '';
+                    dest_name = destInput ? destInput.value.trim() : '';
+                }
+
                 var offset = parseFloat(item.querySelector('.bus-offset').value);
                 tempConfigs.push({ company: company, route: route, dir: dir, stop: stop || '', origin_name: origin_name, dest_name: dest_name, offset: offset });
             }
@@ -1452,7 +1610,7 @@
 
         function addNewBusConfig() {
             currentBuses = syncCurrentDOMToBuses();
-            currentBuses.push({ company: "mtr", route: "TCL", dir: "UP", stop: "TUC", origin_name: "東涌", dest_name: "往 香港", offset: 0 });
+            currentBuses.push({ company: "lrt", route: "610", dir: "元朗", stop: "001", origin_name: "屯門碼頭", dest_name: "往 元朗", offset: 0 });
             renderSettingsList();
         }
 
@@ -1472,8 +1630,22 @@
                 var route = item.querySelector('.bus-route').value.trim();
                 var dir = item.querySelector('.bus-dir').value;
                 var stop = item.querySelector('.bus-stop').value;
-                var origin_name = item.querySelector('.bus-origin').value.trim();
-                var dest_name = item.querySelector('.bus-dest').value.trim();
+
+                var origin_name = '';
+                var dest_name = '';
+
+                if (company === 'lrt') {
+                    var originSelect = item.querySelector('.bus-origin-select');
+                    var destSelect = item.querySelector('.bus-dest-select');
+                    origin_name = originSelect ? originSelect.value : '';
+                    dest_name = destSelect ? destSelect.value : '';
+                } else {
+                    var originInput = item.querySelector('.bus-origin');
+                    var destInput = item.querySelector('.bus-dest');
+                    origin_name = originInput ? originInput.value.trim() : '';
+                    dest_name = destInput ? destInput.value.trim() : '';
+                }
+
                 var offset = parseFloat(item.querySelector('.bus-offset').value);
 
                 if (route) {
@@ -1482,7 +1654,7 @@
             }
 
             currentBuses = newConfigs;
-            localStorage.setItem('user_bus_configs_v12', JSON.stringify(currentBuses));
+            localStorage.setItem('user_bus_configs_v13', JSON.stringify(currentBuses));
             closeSettings();
             fetchBusData();
         }
