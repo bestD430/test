@@ -244,8 +244,6 @@
         .card-ctb .bus-name { color: #000000; text-shadow: none; }
         .card-ctb .bus-dest { color: #1e293b; text-shadow: none; }
         .card-ctb .bus-origin-text { color: #000000; }
-        /* 修改城巴 Logo 標籤為黃色托底、黑字 */
-        .card-ctb .bus-company-tag { background: #ffcc00; color: #000000; border: 1px solid #000000; }
         
         .card-mtr-KTL { background-color: #007a3d; }
         .card-mtr-ISL { background-color: #0099e6; }
@@ -261,15 +259,35 @@
         .bus-header { display: flex; justify-content: space-between; align-items: baseline; }
         .bus-title-group { display: flex; align-items: center; gap: 8px; }
         
+        /* 基礎標籤樣式：深色底 + 城巴式圍邊 */
         .bus-company-tag { 
-            font-size: 0.75rem; 
-            padding: 2px 8px; 
-            border-radius: 4px; 
+            font-size: 0.85rem; 
+            padding: 3px 8px; 
+            border-radius: 6px; 
             font-weight: bold; 
-            color: #ffffff; 
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(15, 23, 42, 0.85);
+            border: 2px solid #ffffff;
+            color: #ffffff;
+            display: inline-block;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
+
+        /* 城巴式圍邊 (九巴、龍運、城巴) */
+        .card-kmb .bus-company-tag { color: #ffffff; background: #d8121a; border-color: #ffffff; }
+        .card-lwb .bus-company-tag { color: #ffffff; background: #f37021; border-color: #ffffff; }
+        .card-ctb .bus-company-tag { color: #000000; background: #ffcc00; border-color: #000000; }
+
+        /* 城巴式圍邊 (港鐵依路線顏色變更) */
+        .card-mtr-KTL .bus-company-tag { color: #ffffff; background: #007a3d; border-color: #ffffff; }
+        .card-mtr-ISL .bus-company-tag { color: #ffffff; background: #0099e6; border-color: #ffffff; }
+        .card-mtr-TWL .bus-company-tag { color: #ffffff; background: #a80010; border-color: #ffffff; }
+        .card-mtr-SIL .bus-company-tag { color: #000000; background: #b6bd00; border-color: #000000; }
+        .card-mtr-TCL .bus-company-tag { color: #ffffff; background: #c85a00; border-color: #ffffff; }
+        .card-mtr-AEL .bus-company-tag { color: #ffffff; background: #008088; border-color: #ffffff; }
+        .card-mtr-TKL .bus-company-tag { color: #ffffff; background: #a35ebf; border-color: #ffffff; }
+        .card-mtr-TML .bus-company-tag { color: #ffffff; background: #923011; border-color: #ffffff; }
+        .card-mtr-EAL .bus-company-tag { color: #000000; background: #53b7e8; border-color: #000000; }
+        .card-mtr-default .bus-company-tag { color: #ffffff; background: #61132e; border-color: #ffffff; }
 
         .bus-name { font-size: 2.835rem; font-weight: 700; letter-spacing: 2px; line-height: 1; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
 
@@ -289,7 +307,6 @@
 
         .eta-group { display: flex; gap: 8px; align-items: center; }
         
-        /* 統一到站時間欄底色為深色半透明 */
         .eta-badge {
             flex: 1;
             background: rgba(15, 23, 42, 0.85);
@@ -310,7 +327,6 @@
             padding: 6px 4px;
         }
 
-        /* 到站時間字體顏色動態設定：>10分鐘為綠字，<=10分鐘及即將到站為紅字 */
         .eta-badge.eta-green {
             color: #34d399;
             border-color: rgba(52, 211, 153, 0.4);
@@ -578,7 +594,6 @@
                     </div>
                 </div>
             </div>
-            <!-- 時間欄下方：日期與降雨機率 (PSR) -->
             <div class="time-sub-info">
                 <span id="weather-psr" class="weather-psr" style="display: none;">💧 降雨機率: --</span>
                 <div id="date">--年--月--日 星期-</div>
@@ -770,7 +785,6 @@
             var weatherPsr = document.getElementById('weather-psr');
             var nightWeatherPsr = document.getElementById('night-weather-psr');
 
-            // 1. 取得即時天氣與溫度
             fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=tc')
                 .then(function(res) { return res.json(); })
                 .then(function(rhrData) {
@@ -816,7 +830,6 @@
                     }
                 }).catch(function(e) {});
 
-            // 2. 取得降雨機率預測 (PSR) 並載入時間欄
             fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=flw&lang=tc')
                 .then(function(res) { return res.json(); })
                 .then(function(flwData) {
@@ -834,7 +847,6 @@
                     }
                 }).catch(function(e) {});
 
-            // 3. 取得天氣警告
             fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=tc')
                 .then(function(res) { return res.json(); })
                 .then(function(data) {
@@ -1140,7 +1152,6 @@
                         displayRoute = mtrRoutesData[displayRoute].name;
                     }
 
-                    // 判斷文字顏色 Class：剩餘 <= 10 分鐘（包含 0 分鐘/即將到站）顯示紅字，> 10 分鐘顯示綠字
                     function getEtaClass(etaObj) {
                         if (etaObj.mins < 0) return '';
                         return etaObj.mins <= 10 ? 'eta-red' : 'eta-green';
