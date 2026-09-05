@@ -89,12 +89,19 @@
             display: block;
         }
 
-        #date {
+        .time-sub-info {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        #date, .night-date {
             font-size: 1rem;
             color: #94a3b8;
             text-align: right;
             white-space: nowrap;
-            direction: rtl;
         }
 
         .weather-sub-bar {
@@ -118,6 +125,17 @@
         .weather-icon { width: 36px; height: 36px; object-fit: contain; }
         .weather-emoji { font-size: 2.475rem; line-height: 1; }
         .weather-temp { font-size: 2.25rem; font-weight: bold; color: #38bdf8; }
+        
+        .weather-psr {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #38bdf8;
+            background: #1e293b;
+            padding: 2px 8px;
+            border-radius: 12px;
+            border: 1px solid #0284c7;
+            white-space: nowrap;
+        }
 
         .weather-warnings {
             display: flex;
@@ -208,7 +226,6 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        /* 卡片基礎樣式 */
         .bus-item {
             border-radius: 12px;
             padding: 12px;
@@ -221,22 +238,24 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
         }
 
-        /* 各巴士公司 House Color */
-        .card-kmb { background-color: #d8121a; } /* 九巴: 經典紅 */
-        .card-lwb { background-color: #f37021; } /* 龍運: 活力橙 */
-        .card-ctb { background-color: #0056a8; } /* 城巴: 企業藍 */
+        .card-kmb { background-color: #d8121a; }
+        .card-lwb { background-color: #f37021; }
+        .card-ctb { background-color: #ffcc00; color: #000000; border: 1px solid rgba(0, 0, 0, 0.1); }
+        .card-ctb .bus-name { color: #000000; text-shadow: none; }
+        .card-ctb .bus-dest { color: #1e293b; text-shadow: none; }
+        .card-ctb .bus-origin-text { color: #000000; }
+        .card-ctb .bus-company-tag { background: rgba(0, 0, 0, 0.85); color: #ffffff; border: none; }
         
-        /* 港鐵各路線底色 (微調防止與巴士撞色) */
-        .card-mtr-KTL { background-color: #007a3d; } /* 觀塘綫: 綠色 */
-        .card-mtr-ISL { background-color: #0099e6; } /* 港島綫: 明亮藍 (避免與城巴藍色撞色) */
-        .card-mtr-TWL { background-color: #a80010; } /* 荃灣綫: 深紅 (避免與九巴鮮紅撞色) */
-        .card-mtr-SIL { background-color: #b6bd00; } /* 南港島綫: 黃綠色 */
-        .card-mtr-TCL { background-color: #c85a00; } /* 東涌綫: 深橘 (避免與龍運橙色撞色) */
-        .card-mtr-AEL { background-color: #008088; } /* 機場快綫: 青綠色 */
-        .card-mtr-TKL { background-color: #a35ebf; } /* 將軍澳綫: 紫色 */
-        .card-mtr-TML { background-color: #923011; } /* 屯馬綫: 棕色 */
-        .card-mtr-EAL { background-color: #53b7e8; } /* 東鐵綫: 天藍色 */
-        .card-mtr-default { background-color: #61132e; } /* 港鐵預設紅 */
+        .card-mtr-KTL { background-color: #007a3d; }
+        .card-mtr-ISL { background-color: #0099e6; }
+        .card-mtr-TWL { background-color: #a80010; }
+        .card-mtr-SIL { background-color: #b6bd00; }
+        .card-mtr-TCL { background-color: #c85a00; }
+        .card-mtr-AEL { background-color: #008088; }
+        .card-mtr-TKL { background-color: #a35ebf; }
+        .card-mtr-TML { background-color: #923011; }
+        .card-mtr-EAL { background-color: #53b7e8; }
+        .card-mtr-default { background-color: #61132e; }
 
         .bus-header { display: flex; justify-content: space-between; align-items: baseline; }
         .bus-title-group { display: flex; align-items: center; gap: 8px; }
@@ -314,12 +333,11 @@
             display: flex;
         }
 
-        .night-date {
-            font-size: 4vw;
-            color: #64748b;
-            font-weight: 600;
-            white-space: nowrap;
-            direction: rtl;
+        .night-time-sub-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: center;
         }
 
         .night-weather-box {
@@ -391,12 +409,34 @@
         .modal-title { font-size: 1.1rem; font-weight: bold; color: #38bdf8; }
         .modal-close { background: none; border: none; color: #94a3b8; font-size: 1.6rem; cursor: pointer; padding: 4px; }
 
+        .night-time-section {
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .night-time-title {
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: #f59e0b;
+        }
+        .night-time-inputs {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: #cbd5e1;
+        }
+
         .config-list { 
             display: flex; 
             flex-direction: column; 
             gap: 10px; 
             overflow-y: auto; 
-            max-height: 50vh; 
+            max-height: 45vh; 
             -webkit-overflow-scrolling: touch;
         }
         .config-item {
@@ -445,12 +485,13 @@
             body { padding: 24px; gap: 8px; }
             header { padding-bottom: 16px; border-bottom: 2px solid #334155; }
             #clock { font-size: 48px; letter-spacing: 4px; }
-            #date { font-size: 1.2rem; }
+            #date, .night-date { font-size: 1.2rem; }
             .weather-sub-bar { gap: 12px; }
             .weather-info-box { padding: 4px 14px; border-radius: 30px; gap: 8px; }
             .weather-icon { width: 48px; height: 48px; }
             .weather-emoji { font-size: 3.15rem; }
             .weather-temp { font-size: 2.925rem; }
+            .weather-psr { font-size: 1rem; padding: 3px 10px; border-radius: 16px; }
             .warning-badge { padding: 9px 21px; font-size: 1.65rem; border-radius: 20px; }
             .school-notice { font-size: 1.95rem; padding: 16px; border-radius: 16px; margin-bottom: 16px; }
             .bus-panel { padding: 24px; border-radius: 24px; }
@@ -483,6 +524,7 @@
 </head>
 <body>
 
+    <!-- 夜間模式畫面 -->
     <div id="night-screen" onclick="wakeUpNightScreen()">
         <div id="night-clock" class="night-clock">
             12:00
@@ -491,7 +533,10 @@
                 <span class="clock-seconds">:00</span>
             </div>
         </div>
-        <div id="night-date" class="night-date">--年--月--日 星期-</div>
+        <div class="night-time-sub-info">
+            <div id="night-date" class="night-date">--年--月--日 星期-</div>
+            <span id="night-weather-psr" class="weather-psr" style="display:none;">💧 降雨機率: --</span>
+        </div>
         <div class="night-weather-box">
             <img id="night-weather-icon" class="night-weather-icon" src="" alt="weather icon" style="display:none;" />
             <span id="night-weather-emoji" class="weather-emoji" style="display:none;">🌤️</span>
@@ -503,6 +548,7 @@
         <div class="night-tip">輕按一下顯示路線資料</div>
     </div>
 
+    <!-- 主頁面 Header 區域 -->
     <header>
         <div class="header-left">
             <div class="weather-sub-bar">
@@ -526,7 +572,11 @@
                     </div>
                 </div>
             </div>
-            <div id="date">--年--月--日 星期-</div>
+            <!-- 時間欄下方新增：日期與降雨機率 (PSR) -->
+            <div class="time-sub-info">
+                <span id="weather-psr" class="weather-psr" style="display: none;">💧 降雨機率: --</span>
+                <div id="date">--年--月--日 星期-</div>
+            </div>
         </div>
     </header>
 
@@ -542,12 +592,22 @@
         </section>
     </main>
 
+    <!-- 設定彈窗 -->
     <div class="modal-overlay" id="settings-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="modal-title">⚙️ 設定路線及車站</div>
+                <div class="modal-title">⚙️ 系統及路線設定</div>
                 <button class="modal-close" onclick="closeSettings()">&times;</button>
             </div>
+            
+            <div class="night-time-section">
+                <div class="night-time-title">🌙 夜間黑屏時間設定</div>
+                <div class="night-time-inputs">
+                    <label>開始：<input type="time" id="night-start-time" class="config-input" style="flex:none; width: 120px;" value="20:00"></label>
+                    <label>結束：<input type="time" id="night-end-time" class="config-input" style="flex:none; width: 120px;" value="05:00"></label>
+                </div>
+            </div>
+
             <div class="hint-text">
                 💡 當某路線無有效班次時，將顯示「暫無班次」。
             </div>
@@ -568,7 +628,7 @@
             "ISL": { name: "港島綫", stops: [ {code:"KET", name:"堅尼地城"}, {code:"HKU", name:"香港大學"}, {code:"SYP", name:"西營盤"}, {code:"SHW", name:"上環"}, {code:"CEN", name:"中環"}, {code:"ADM", name:"金鐘"}, {code:"WAC", name:"灣仔"}, {code:"CAB", name:"銅鑼灣"}, {code:"TIH", name:"天后"}, {code:"FOH", name:"炮台山"}, {code:"NOP", name:"北角"}, {code:"QUB", name:"鰂魚湧"}, {code:"TAK", name:"太古"}, {code:"SWH", name:"西灣河"}, {code:"SKW", name:"筲箕灣"}, {code:"HFC", name:"杏花邨"}, {code:"CHW", name:"柴灣"} ] },
             "TWL": { name: "荃灣綫", stops: [ {code:"CEN", name:"中環"}, {code:"ADM", name:"金鐘"}, {code:"TST", name:"尖沙咀"}, {code:"JOR", name:"佐敦"}, {code:"YMT", name:"油麻地"}, {code:"MOK", name:"旺角"}, {code:"PRE", name:"太子"}, {code:"SSP", name:"深水埗"}, {code:"CSW", name:"長沙灣"}, {code:"LCK", name:"荔枝角"}, {code:"MEFO", name:"美孚"}, {code:"LAK", name:"荔景"}, {code:"KWF", name:"葵芳"}, {code:"KWT", name:"葵興"}, {code:"TWH", name:"大窩口"}, {code:"TSW", name:"荃灣"} ] },
             "SIL": { name: "南港島綫", stops: [ {code:"ADM", name:"金鐘"}, {code:"OCP", name:"海洋公園"}, {code:"WCH", name:"黃竹坑"}, {code:"LET", name:"利東"}, {code:"SOH", name:"海怡半島"} ] },
-            "TCL": { name: "東涌綫", stops: [ {code:"HOK", name:"香港"}, {code:"KOW", name:"九龍"}, {code:"OLY", name:"奧運"}, {code:"NAC", name:"南昌"}, {code:"LAK", name:"荔景"}, {code:"TSY", name:"青衣"}, {code:"SUN", name:"欣澳"}, {code:"TUC", name:"東涌"} ] },
+            "TCL": { name: "東湧綫", stops: [ {code:"HOK", name:"香港"}, {code:"KOW", name:"九龍"}, {code:"OLY", name:"奧運"}, {code:"NAC", name:"南昌"}, {code:"LAK", name:"荔景"}, {code:"TSY", name:"青衣"}, {code:"SUN", name:"欣澳"}, {code:"TUC", name:"東湧"} ] },
             "AEL": { name: "機場快綫", stops: [ {code:"HOK", name:"香港"}, {code:"KOW", name:"九龍"}, {code:"TSY", name:"青衣"}, {code:"AIR", name:"機場"}, {code:"AWE", name:"博覽館"} ] },
             "TKL": { name: "將軍澳綫", stops: [ {code:"NOP", name:"北角"}, {code:"QUB", name:"鰂魚湧"}, {code:"YAT", name:"油塘"}, {code:"TIK", name:"調景嶺"}, {code:"TKO", name:"將軍澳"}, {code:"LHA", name:"坑口"}, {code:"POA", name:"寶琳"}, {code:"LHP", name:"日出康城"} ] },
             "TML": { name: "屯馬綫", stops: [ {code:"TUM", name:"屯門"}, {code:"SIH", name:"兆康"}, {code:"TIS", name:"天水圍"}, {code:"LOP", name:"朗屏"}, {code:"YUL", name:"元朗"}, {code:"KSR", name:"錦上路"}, {code:"TWW", name:"荃灣西"}, {code:"MEF", name:"美孚"}, {code:"NAC", name:"南昌"}, {code:"AUS", name:"柯士甸"}, {code:"ETS", name:"尖東"}, {code:"HUH", name:"紅磡"}, {code:"HOM", name:"何文田"}, {code:"TKW", name:"土瓜灣"}, {code:"SUW", name:"宋皇臺"}, {code:"KAT", name:"啟德"}, {code:"DIH", name:"鑽石山"}, {code:"HIK", name:"顯徑"}, {code:"TAI", name:"大圍"}, {code:"CKT", name:"車公廟"}, {code:"STW", name:"沙田圍"}, {code:"CIO", name:"第一城"}, {code:"SHM", name:"石門"}, {code:"TSH", name:"亞公角"}, {code:"HEO", name:"恆安"}, {code:"MOS", name:"馬鞍山"}, {code:"WHA", name:"烏溪沙"} ] },
@@ -634,14 +694,29 @@
             var nightDateEl = document.getElementById('night-date');
             if (nightDateEl) nightDateEl.innerText = dateStr;
 
-            checkNightMode(hours);
+            checkNightMode(now);
         }
 
-        function checkNightMode(hours) {
+        function checkNightMode(now) {
             var nightScreen = document.getElementById('night-screen');
             if (!nightScreen) return;
 
-            var isNightTime = (hours >= 20 || hours < 5);
+            var startTime = localStorage.getItem('night_mode_start') || "20:00";
+            var endTime = localStorage.getItem('night_mode_end') || "05:00";
+
+            var startParts = startTime.split(':').map(Number);
+            var endParts = endTime.split(':').map(Number);
+
+            var currentMin = now.getHours() * 60 + now.getMinutes();
+            var startMin = startParts[0] * 60 + startParts[1];
+            var endMin = endParts[0] * 60 + endParts[1];
+
+            var isNightTime = false;
+            if (startMin <= endMin) {
+                isNightTime = (currentMin >= startMin && currentMin < endMin);
+            } else {
+                isNightTime = (currentMin >= startMin || currentMin < endMin);
+            }
 
             if (isNightTime) {
                 if (!isManuallyWoken) {
@@ -658,24 +733,19 @@
         }
 
         function wakeUpNightScreen() {
-            var now = new Date();
-            var hours = now.getHours();
-            var isNightTime = (hours >= 20 || hours < 5);
+            var nightScreen = document.getElementById('night-screen');
 
-            if (isNightTime) {
-                isManuallyWoken = true;
-                var nightScreen = document.getElementById('night-screen');
-                if (nightScreen) nightScreen.classList.remove('active');
+            isManuallyWoken = true;
+            if (nightScreen) nightScreen.classList.remove('active');
 
-                if (nightWakeTimer) {
-                    clearTimeout(nightWakeTimer);
-                }
-
-                nightWakeTimer = setTimeout(function() {
-                    isManuallyWoken = false;
-                    checkNightMode(new Date().getHours());
-                }, 30000);
+            if (nightWakeTimer) {
+                clearTimeout(nightWakeTimer);
             }
+
+            nightWakeTimer = setTimeout(function() {
+                isManuallyWoken = false;
+                checkNightMode(new Date());
+            }, 30000);
         }
 
         setInterval(updateClock, 1000);
@@ -691,7 +761,10 @@
             var nightEmojiFallback = document.getElementById('night-weather-emoji');
             var weatherTemp = document.getElementById('weather-temp');
             var nightTemp = document.getElementById('night-temp');
+            var weatherPsr = document.getElementById('weather-psr');
+            var nightWeatherPsr = document.getElementById('night-weather-psr');
 
+            // 1. 取得即時天氣與溫度
             fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=tc')
                 .then(function(res) { return res.json(); })
                 .then(function(rhrData) {
@@ -737,6 +810,25 @@
                     }
                 }).catch(function(e) {});
 
+            // 2. 取得降雨機率預測 (PSR) 並載入時間欄
+            fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=flw&lang=tc')
+                .then(function(res) { return res.json(); })
+                .then(function(flwData) {
+                    if (flwData && flwData.psr) {
+                        var psrText = flwData.psr;
+                        var psrStr = '💧 降雨機率: ' + psrText;
+                        if (weatherPsr) {
+                            weatherPsr.innerText = psrStr;
+                            weatherPsr.style.display = 'inline-block';
+                        }
+                        if (nightWeatherPsr) {
+                            nightWeatherPsr.innerText = psrStr;
+                            nightWeatherPsr.style.display = 'inline-block';
+                        }
+                    }
+                }).catch(function(e) {});
+
+            // 3. 取得天氣警告
             fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=tc')
                 .then(function(res) { return res.json(); })
                 .then(function(data) {
@@ -826,9 +918,9 @@
         setInterval(fetchGovPressRelease, 60000);
 
         var defaultBuses = [
-            { company: "lwb", route: "E36A", dir: "inbound", stop: "TC188", origin_name: "東涌", dest_name: "往 元朗", offset: 0 },
-            { company: "ctb", route: "E33", dir: "outbound", stop: "001854", origin_name: "屯門", dest_name: "往 機場/東涌", offset: 0 },
-            { company: "mtr", route: "TCL", dir: "UP", stop: "TUC", origin_name: "東涌", dest_name: "往 香港", offset: 0 }
+            { company: "lwb", route: "E36A", dir: "inbound", stop: "TC188", origin_name: "東湧", dest_name: "往 元朗", offset: 0 },
+            { company: "ctb", route: "E33", dir: "outbound", stop: "001854", origin_name: "屯門", dest_name: "往 機場/東湧", offset: 0 },
+            { company: "mtr", route: "TCL", dir: "UP", stop: "TUC", origin_name: "東湧", dest_name: "往 香港", offset: 0 }
         ];
 
         var currentBuses = [];
@@ -913,7 +1005,6 @@
             var lineUpper = line.toUpperCase();
             var staUpper = station.toUpperCase();
 
-            // 處理開放數據格式相容性（東涌綫 TCL、南港島綫 SIL、港島綫 ISL 等）
             var url = 'https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php?line=' + lineUpper + '&sta=' + staUpper;
             fetch(url)
                 .then(function(res) { return res.json(); })
@@ -925,14 +1016,12 @@
                         if (trainData) {
                             var targetDir = dir || 'UP';
                             var trains = trainData[targetDir] || [];
-                            // 若指定方向無資料，自動嘗試備用方向（處理單向或特例路線）
                             if (trains.length === 0) {
                                 var altDir = (targetDir === 'UP') ? 'DN' : 'UP';
                                 trains = trainData[altDir] || [];
                             }
                             for (var i = 0; i < trains.length; i++) {
                                 var tItem = trains[i];
-                                // 相容 API 返回的 time 或 ttnt (Time To Next Train) 格式
                                 if (tItem.time) {
                                     var tStr = tItem.time.replace(/-/g, '/');
                                     list.push({ eta: tStr });
@@ -1081,6 +1170,12 @@
 
         function openSettings() {
             loadBusConfigs();
+            
+            var startEl = document.getElementById('night-start-time');
+            var endEl = document.getElementById('night-end-time');
+            if (startEl) startEl.value = localStorage.getItem('night_mode_start') || "20:00";
+            if (endEl) endEl.value = localStorage.getItem('night_mode_end') || "05:00";
+
             renderSettingsList();
             var modal = document.getElementById('settings-modal');
             if (modal) modal.classList.add('active');
@@ -1452,7 +1547,7 @@
 
         function addNewBusConfig() {
             currentBuses = syncCurrentDOMToBuses();
-            currentBuses.push({ company: "mtr", route: "TCL", dir: "UP", stop: "TUC", origin_name: "東涌", dest_name: "往 香港", offset: 0 });
+            currentBuses.push({ company: "mtr", route: "TCL", dir: "UP", stop: "TUC", origin_name: "東湧", dest_name: "往 香港", offset: 0 });
             renderSettingsList();
         }
 
@@ -1463,6 +1558,11 @@
         }
 
         function saveBusConfig() {
+            var startTime = document.getElementById('night-start-time').value;
+            var endTime = document.getElementById('night-end-time').value;
+            if (startTime) localStorage.setItem('night_mode_start', startTime);
+            if (endTime) localStorage.setItem('night_mode_end', endTime);
+
             var items = document.querySelectorAll('.config-item');
             var newConfigs = [];
 
@@ -1484,6 +1584,8 @@
             currentBuses = newConfigs;
             localStorage.setItem('user_bus_configs_v12', JSON.stringify(currentBuses));
             closeSettings();
+            
+            checkNightMode(new Date());
             fetchBusData();
         }
     </script>
