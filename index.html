@@ -244,7 +244,7 @@
         .card-ctb .bus-name { color: #000000; text-shadow: none; }
         .card-ctb .bus-dest { color: #1e293b; text-shadow: none; }
         .card-ctb .bus-origin-text { color: #000000; }
-        .card-ctb .bus-company-tag { background: rgba(0, 0, 0, 0.85); color: #ffffff; border: none; }
+        .card-ctb .bus-company-tag { background: #003399; color: #ffffff; border: none; }
         
         .card-mtr-KTL { background-color: #007a3d; }
         .card-mtr-ISL { background-color: #0099e6; }
@@ -572,7 +572,7 @@
                     </div>
                 </div>
             </div>
-            <!-- 時間欄下方新增：日期與降雨機率 (PSR) -->
+            <!-- 時間欄下方：日期與降雨機率 (PSR) -->
             <div class="time-sub-info">
                 <span id="weather-psr" class="weather-psr" style="display: none;">💧 降雨機率: --</span>
                 <div id="date">--年--月--日 星期-</div>
@@ -625,12 +625,12 @@
         
         var mtrRoutesData = {
             "KTL": { name: "觀塘綫", stops: [ {code:"WHA", name:"黃埔"}, {code:"HOM", name:"何文田"}, {code:"YMT", name:"油麻地"}, {code:"MOK", name:"旺角"}, {code:"PRE", name:"太子"}, {code:"SKM", name:"石硤尾"}, {code:"KOT", name:"九龍塘"}, {code:"LOF", name:"樂富"}, {code:"WTS", name:"黃大仙"}, {code:"DIH", name:"鑽石山"}, {code:"CHH", name:"彩虹"}, {code:"KOB", name:"九龍灣"}, {code:"NTK", name:"牛頭角"}, {code:"KWT", name:"觀塘"}, {code:"LAT", name:"藍田"}, {code:"YAT", name:"油塘"}, {code:"TIK", name:"調景嶺"} ] },
-            "ISL": { name: "港島綫", stops: [ {code:"KET", name:"堅尼地城"}, {code:"HKU", name:"香港大學"}, {code:"SYP", name:"西營盤"}, {code:"SHW", name:"上環"}, {code:"CEN", name:"中環"}, {code:"ADM", name:"金鐘"}, {code:"WAC", name:"灣仔"}, {code:"CAB", name:"銅鑼灣"}, {code:"TIH", name:"天后"}, {code:"FOH", name:"炮台山"}, {code:"NOP", name:"北角"}, {code:"QUB", name:"鰂魚湧"}, {code:"TAK", name:"太古"}, {code:"SWH", name:"西灣河"}, {code:"SKW", name:"筲箕灣"}, {code:"HFC", name:"杏花邨"}, {code:"CHW", name:"柴灣"} ] },
+            "ISL": { name: "港島綫", stops: [ {code:"KET", name:"堅尼地城"}, {code:"HKU", name:"香港大學"}, {code:"SYP", name:"西營盤"}, {code:"SHW", name:"上環"}, {code:"CEN", name:"中環"}, {code:"ADM", name:"金鐘"}, {code:"WAC", name:"灣仔"}, {code:"CAB", name:"銅鑼灣"}, {code:"TIH", name:"天后"}, {code:"FOH", name:"炮台山"}, {code:"NOP", name:"北角"}, {code:"QUB", name:"鰂魚涌"}, {code:"TAK", name:"太古"}, {code:"SWH", name:"西灣河"}, {code:"SKW", name:"筲箕灣"}, {code:"HFC", name:"杏花邨"}, {code:"CHW", name:"柴灣"} ] },
             "TWL": { name: "荃灣綫", stops: [ {code:"CEN", name:"中環"}, {code:"ADM", name:"金鐘"}, {code:"TST", name:"尖沙咀"}, {code:"JOR", name:"佐敦"}, {code:"YMT", name:"油麻地"}, {code:"MOK", name:"旺角"}, {code:"PRE", name:"太子"}, {code:"SSP", name:"深水埗"}, {code:"CSW", name:"長沙灣"}, {code:"LCK", name:"荔枝角"}, {code:"MEFO", name:"美孚"}, {code:"LAK", name:"荔景"}, {code:"KWF", name:"葵芳"}, {code:"KWT", name:"葵興"}, {code:"TWH", name:"大窩口"}, {code:"TSW", name:"荃灣"} ] },
             "SIL": { name: "南港島綫", stops: [ {code:"ADM", name:"金鐘"}, {code:"OCP", name:"海洋公園"}, {code:"WCH", name:"黃竹坑"}, {code:"LET", name:"利東"}, {code:"SOH", name:"海怡半島"} ] },
-            "TCL": { name: "東湧綫", stops: [ {code:"HOK", name:"香港"}, {code:"KOW", name:"九龍"}, {code:"OLY", name:"奧運"}, {code:"NAC", name:"南昌"}, {code:"LAK", name:"荔景"}, {code:"TSY", name:"青衣"}, {code:"SUN", name:"欣澳"}, {code:"TUC", name:"東湧"} ] },
+            "TCL": { name: "東涌綫", stops: [ {code:"HOK", name:"香港"}, {code:"KOW", name:"九龍"}, {code:"OLY", name:"奧運"}, {code:"NAC", name:"南昌"}, {code:"LAK", name:"荔景"}, {code:"TSY", name:"青衣"}, {code:"SUN", name:"欣澳"}, {code:"TUC", name:"東涌"} ] },
             "AEL": { name: "機場快綫", stops: [ {code:"HOK", name:"香港"}, {code:"KOW", name:"九龍"}, {code:"TSY", name:"青衣"}, {code:"AIR", name:"機場"}, {code:"AWE", name:"博覽館"} ] },
-            "TKL": { name: "將軍澳綫", stops: [ {code:"NOP", name:"北角"}, {code:"QUB", name:"鰂魚湧"}, {code:"YAT", name:"油塘"}, {code:"TIK", name:"調景嶺"}, {code:"TKO", name:"將軍澳"}, {code:"LHA", name:"坑口"}, {code:"POA", name:"寶琳"}, {code:"LHP", name:"日出康城"} ] },
+            "TKL": { name: "將軍澳綫", stops: [ {code:"NOP", name:"北角"}, {code:"QUB", name:"鰂魚涌"}, {code:"YAT", name:"油塘"}, {code:"TIK", name:"調景嶺"}, {code:"TKO", name:"將軍澳"}, {code:"LHA", name:"坑口"}, {code:"POA", name:"寶琳"}, {code:"LHP", name:"日出康城"} ] },
             "TML": { name: "屯馬綫", stops: [ {code:"TUM", name:"屯門"}, {code:"SIH", name:"兆康"}, {code:"TIS", name:"天水圍"}, {code:"LOP", name:"朗屏"}, {code:"YUL", name:"元朗"}, {code:"KSR", name:"錦上路"}, {code:"TWW", name:"荃灣西"}, {code:"MEF", name:"美孚"}, {code:"NAC", name:"南昌"}, {code:"AUS", name:"柯士甸"}, {code:"ETS", name:"尖東"}, {code:"HUH", name:"紅磡"}, {code:"HOM", name:"何文田"}, {code:"TKW", name:"土瓜灣"}, {code:"SUW", name:"宋皇臺"}, {code:"KAT", name:"啟德"}, {code:"DIH", name:"鑽石山"}, {code:"HIK", name:"顯徑"}, {code:"TAI", name:"大圍"}, {code:"CKT", name:"車公廟"}, {code:"STW", name:"沙田圍"}, {code:"CIO", name:"第一城"}, {code:"SHM", name:"石門"}, {code:"TSH", name:"亞公角"}, {code:"HEO", name:"恆安"}, {code:"MOS", name:"馬鞍山"}, {code:"WHA", name:"烏溪沙"} ] },
             "EAL": { name: "東鐵綫", stops: [ {code:"ADM", name:"金鐘"}, {code:"EXC", name:"會展"}, {code:"HUH", name:"紅磡"}, {code:"MKK", name:"旺角東"}, {code:"KOT", name:"九龍塘"}, {code:"TAI", name:"大圍"}, {code:"SHT", name:"沙田"}, {code:"FOT", name:"火炭"}, {code:"RAC", name:"馬場"}, {code:"UNI", name:"大學"}, {code:"TAP", name:"大埔墟"}, {code:"TWO", name:"太和"}, {code:"FAN", name:"粉嶺"}, {code:"SHS", name:"上水"}, {code:"LOW", name:"羅湖"}, {code:"LKM", name:"落馬洲"} ] }
         };
@@ -918,9 +918,9 @@
         setInterval(fetchGovPressRelease, 60000);
 
         var defaultBuses = [
-            { company: "lwb", route: "E36A", dir: "inbound", stop: "TC188", origin_name: "東湧", dest_name: "往 元朗", offset: 0 },
-            { company: "ctb", route: "E33", dir: "outbound", stop: "001854", origin_name: "屯門", dest_name: "往 機場/東湧", offset: 0 },
-            { company: "mtr", route: "TCL", dir: "UP", stop: "TUC", origin_name: "東湧", dest_name: "往 香港", offset: 0 }
+            { company: "lwb", route: "E36A", dir: "inbound", stop: "TC188", origin_name: "東涌", dest_name: "往 元朗", offset: 0 },
+            { company: "ctb", route: "E33", dir: "outbound", stop: "001854", origin_name: "屯門", dest_name: "往 機場/東涌", offset: 0 },
+            { company: "mtr", route: "TCL", dir: "UP", stop: "TUC", origin_name: "東涌", dest_name: "往 香港", offset: 0 }
         ];
 
         var currentBuses = [];
@@ -1547,7 +1547,7 @@
 
         function addNewBusConfig() {
             currentBuses = syncCurrentDOMToBuses();
-            currentBuses.push({ company: "mtr", route: "TCL", dir: "UP", stop: "TUC", origin_name: "東湧", dest_name: "往 香港", offset: 0 });
+            currentBuses.push({ company: "mtr", route: "TCL", dir: "UP", stop: "TUC", origin_name: "東涌", dest_name: "往 香港", offset: 0 });
             renderSettingsList();
         }
 
@@ -1591,4 +1591,3 @@
     </script>
 </body>
 </html>
-
