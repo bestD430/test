@@ -244,7 +244,8 @@
         .card-ctb .bus-name { color: #000000; text-shadow: none; }
         .card-ctb .bus-dest { color: #1e293b; text-shadow: none; }
         .card-ctb .bus-origin-text { color: #000000; }
-        .card-ctb .bus-company-tag { background: #003399; color: #ffffff; border: none; }
+        /* 修改城巴 Logo 標籤為黃色托底、黑字 */
+        .card-ctb .bus-company-tag { background: #ffcc00; color: #000000; border: 1px solid #000000; }
         
         .card-mtr-KTL { background-color: #007a3d; }
         .card-mtr-ISL { background-color: #0099e6; }
@@ -287,9 +288,11 @@
         .bus-dest-text { font-size: 0.85rem; font-weight: 500; opacity: 0.95; }
 
         .eta-group { display: flex; gap: 8px; align-items: center; }
+        
+        /* 統一到站時間欄底色為深色半透明 */
         .eta-badge {
             flex: 1;
-            background: rgba(15, 23, 42, 0.75);
+            background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(4px);
             border-radius: 6px;
             padding: 8px 4px;
@@ -301,17 +304,20 @@
         }
         .eta-badge.first {
             flex: 1.6;
-            background: rgba(6, 78, 59, 0.9);
-            color: #34d399;
-            border-color: #10b981;
+            background: rgba(15, 23, 42, 0.85);
             font-size: 1.5rem;
             font-weight: 900;
             padding: 6px 4px;
         }
-        .eta-badge.first.arr {
-            background: rgba(136, 19, 55, 0.95);
-            color: #fb7185;
-            border-color: #f43f5e;
+
+        /* 到站時間字體顏色動態設定：>10分鐘為綠字，<=10分鐘及即將到站為紅字 */
+        .eta-badge.eta-green {
+            color: #34d399;
+            border-color: rgba(52, 211, 153, 0.4);
+        }
+        .eta-badge.eta-red {
+            color: #f87171;
+            border-color: rgba(248, 113, 113, 0.4);
         }
 
         .loading-text { text-align: center; color: #94a3b8; padding: 20px; font-size: 0.9rem; }
@@ -1093,20 +1099,20 @@
                             if (bus.company === 'kmb' || bus.company === 'lwb') totalDiffSeconds -= 60;
                             if (totalDiffSeconds < 0) continue;
                             if (totalDiffSeconds <= 90) {
-                                etas.push('即將到站');
+                                etas.push({ text: '即將到站', mins: 0 });
                             } else {
-                                etas.push(Math.round(totalDiffSeconds / 60) + ' 分鐘');
+                                var mVal = Math.round(totalDiffSeconds / 60);
+                                etas.push({ text: mVal + ' 分鐘', mins: mVal });
                             }
                         }
                     }
 
                     if (etas.length === 0) {
-                        etas = ['暫無班次', '-', '-'];
+                        etas = [{ text: '暫無班次', mins: -1 }, { text: '-', mins: -1 }, { text: '-', mins: -1 }];
                     } else {
-                        while (etas.length < 3) { etas.push('-'); }
+                        while (etas.length < 3) { etas.push({ text: '-', mins: -1 }); }
                     }
 
-                    var isArr = (etas[0] === '即將到站');
                     var companyTag = '';
                     var cardClass = 'card-kmb';
 
@@ -1134,15 +1140,21 @@
                         displayRoute = mtrRoutesData[displayRoute].name;
                     }
 
+                    // 判斷文字顏色 Class：剩餘 <= 10 分鐘（包含 0 分鐘/即將到站）顯示紅字，> 10 分鐘顯示綠字
+                    function getEtaClass(etaObj) {
+                        if (etaObj.mins < 0) return '';
+                        return etaObj.mins <= 10 ? 'eta-red' : 'eta-green';
+                    }
+
                     busResults[index] = '<div class="bus-item ' + cardClass + '">' +
                         '<div class="bus-header">' +
                             '<div class="bus-title-group">' + companyTag + '<div class="bus-name">' + displayRoute + '</div></div>' +
                             '<div class="bus-dest">' + routeDirectionHtml + '</div>' +
                         '</div>' +
                         '<div class="eta-group">' +
-                            '<div class="eta-badge first ' + (isArr ? 'arr' : '') + '">' + etas[0] + '</div>' +
-                            '<div class="eta-badge">' + etas[1] + '</div>' +
-                            '<div class="eta-badge">' + etas[2] + '</div>' +
+                            '<div class="eta-badge first ' + getEtaClass(etas[0]) + '">' + etas[0].text + '</div>' +
+                            '<div class="eta-badge ' + getEtaClass(etas[1]) + '">' + etas[1].text + '</div>' +
+                            '<div class="eta-badge ' + getEtaClass(etas[2]) + '">' + etas[2].text + '</div>' +
                         '</div>' +
                     '</div>';
 
