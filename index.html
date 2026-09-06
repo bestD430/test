@@ -244,22 +244,10 @@
         .card-ctb .bus-name { color: #000000; text-shadow: none; }
         .card-ctb .bus-dest { color: #1e293b; text-shadow: none; }
         .card-ctb .bus-origin-text { color: #000000; }
-        
-        .card-mtr-KTL { background-color: #007a3d; }
-        .card-mtr-ISL { background-color: #0099e6; }
-        .card-mtr-TWL { background-color: #a80010; }
-        .card-mtr-SIL { background-color: #b6bd00; }
-        .card-mtr-TCL { background-color: #c85a00; }
-        .card-mtr-AEL { background-color: #008088; }
-        .card-mtr-TKL { background-color: #a35ebf; }
-        .card-mtr-TML { background-color: #923011; }
-        .card-mtr-EAL { background-color: #53b7e8; }
-        .card-mtr-default { background-color: #61132e; }
 
         .bus-header { display: flex; justify-content: space-between; align-items: baseline; }
         .bus-title-group { display: flex; align-items: center; gap: 8px; }
         
-        /* 基礎標籤樣式：深色底 + 城巴式圍邊 */
         .bus-company-tag { 
             font-size: 0.85rem; 
             padding: 3px 8px; 
@@ -272,22 +260,9 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
-        /* 城巴式圍邊 (九巴、龍運、城巴) */
         .card-kmb .bus-company-tag { color: #ffffff; background: #d8121a; border-color: #ffffff; }
         .card-lwb .bus-company-tag { color: #ffffff; background: #f37021; border-color: #ffffff; }
         .card-ctb .bus-company-tag { color: #000000; background: #ffcc00; border-color: #000000; }
-
-        /* 城巴式圍邊 (港鐵依路線顏色變更) */
-        .card-mtr-KTL .bus-company-tag { color: #ffffff; background: #007a3d; border-color: #ffffff; }
-        .card-mtr-ISL .bus-company-tag { color: #ffffff; background: #0099e6; border-color: #ffffff; }
-        .card-mtr-TWL .bus-company-tag { color: #ffffff; background: #a80010; border-color: #ffffff; }
-        .card-mtr-SIL .bus-company-tag { color: #000000; background: #b6bd00; border-color: #000000; }
-        .card-mtr-TCL .bus-company-tag { color: #ffffff; background: #c85a00; border-color: #ffffff; }
-        .card-mtr-AEL .bus-company-tag { color: #ffffff; background: #008088; border-color: #ffffff; }
-        .card-mtr-TKL .bus-company-tag { color: #ffffff; background: #a35ebf; border-color: #ffffff; }
-        .card-mtr-TML .bus-company-tag { color: #ffffff; background: #923011; border-color: #ffffff; }
-        .card-mtr-EAL .bus-company-tag { color: #000000; background: #53b7e8; border-color: #000000; }
-        .card-mtr-default .bus-company-tag { color: #ffffff; background: #61132e; border-color: #ffffff; }
 
         .bus-name { font-size: 2.835rem; font-weight: 700; letter-spacing: 2px; line-height: 1; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
 
@@ -334,6 +309,22 @@
         .eta-badge.eta-red {
             color: #f87171;
             border-color: rgba(248, 113, 113, 0.4);
+        }
+
+        /* 6-10分鐘紅綠字交替閃爍 */
+        @keyframes flashRedGreen {
+            0%, 49% {
+                color: #f87171;
+                border-color: rgba(248, 113, 113, 0.8);
+            }
+            50%, 100% {
+                color: #34d399;
+                border-color: rgba(52, 211, 153, 0.8);
+            }
+        }
+
+        .eta-badge.eta-flash {
+            animation: flashRedGreen 1s infinite;
         }
 
         .loading-text { text-align: center; color: #94a3b8; padding: 20px; font-size: 0.9rem; }
@@ -644,18 +635,6 @@
         var kmbStopsCacheMap = null;
         var ctbStopsCache = {};
         
-        var mtrRoutesData = {
-            "KTL": { name: "觀塘綫", stops: [ {code:"WHA", name:"黃埔"}, {code:"HOM", name:"何文田"}, {code:"YMT", name:"油麻地"}, {code:"MOK", name:"旺角"}, {code:"PRE", name:"太子"}, {code:"SKM", name:"石硤尾"}, {code:"KOT", name:"九龍塘"}, {code:"LOF", name:"樂富"}, {code:"WTS", name:"黃大仙"}, {code:"DIH", name:"鑽石山"}, {code:"CHH", name:"彩虹"}, {code:"KOB", name:"九龍灣"}, {code:"NTK", name:"牛頭角"}, {code:"KWT", name:"觀塘"}, {code:"LAT", name:"藍田"}, {code:"YAT", name:"油塘"}, {code:"TIK", name:"調景嶺"} ] },
-            "ISL": { name: "港島綫", stops: [ {code:"KET", name:"堅尼地城"}, {code:"HKU", name:"香港大學"}, {code:"SYP", name:"西營盤"}, {code:"SHW", name:"上環"}, {code:"CEN", name:"中環"}, {code:"ADM", name:"金鐘"}, {code:"WAC", name:"灣仔"}, {code:"CAB", name:"銅鑼灣"}, {code:"TIH", name:"天后"}, {code:"FOH", name:"炮台山"}, {code:"NOP", name:"北角"}, {code:"QUB", name:"鰂魚涌"}, {code:"TAK", name:"太古"}, {code:"SWH", name:"西灣河"}, {code:"SKW", name:"筲箕灣"}, {code:"HFC", name:"杏花邨"}, {code:"CHW", name:"柴灣"} ] },
-            "TWL": { name: "荃灣綫", stops: [ {code:"CEN", name:"中環"}, {code:"ADM", name:"金鐘"}, {code:"TST", name:"尖沙咀"}, {code:"JOR", name:"佐敦"}, {code:"YMT", name:"油麻地"}, {code:"MOK", name:"旺角"}, {code:"PRE", name:"太子"}, {code:"SSP", name:"深水埗"}, {code:"CSW", name:"長沙灣"}, {code:"LCK", name:"荔枝角"}, {code:"MEFO", name:"美孚"}, {code:"LAK", name:"荔景"}, {code:"KWF", name:"葵芳"}, {code:"KWT", name:"葵興"}, {code:"TWH", name:"大窩口"}, {code:"TSW", name:"荃灣"} ] },
-            "SIL": { name: "南港島綫", stops: [ {code:"ADM", name:"金鐘"}, {code:"OCP", name:"海洋公園"}, {code:"WCH", name:"黃竹坑"}, {code:"LET", name:"利東"}, {code:"SOH", name:"海怡半島"} ] },
-            "TCL": { name: "東涌綫", stops: [ {code:"HOK", name:"香港"}, {code:"KOW", name:"九龍"}, {code:"OLY", name:"奧運"}, {code:"NAC", name:"南昌"}, {code:"LAK", name:"荔景"}, {code:"TSY", name:"青衣"}, {code:"SUN", name:"欣澳"}, {code:"TUC", name:"東涌"} ] },
-            "AEL": { name: "機場快綫", stops: [ {code:"HOK", name:"香港"}, {code:"KOW", name:"九龍"}, {code:"TSY", name:"青衣"}, {code:"AIR", name:"機場"}, {code:"AWE", name:"博覽館"} ] },
-            "TKL": { name: "將軍澳綫", stops: [ {code:"NOP", name:"北角"}, {code:"QUB", name:"鰂魚涌"}, {code:"YAT", name:"油塘"}, {code:"TIK", name:"調景嶺"}, {code:"TKO", name:"將軍澳"}, {code:"LHA", name:"坑口"}, {code:"POA", name:"寶琳"}, {code:"LHP", name:"日出康城"} ] },
-            "TML": { name: "屯馬綫", stops: [ {code:"TUM", name:"屯門"}, {code:"SIH", name:"兆康"}, {code:"TIS", name:"天水圍"}, {code:"LOP", name:"朗屏"}, {code:"YUL", name:"元朗"}, {code:"KSR", name:"錦上路"}, {code:"TWW", name:"荃灣西"}, {code:"MEF", name:"美孚"}, {code:"NAC", name:"南昌"}, {code:"AUS", name:"柯士甸"}, {code:"ETS", name:"尖東"}, {code:"HUH", name:"紅磡"}, {code:"HOM", name:"何文田"}, {code:"TKW", name:"土瓜灣"}, {code:"SUW", name:"宋皇臺"}, {code:"KAT", name:"啟德"}, {code:"DIH", name:"鑽石山"}, {code:"HIK", name:"顯徑"}, {code:"TAI", name:"大圍"}, {code:"CKT", name:"車公廟"}, {code:"STW", name:"沙田圍"}, {code:"CIO", name:"第一城"}, {code:"SHM", name:"石門"}, {code:"TSH", name:"亞公角"}, {code:"HEO", name:"恆安"}, {code:"MOS", name:"馬鞍山"}, {code:"WHA", name:"烏溪沙"} ] },
-            "EAL": { name: "東鐵綫", stops: [ {code:"ADM", name:"金鐘"}, {code:"EXC", name:"會展"}, {code:"HUH", name:"紅磡"}, {code:"MKK", name:"旺角東"}, {code:"KOT", name:"九龍塘"}, {code:"TAI", name:"大圍"}, {code:"SHT", name:"沙田"}, {code:"FOT", name:"火炭"}, {code:"RAC", name:"馬場"}, {code:"UNI", name:"大學"}, {code:"TAP", name:"大埔墟"}, {code:"TWO", name:"太和"}, {code:"FAN", name:"粉嶺"}, {code:"SHS", name:"上水"}, {code:"LOW", name:"羅湖"}, {code:"LKM", name:"落馬洲"} ] }
-        };
-
         var nightWakeTimer = null;
         var isManuallyWoken = false;
 
@@ -937,21 +916,20 @@
 
         var defaultBuses = [
             { company: "lwb", route: "E36A", dir: "inbound", stop: "TC188", origin_name: "東涌", dest_name: "往 元朗", offset: 0 },
-            { company: "ctb", route: "E33", dir: "outbound", stop: "001854", origin_name: "屯門", dest_name: "往 機場/東涌", offset: 0 },
-            { company: "mtr", route: "TCL", dir: "UP", stop: "TUC", origin_name: "東涌", dest_name: "往 香港", offset: 0 }
+            { company: "ctb", route: "E33", dir: "outbound", stop: "001854", origin_name: "屯門", dest_name: "往 機場/東涌", offset: 0 }
         ];
 
         var currentBuses = [];
         var cachedRawEtas = {};
 
         function loadBusConfigs() {
-            var saved = localStorage.getItem('user_bus_configs_v12');
+            var saved = localStorage.getItem('user_bus_configs_v14');
             if (saved) {
                 try {
                     var parsed = JSON.parse(saved);
                     currentBuses = [];
                     for (var i = 0; i < parsed.length; i++) {
-                        if (parsed[i].company !== 'nlb') {
+                        if (parsed[i].company !== 'nlb' && parsed[i].company !== 'mtr') {
                             currentBuses.push(parsed[i]);
                         }
                     }
@@ -1018,43 +996,6 @@
             }
         }
 
-        function getMTRETA(line, station, dir, callback) {
-            if (!line || !station) { callback([]); return; }
-            var lineUpper = line.toUpperCase();
-            var staUpper = station.toUpperCase();
-
-            var url = 'https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php?line=' + lineUpper + '&sta=' + staUpper;
-            fetch(url)
-                .then(function(res) { return res.json(); })
-                .then(function(data) {
-                    var list = [];
-                    if (data && data.status === 1 && data.data) {
-                        var key = lineUpper + '-' + staUpper;
-                        var trainData = data.data[key];
-                        if (trainData) {
-                            var targetDir = dir || 'UP';
-                            var trains = trainData[targetDir] || [];
-                            if (trains.length === 0) {
-                                var altDir = (targetDir === 'UP') ? 'DN' : 'UP';
-                                trains = trainData[altDir] || [];
-                            }
-                            for (var i = 0; i < trains.length; i++) {
-                                var tItem = trains[i];
-                                if (tItem.time) {
-                                    var tStr = tItem.time.replace(/-/g, '/');
-                                    list.push({ eta: tStr });
-                                } else if (tItem.ttnt !== undefined) {
-                                    var etaDate = new Date(Date.now() + parseInt(tItem.ttnt, 10) * 60000);
-                                    list.push({ eta: etaDate.toISOString() });
-                                }
-                            }
-                        }
-                    }
-                    callback(list);
-                })
-                .catch(function(e) { callback([]); });
-        }
-
         function fetchBusData() {
             loadBusConfigs();
             var busListContainer = document.getElementById('bus-list');
@@ -1065,7 +1006,7 @@
                 return;
             }
 
-            var companyOrder = { mtr: 1, kmb: 2, lwb: 3, ctb: 4 };
+            var companyOrder = { kmb: 1, lwb: 2, ctb: 3 };
             currentBuses.sort(function(a, b) {
                 var oA = companyOrder[a.company] || 99;
                 var oB = companyOrder[b.company] || 99;
@@ -1091,7 +1032,7 @@
 
             var loopFn = function(index) {
                 var bus = currentBuses[index];
-                var busDir = bus.dir || (bus.company === 'mtr' ? 'UP' : 'outbound');
+                var busDir = bus.dir || 'outbound';
                 var busOffset = parseFloat(bus.offset || 0);
                 var busKey = bus.company + '_' + bus.route + '_' + busDir + '_' + bus.stop;
 
@@ -1137,10 +1078,6 @@
                     } else if (bus.company === 'ctb') {
                         companyTag = '<span class="bus-company-tag">城巴</span>';
                         cardClass = 'card-ctb';
-                    } else if (bus.company === 'mtr') {
-                        companyTag = '<span class="bus-company-tag">港鐵</span>';
-                        var lineCode = bus.route.toUpperCase();
-                        cardClass = 'card-mtr-' + (mtrRoutesData[lineCode] ? lineCode : 'default');
                     }
 
                     var originText = bus.origin_name ? '<span class="bus-origin-text">' + bus.origin_name + '</span>' : '';
@@ -1148,13 +1085,13 @@
                     var routeDirectionHtml = (originText && destText) ? originText + ' <span style="font-size: 0.8rem; opacity: 0.8;">➔</span> ' + destText : (originText || destText);
 
                     var displayRoute = bus.route.toUpperCase();
-                    if (bus.company === 'mtr' && mtrRoutesData[displayRoute]) {
-                        displayRoute = mtrRoutesData[displayRoute].name;
-                    }
 
+                    // 判斷顏色：<= 5分鐘(長亮紅), 6-10分鐘(紅綠間格閃爍), >10分鐘(長亮綠)
                     function getEtaClass(etaObj) {
                         if (etaObj.mins < 0) return '';
-                        return etaObj.mins <= 10 ? 'eta-red' : 'eta-green';
+                        if (etaObj.mins <= 5) return 'eta-red';
+                        if (etaObj.mins <= 10) return 'eta-flash';
+                        return 'eta-green';
                     }
 
                     busResults[index] = '<div class="bus-item ' + cardClass + '">' +
@@ -1176,8 +1113,6 @@
                     getKMBSeta(bus.route, bus.stop, busDir, processEtas);
                 } else if (bus.company === 'ctb') {
                     getCTBETA(bus.route, bus.stop, busDir, processEtas);
-                } else if (bus.company === 'mtr') {
-                    getMTRETA(bus.route, bus.stop, busDir, processEtas);
                 } else {
                     processEtas([]);
                 }
@@ -1227,13 +1162,12 @@
 
             for (var i = 0; i < currentBuses.length; i++) {
                 var bus = currentBuses[i];
-                var busDir = bus.dir || (bus.company === 'mtr' ? 'UP' : 'outbound');
+                var busDir = bus.dir || 'outbound';
                 var busOffset = bus.offset !== undefined ? bus.offset : 0;
 
                 var itemHtml = '<div class="config-item" data-index="' + i + '" data-current-stop="' + bus.stop + '" data-current-dir="' + busDir + '">' +
                     '<div class="config-row">' +
                         '<select class="config-select bus-company" onchange="onCompanyChanged(' + i + ')">' +
-                            '<option value="mtr" ' + (bus.company === 'mtr' ? 'selected' : '') + '>港鐵 (MTR)</option>' +
                             '<option value="kmb" ' + (bus.company === 'kmb' ? 'selected' : '') + '>九巴 (KMB)</option>' +
                             '<option value="lwb" ' + (bus.company === 'lwb' ? 'selected' : '') + '>龍運 (LWB)</option>' +
                             '<option value="ctb" ' + (bus.company === 'ctb' ? 'selected' : '') + '>城巴 (CTB)</option>' +
@@ -1261,17 +1195,7 @@
         }
 
         function renderRouteControl(company, currentRoute, index) {
-            if (company === 'mtr') {
-                var optionsHtml = '<select class="config-select bus-route" onchange="onBusMetaChanged(' + index + ')">';
-                for (var code in mtrRoutesData) {
-                    var selected = (currentRoute.toUpperCase() === code) ? 'selected' : '';
-                    optionsHtml += '<option value="' + code + '" ' + selected + '>' + mtrRoutesData[code].name + '</option>';
-                }
-                optionsHtml += '</select>';
-                return optionsHtml;
-            } else {
-                return '<input type="text" class="config-input bus-route" placeholder="路線 (例: E33)" value="' + currentRoute + '" onchange="onBusMetaChanged(' + index + ')">';
-            }
+            return '<input type="text" class="config-input bus-route" placeholder="路線 (例: E33)" value="' + currentRoute + '" onchange="onBusMetaChanged(' + index + ')">';
         }
 
         function onCompanyChanged(index) {
@@ -1282,9 +1206,7 @@
             var company = item.querySelector('.bus-company').value;
             var routeContainer = item.querySelector('.config-route-container');
             
-            var defaultRoute = (company === 'mtr') ? 'TCL' : '';
-            routeContainer.innerHTML = renderRouteControl(company, defaultRoute, index);
-
+            routeContainer.innerHTML = renderRouteControl(company, '', index);
             onBusMetaChanged(index);
         }
 
@@ -1317,24 +1239,8 @@
             var routeInput = item.querySelector('.bus-route');
             var route = routeInput.value.trim().toUpperCase();
             var dirSelect = item.querySelector('.bus-dir');
-            var currentDir = item.getAttribute('data-current-dir') || (company === 'mtr' ? 'UP' : 'outbound');
+            var currentDir = item.getAttribute('data-current-dir') || 'outbound';
             var destInput = item.querySelector('.bus-dest');
-
-            if (company === 'mtr') {
-                if (!route || !mtrRoutesData[route]) route = "TCL";
-                
-                var lineInfo = mtrRoutesData[route];
-                if (lineInfo && lineInfo.stops.length > 0) {
-                    var firstStopName = lineInfo.stops[0].name;
-                    var lastStopName = lineInfo.stops[lineInfo.stops.length - 1].name;
-                    dirSelect.innerHTML = '<option value="UP">往 ' + lastStopName + '</option>' +
-                                           '<option value="DN">往 ' + firstStopName + '</option>';
-                } else {
-                    dirSelect.innerHTML = '<option value="UP">往 上行方向</option><option value="DN">往 下行方向</option>';
-                }
-                finalizeDir(dirSelect, item, currentDir, isUserAction, destInput, callback);
-                return;
-            }
 
             if (!route) {
                 dirSelect.innerHTML = '<option value="outbound">請先輸入路線...</option>';
@@ -1412,26 +1318,11 @@
                 var company = item.querySelector('.bus-company').value;
                 var route = item.querySelector('.bus-route').value.trim().toUpperCase();
                 var dirSelect = item.querySelector('.bus-dir');
-                var dir = dirSelect.value || (company === 'mtr' ? 'UP' : 'outbound');
+                var dir = dirSelect.value || 'outbound';
                 item.setAttribute('data-current-dir', dir);
 
                 var stopSelect = item.querySelector('.bus-stop');
                 var originInput = item.querySelector('.bus-origin');
-
-                if (company === 'mtr') {
-                    var optionsHtml = '<option value="">請選擇車站...</option>';
-                    var lineInfo = mtrRoutesData[route];
-                    if (lineInfo && lineInfo.stops) {
-                        for (var s = 0; s < lineInfo.stops.length; s++) {
-                            var st = lineInfo.stops[s];
-                            optionsHtml += '<option value="' + st.code + '">' + (s + 1) + '. ' + st.name + ' (' + st.code + ')</option>';
-                        }
-                    }
-                    stopSelect.innerHTML = optionsHtml;
-                    var initialStop = item.getAttribute('data-current-stop') || '';
-                    applyStopSelection(item, stopSelect, initialStop, isUserAction, originInput);
-                    return;
-                }
 
                 if (!route) {
                     stopSelect.innerHTML = '<option value="">請先輸入路線...</option>';
@@ -1557,6 +1448,7 @@
             for (var i = 0; i < items.length; i++) {
                 var item = items[i];
                 var company = item.querySelector('.bus-company').value;
+                if (company === 'mtr') continue;
                 var route = item.querySelector('.bus-route').value.trim();
                 var dir = item.querySelector('.bus-dir').value;
                 var stop = item.querySelector('.bus-stop').value;
@@ -1570,7 +1462,7 @@
 
         function addNewBusConfig() {
             currentBuses = syncCurrentDOMToBuses();
-            currentBuses.push({ company: "mtr", route: "TCL", dir: "UP", stop: "TUC", origin_name: "東涌", dest_name: "往 香港", offset: 0 });
+            currentBuses.push({ company: "kmb", route: "", dir: "outbound", stop: "", origin_name: "", dest_name: "", offset: 0 });
             renderSettingsList();
         }
 
@@ -1592,6 +1484,7 @@
             for (var i = 0; i < items.length; i++) {
                 var item = items[i];
                 var company = item.querySelector('.bus-company').value;
+                if (company === 'mtr') continue;
                 var route = item.querySelector('.bus-route').value.trim();
                 var dir = item.querySelector('.bus-dir').value;
                 var stop = item.querySelector('.bus-stop').value;
@@ -1605,7 +1498,7 @@
             }
 
             currentBuses = newConfigs;
-            localStorage.setItem('user_bus_configs_v12', JSON.stringify(currentBuses));
+            localStorage.setItem('user_bus_configs_v14', JSON.stringify(currentBuses));
             closeSettings();
             
             checkNightMode(new Date());
