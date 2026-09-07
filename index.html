@@ -247,7 +247,6 @@
         .card-ctb .bus-dest { color: #1e293b; text-shadow: none; }
         .card-ctb .bus-origin-text { color: #000000; }
 
-        /* 修改：確保路線與下方起終點對齊 */
         .bus-header { 
             display: flex; 
             flex-direction: column; 
@@ -259,7 +258,7 @@
         
         .bus-title-group { 
             display: flex; 
-            align-items: center; 
+            align-items: flex-end; 
             gap: 6px; 
         }
         
@@ -279,6 +278,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             letter-spacing: 1px;
             line-height: 1;
+            align-self: center;
         }
 
         .card-kmb .bus-company-tag { color: #ffffff; background: #d8121a; border-color: #ffffff; }
@@ -287,7 +287,27 @@
 
         .bus-name { font-size: 3.8rem; font-weight: 700; letter-spacing: 1px; line-height: 0.95; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
 
-        /* 修改：設定在路線號下方並完全靠左對齊 */
+        /* 路線號右側的收費標籤 */
+        .bus-fare {
+            font-size: 1.1rem;
+            font-weight: 800;
+            background: rgba(15, 23, 42, 0.85);
+            color: #fef08a;
+            padding: 2px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            margin-left: 2px;
+            margin-bottom: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            white-space: nowrap;
+        }
+
+        .card-ctb .bus-fare {
+            background: rgba(0, 0, 0, 0.85);
+            color: #ffcc00;
+            border-color: rgba(0, 0, 0, 0.2);
+        }
+
         .bus-dest { 
             font-size: 0.8rem; 
             font-weight: 500; 
@@ -517,6 +537,7 @@
         }
         .config-input, .config-route-container { flex: 1; }
         .config-select.bus-stop { flex: 1.5; }
+        .config-input.bus-fare-input { width: 80px; flex: none; }
         .delete-btn {
             background: #991b1b;
             color: #fca5a5;
@@ -560,6 +581,7 @@
             .bus-company-tag { font-size: 0.85rem; padding: 4px 3px; border-radius: 5px; }
             
             .bus-name { font-size: 5rem; letter-spacing: 2px; }
+            .bus-fare { font-size: 1.4rem; padding: 3px 12px; border-radius: 8px; margin-bottom: 8px; }
             
             .bus-dest { margin-top: 2px; gap: 2px; line-height: 1.2; }
             .bus-origin-text { font-size: 1.6rem; line-height: 1.2; }
@@ -575,6 +597,7 @@
             .modal-close { font-size: 2.2rem; }
             .config-item { padding: 16px; gap: 14px; border-radius: 12px; }
             .config-input, .config-select { font-size: 1.1rem; padding: 12px; }
+            .config-input.bus-fare-input { width: 110px; }
             .delete-btn { font-size: 1.05rem; padding: 12px 16px; }
             .action-btn { font-size: 1.2rem; padding: 14px 24px; }
             .hint-text { font-size: 1rem; }
@@ -671,7 +694,7 @@
             </div>
 
             <div class="hint-text">
-                💡 當某路線無有效班次時，將顯示「暫無班次」。
+                💡 當某路線無有效班次時，將顯示「暫無班次」。可於路線設定中填寫車費（如 $10.5）。
             </div>
             <div class="config-list" id="config-list"></div>
             <div class="modal-footer">
@@ -965,15 +988,15 @@
         setInterval(fetchGovPressRelease, 60000);
 
         var defaultBuses = [
-            { company: "lwb", route: "E36A", dir: "inbound", stop: "TC188", origin_name: "東涌", dest_name: "往 元朗", offset: 0 },
-            { company: "ctb", route: "E33", dir: "outbound", stop: "001854", origin_name: "屯門", dest_name: "往 機場/東涌", offset: 0 }
+            { company: "lwb", route: "E36A", dir: "inbound", stop: "TC188", origin_name: "東涌", dest_name: "往 元朗", offset: 0, fare: "$14.4" },
+            { company: "ctb", route: "E33", dir: "outbound", stop: "001854", origin_name: "屯門", dest_name: "往 機場/東涌", offset: 0, fare: "$12.4" }
         ];
 
         var currentBuses = [];
         var cachedRawEtas = {};
 
         function loadBusConfigs() {
-            var saved = localStorage.getItem('user_bus_configs_v14');
+            var saved = localStorage.getItem('user_bus_configs_v15');
             if (saved) {
                 try {
                     var parsed = JSON.parse(saved);
@@ -1135,6 +1158,7 @@
                     
                     var routeDirectionHtml = originText + destText;
                     var displayRoute = bus.route.toUpperCase();
+                    var fareHtml = bus.fare ? '<span class="bus-fare">' + bus.fare + '</span>' : '';
 
                     function getEtaClass(etaObj) {
                         if (etaObj.mins < 0) return '';
@@ -1148,6 +1172,7 @@
                             '<div class="bus-title-group">' +
                                 companyTag + 
                                 '<div class="bus-name">' + displayRoute + '</div>' + 
+                                fareHtml +
                             '</div>' +
                             '<div class="bus-dest">' + routeDirectionHtml + '</div>' +
                         '</div>' +
@@ -1218,6 +1243,7 @@
                 var bus = currentBuses[i];
                 var busDir = bus.dir || 'outbound';
                 var busOffset = bus.offset !== undefined ? bus.offset : 0;
+                var busFare = bus.fare || '';
 
                 var itemHtml = '<div class="config-item" data-index="' + i + '" data-current-stop="' + bus.stop + '" data-current-dir="' + busDir + '">' +
                     '<div class="config-row">' +
@@ -1229,6 +1255,7 @@
                         '<div class="config-route-container">' +
                             renderRouteControl(bus.company, bus.route, i) +
                         '</div>' +
+                        '<input type="text" class="config-input bus-fare-input" placeholder="車費 (例: $10.5)" value="' + busFare + '">' +
                         '<select class="config-select bus-dir" onchange="onDirectionChanged(' + i + ')">' +
                             '<option value="' + busDir + '" selected>方向載入中...</option>' +
                         '</select>' +
@@ -1509,14 +1536,15 @@
                 var origin_name = item.querySelector('.bus-origin').value.trim();
                 var dest_name = item.querySelector('.bus-dest').value.trim();
                 var offset = parseFloat(item.querySelector('.bus-offset').value);
-                tempConfigs.push({ company: company, route: route, dir: dir, stop: stop || '', origin_name: origin_name, dest_name: dest_name, offset: offset });
+                var fare = item.querySelector('.bus-fare-input').value.trim();
+                tempConfigs.push({ company: company, route: route, dir: dir, stop: stop || '', origin_name: origin_name, dest_name: dest_name, offset: offset, fare: fare });
             }
             return tempConfigs;
         }
 
         function addNewBusConfig() {
             currentBuses = syncCurrentDOMToBuses();
-            currentBuses.push({ company: "kmb", route: "", dir: "outbound", stop: "", origin_name: "", dest_name: "", offset: 0 });
+            currentBuses.push({ company: "kmb", route: "", dir: "outbound", stop: "", origin_name: "", dest_name: "", offset: 0, fare: "" });
             renderSettingsList();
         }
 
@@ -1545,14 +1573,15 @@
                 var origin_name = item.querySelector('.bus-origin').value.trim();
                 var dest_name = item.querySelector('.bus-dest').value.trim();
                 var offset = parseFloat(item.querySelector('.bus-offset').value);
+                var fare = item.querySelector('.bus-fare-input').value.trim();
 
                 if (route) {
-                    newConfigs.push({ company: company, route: route, dir: dir, stop: stop || '', origin_name: origin_name, dest_name: dest_name, offset: offset });
+                    newConfigs.push({ company: company, route: route, dir: dir, stop: stop || '', origin_name: origin_name, dest_name: dest_name, offset: offset, fare: fare });
                 }
             }
 
             currentBuses = newConfigs;
-            localStorage.setItem('user_bus_configs_v14', JSON.stringify(currentBuses));
+            localStorage.setItem('user_bus_configs_v15', JSON.stringify(currentBuses));
             closeSettings();
             
             checkNightMode(new Date());
@@ -1561,4 +1590,3 @@
     </script>
 </body>
 </html>
-
