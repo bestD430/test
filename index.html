@@ -262,7 +262,6 @@
             gap: 6px; 
         }
         
-        /* 修改：新增直排文字 (writing-mode & text-orientation) */
         .bus-company-tag { 
             writing-mode: vertical-rl;
             text-orientation: upright;
@@ -287,6 +286,7 @@
 
         .bus-name { font-size: 3.8rem; font-weight: 700; letter-spacing: 1px; line-height: 0.95; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
 
+        /* 修改：行距增加 20% (由原 1 增加至 1.2，並調整垂直間距) */
         .bus-dest { 
             font-size: 0.8rem; 
             font-weight: 500; 
@@ -294,13 +294,14 @@
             display: flex;
             flex-direction: column;
             align-items: flex-start;
-            gap: 0px;
+            gap: 2px;
             color: #f1f5f9;
             text-shadow: 0 1px 2px rgba(0,0,0,0.5);
             margin-top: 0px;
+            line-height: 1.2;
         }
-        .bus-origin-text { font-size: 1.05rem; font-weight: 800; color: #ffffff; line-height: 1; }
-        .bus-dest-text { font-size: 0.8rem; font-weight: 500; opacity: 0.95; line-height: 1; }
+        .bus-origin-text { font-size: 1.05rem; font-weight: 800; color: #ffffff; line-height: 1.2; }
+        .bus-dest-text { font-size: 0.8rem; font-weight: 500; opacity: 0.95; line-height: 1.2; }
 
         .eta-group { 
             display: flex; 
@@ -558,9 +559,10 @@
             
             .bus-name { font-size: 5rem; letter-spacing: 2px; }
             
-            .bus-dest { margin-top: 0px; gap: 1px; }
-            .bus-origin-text { font-size: 1.6rem; }
-            .bus-dest-text { font-size: 1.15rem; }
+            /* 平板及大螢距微調：保持良好的垂直邊距 */
+            .bus-dest { margin-top: 0px; gap: 3px; line-height: 1.2; }
+            .bus-origin-text { font-size: 1.6rem; line-height: 1.2; }
+            .bus-dest-text { font-size: 1.15rem; line-height: 1.2; }
 
             .eta-group { gap: 5px; width: 40%; }
             .eta-next-group { gap: 6px; }
