@@ -287,7 +287,6 @@
 
         .bus-name { font-size: 3.8rem; font-weight: 700; letter-spacing: 1px; line-height: 0.95; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
 
-        /* 目的地區域與車費的橫向排列佈局 */
         .bus-dest { 
             font-size: 0.8rem; 
             font-weight: 500; 
@@ -313,7 +312,6 @@
         .bus-origin-text { font-size: 1.05rem; font-weight: 800; color: #ffffff; line-height: 1.2; text-align: left; }
         .bus-dest-text { font-size: 0.8rem; font-weight: 500; opacity: 0.95; line-height: 1.2; text-align: left; }
 
-        /* 車站資訊右側的收費標籤 */
         .bus-fare {
             font-size: 0.9rem;
             font-weight: 800;
@@ -544,7 +542,7 @@
         }
         .config-input, .config-route-container { flex: 1; }
         .config-select.bus-stop { flex: 1.5; }
-        .config-input.bus-fare-input { width: 80px; flex: none; }
+        .config-input.bus-fare-input { width: 90px; flex: none; }
         .delete-btn {
             background: #991b1b;
             color: #fca5a5;
@@ -604,7 +602,7 @@
             .modal-close { font-size: 2.2rem; }
             .config-item { padding: 16px; gap: 14px; border-radius: 12px; }
             .config-input, .config-select { font-size: 1.1rem; padding: 12px; }
-            .config-input.bus-fare-input { width: 110px; }
+            .config-input.bus-fare-input { width: 120px; }
             .delete-btn { font-size: 1.05rem; padding: 12px 16px; }
             .action-btn { font-size: 1.2rem; padding: 14px 24px; }
             .hint-text { font-size: 1rem; }
@@ -617,7 +615,6 @@
 </head>
 <body>
 
-    <!-- 夜間模式畫面 -->
     <div id="night-screen" onclick="wakeUpNightScreen()">
         <div id="night-clock" class="night-clock">
             12:00
@@ -641,7 +638,6 @@
         <div class="night-tip">輕按一下顯示路線資料</div>
     </div>
 
-    <!-- 主頁面 Header 區域 -->
     <header>
         <div class="header-left">
             <div class="weather-sub-bar">
@@ -684,7 +680,6 @@
         </section>
     </main>
 
-    <!-- 設定彈窗 -->
     <div class="modal-overlay" id="settings-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -701,7 +696,7 @@
             </div>
 
             <div class="hint-text">
-                💡 當某路線無有效班次時，將顯示「暫無班次」。可於路線設定中填寫車費（如 $10.5）。
+                💡 選擇路線及車站後，系統會自動搜尋對應車費並填入，您亦可自由修改。
             </div>
             <div class="config-list" id="config-list"></div>
             <div class="modal-footer">
@@ -1442,10 +1437,10 @@
                                     for (var i = 0; i < data.data.length; i++) {
                                         var sId = data.data[i].stop;
                                         var name = stopMap[sId] || sId;
-                                        optionsHtml += '<option value="' + sId + '">' + (i + 1) + '. ' + name + '</option>';
+                                        optionsHtml += '<option value="' + sId + '" data-seq="' + data.data[i].seq + '">' + (i + 1) + '. ' + name + '</option>';
                                     }
                                     stopSelect.innerHTML = optionsHtml;
-                                    applyStopSelection(item, stopSelect, initialStop, isUserAction, originInput);
+                                    applyStopSelection(item, stopSelect, initialStop, isUserAction, originInput, index);
                                 });
                             } else {
                                 stopSelect.innerHTML = '<option value="">找不到該路線或方向</option>';
@@ -1468,10 +1463,10 @@
                                         for (var j = 0; j < stops.length; j++) {
                                             var sId = stops[j].stop;
                                             var name = stopNames[j] || ('代碼: ' + sId);
-                                            optionsHtml += '<option value="' + sId + '">' + (j + 1) + '. ' + name + '</option>';
+                                            optionsHtml += '<option value="' + sId + '" data-seq="' + (j + 1) + '">' + (j + 1) + '. ' + name + '</option>';
                                         }
                                         stopSelect.innerHTML = optionsHtml;
-                                        applyStopSelection(item, stopSelect, initialStop, isUserAction, originInput);
+                                        applyStopSelection(item, stopSelect, initialStop, isUserAction, originInput, index);
                                         return;
                                     }
                                     var sId = stops[idx].stop;
@@ -1508,12 +1503,64 @@
             });
         }
 
-        function applyStopSelection(item, stopSelect, initialStop, isUserAction, originInput) {
+        function applyStopSelection(item, stopSelect, initialStop, isUserAction, originInput, index) {
             if (!isUserAction && initialStop) {
                 stopSelect.value = initialStop;
             } else if (isUserAction) {
                 if (originInput) originInput.value = '';
                 item.setAttribute('data-current-stop', '');
+            }
+            if (isUserAction || !item.querySelector('.bus-fare-input').value) {
+                autoFetchFare(index);
+            }
+        }
+
+        /* 自動查詢與填入車費 */
+        function autoFetchFare(index) {
+            var items = document.querySelectorAll('.config-item');
+            var item = items[index];
+            if (!item) return;
+
+            var company = item.querySelector('.bus-company').value;
+            var route = item.querySelector('.bus-route').value.trim().toUpperCase();
+            var dir = item.querySelector('.bus-dir').value;
+            var stopSelect = item.querySelector('.bus-stop');
+            var fareInput = item.querySelector('.bus-fare-input');
+
+            if (!route || !stopSelect.value) return;
+
+            var selectedOpt = stopSelect.options[stopSelect.selectedIndex];
+            var seq = selectedOpt ? selectedOpt.getAttribute('data-seq') : null;
+
+            if (company === 'kmb' || company === 'lwb') {
+                var dirCode = dir === 'inbound' ? 'inbound' : 'outbound';
+                fetch('https://data.etabus.gov.hk/v1/transport/kmb/route-fare/' + route + '/' + dirCode + '/1')
+                    .then(function(res) { return res.json(); })
+                    .then(function(d) {
+                        if (d && d.data && d.data.length > 0) {
+                            var targetFare = null;
+                            if (seq) {
+                                for (var i = 0; i < d.data.length; i++) {
+                                    if (String(d.data[i].seq) === String(seq)) {
+                                        targetFare = d.data[i].fare;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (!targetFare) targetFare = d.data[0].fare;
+                            if (targetFare) {
+                                fareInput.value = '$' + parseFloat(targetFare).toFixed(1);
+                            }
+                        }
+                    }).catch(function(e) {});
+            } else if (company === 'ctb') {
+                fetch('https://rt.data.gov.hk/v2/transport/citybus/route/CTB/' + route)
+                    .then(function(res) { return res.json(); })
+                    .then(function(d) {
+                        if (d && d.data && d.data.fare) {
+                            fareInput.value = '$' + parseFloat(d.data.fare).toFixed(1);
+                        }
+                    }).catch(function(e) {});
             }
         }
 
@@ -1532,6 +1579,8 @@
                 if (originInput) originInput.value = '';
             }
             item.setAttribute('data-current-stop', selectedOption ? selectedOption.value : '');
+            
+            autoFetchFare(index);
         }
 
         function syncCurrentDOMToBuses() {
