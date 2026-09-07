@@ -287,17 +287,41 @@
 
         .bus-name { font-size: 3.8rem; font-weight: 700; letter-spacing: 1px; line-height: 0.95; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
 
-        /* 路線號右側的收費標籤 */
+        /* 目的地區域與車費的橫向排列佈局 */
+        .bus-dest { 
+            font-size: 0.8rem; 
+            font-weight: 500; 
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            color: #f1f5f9;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            margin-top: 2px;
+            line-height: 1.2;
+            width: 100%;
+        }
+
+        .bus-dest-text-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1px;
+        }
+
+        .bus-origin-text { font-size: 1.05rem; font-weight: 800; color: #ffffff; line-height: 1.2; text-align: left; }
+        .bus-dest-text { font-size: 0.8rem; font-weight: 500; opacity: 0.95; line-height: 1.2; text-align: left; }
+
+        /* 車站資訊右側的收費標籤 */
         .bus-fare {
-            font-size: 1.1rem;
+            font-size: 0.9rem;
             font-weight: 800;
             background: rgba(15, 23, 42, 0.85);
             color: #fef08a;
-            padding: 2px 8px;
-            border-radius: 6px;
+            padding: 2px 6px;
+            border-radius: 5px;
             border: 1px solid rgba(255, 255, 255, 0.4);
-            margin-left: 2px;
-            margin-bottom: 4px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             white-space: nowrap;
         }
@@ -307,23 +331,6 @@
             color: #ffcc00;
             border-color: rgba(0, 0, 0, 0.2);
         }
-
-        .bus-dest { 
-            font-size: 0.8rem; 
-            font-weight: 500; 
-            text-align: left; 
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 1px;
-            color: #f1f5f9;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-            margin-top: 2px;
-            line-height: 1.2;
-            width: 100%;
-        }
-        .bus-origin-text { font-size: 1.05rem; font-weight: 800; color: #ffffff; line-height: 1.2; text-align: left; }
-        .bus-dest-text { font-size: 0.8rem; font-weight: 500; opacity: 0.95; line-height: 1.2; text-align: left; }
 
         .eta-group { 
             display: flex; 
@@ -581,9 +588,9 @@
             .bus-company-tag { font-size: 0.85rem; padding: 4px 3px; border-radius: 5px; }
             
             .bus-name { font-size: 5rem; letter-spacing: 2px; }
-            .bus-fare { font-size: 1.4rem; padding: 3px 12px; border-radius: 8px; margin-bottom: 8px; }
+            .bus-fare { font-size: 1.15rem; padding: 2px 10px; border-radius: 6px; }
             
-            .bus-dest { margin-top: 2px; gap: 2px; line-height: 1.2; }
+            .bus-dest { margin-top: 2px; gap: 8px; line-height: 1.2; }
             .bus-origin-text { font-size: 1.6rem; line-height: 1.2; }
             .bus-dest-text { font-size: 1.15rem; line-height: 1.2; }
 
@@ -1002,7 +1009,7 @@
                     var parsed = JSON.parse(saved);
                     currentBuses = [];
                     for (var i = 0; i < parsed.length; i++) {
-                        if (parsed[i].company !== 'nlb' && parsed[i].company !== 'mtr') {
+                        if (parsed[i].company !== 'mtr') {
                             currentBuses.push(parsed[i]);
                         }
                     }
@@ -1155,10 +1162,9 @@
 
                     var originText = bus.origin_name ? '<span class="bus-origin-text">' + bus.origin_name + '</span>' : '';
                     var destText = bus.dest_name ? '<span class="bus-dest-text">' + bus.dest_name + '</span>' : '';
-                    
-                    var routeDirectionHtml = originText + destText;
-                    var displayRoute = bus.route.toUpperCase();
                     var fareHtml = bus.fare ? '<span class="bus-fare">' + bus.fare + '</span>' : '';
+
+                    var displayRoute = bus.route.toUpperCase();
 
                     function getEtaClass(etaObj) {
                         if (etaObj.mins < 0) return '';
@@ -1172,9 +1178,14 @@
                             '<div class="bus-title-group">' +
                                 companyTag + 
                                 '<div class="bus-name">' + displayRoute + '</div>' + 
+                            '</div>' +
+                            '<div class="bus-dest">' +
+                                '<div class="bus-dest-text-group">' +
+                                    originText +
+                                    destText +
+                                '</div>' +
                                 fareHtml +
                             '</div>' +
-                            '<div class="bus-dest">' + routeDirectionHtml + '</div>' +
                         '</div>' +
                         '<div class="eta-group">' +
                             '<div class="eta-badge first ' + getEtaClass(etas[0]) + '">' + etas[0].text + '</div>' +
