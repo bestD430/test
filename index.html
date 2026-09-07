@@ -1547,7 +1547,7 @@
                                     }
                                 }
                             }
-                            if (!targetFare) targetFare = d.data[0].fare;
+                            if (!targetFare && d.data[0]) targetFare = d.data[0].fare;
                             if (targetFare) {
                                 fareInput.value = '$' + parseFloat(targetFare).toFixed(1);
                             }
