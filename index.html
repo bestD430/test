@@ -1,1560 +1,4169 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>交通及天氣看板</title>
-    <style>
-        * { 
-            box-sizing: border-box; 
-            margin: 0; 
-            padding: 0; 
-            -webkit-tap-highlight-color: transparent;
-        }
-        body {
-            background-color: #0f172a;
-            color: #f8fafc;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding: 16px;
-            overflow: hidden;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #334155;
-            margin-bottom: 10px;
-            flex-shrink: 0;
-            gap: 10px;
-        }
-
-        .header-left {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            align-items: flex-start;
-        }
-
-        .header-right {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 2px;
-        }
-
-        .clock-container { 
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-        }
-
-        #clock, .night-clock {
-            font-size: 48px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            color: #38bdf8;
-            line-height: 1;
-            display: flex;
-            align-items: center;
-        }
-
-        .clock-sub-box {
-            display: inline-flex !important;
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            justify-content: center !important;
-            margin-left: 6px;
-            line-height: 1.1;
-        }
-
-        .clock-ampm {
-            font-size: 21px;
-            font-weight: 600;
-            line-height: 1.1;
-            display: block;
-            writing-mode: horizontal-tb !important;
-            white-space: nowrap !important;
-        }
-
-        .clock-seconds {
-            font-size: 21px;
-            font-weight: 600;
-            line-height: 1.1;
-            opacity: 0.85;
-            display: block;
-        }
-
-        .time-sub-info {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 8px;
-            margin-top: 4px;
-        }
-
-        #date, .night-date {
-            font-size: 1rem;
-            color: #94a3b8;
-            text-align: right;
-            white-space: nowrap;
-        }
-
-        .weather-sub-bar {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .weather-info-box {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: #1e293b;
-            padding: 2px 10px;
-            border-radius: 20px;
-            border: 1px solid #334155;
-        }
-
-        .weather-icon { width: 36px; height: 36px; object-fit: contain; }
-        .weather-emoji { font-size: 2.475rem; line-height: 1; }
-        .weather-temp { font-size: 2.25rem; font-weight: bold; color: #38bdf8; }
-        
-        .weather-psr {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #38bdf8;
-            background: #1e293b;
-            padding: 2px 8px;
-            border-radius: 12px;
-            border: 1px solid #0284c7;
-            white-space: nowrap;
-        }
-
-        .weather-warnings {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-
-        .warning-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 3px 15px;
-            border-radius: 20px;
-            font-size: 1.32rem;
-            font-weight: bold;
-            color: #ffffff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            white-space: nowrap;
-        }
-
-        .badge-none { background: #334155; color: #94a3b8; }
-        .badge-yellow-rain { background: #eab308; color: #000; }
-        .badge-red-rain { background: #dc2626; color: #fff; }
-        .badge-black-rain { background: #000000; color: #fff; border: 1px solid #475569; }
-        .badge-tc { background: #ea580c; color: #fff; }
-        .badge-ts { background: #7c3aed; color: #fff; }
-
-        .school-notice {
-            display: none;
-            background: #dc2626;
-            color: #ffffff;
-            padding: 10px 14px;
-            border-radius: 12px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 12px;
-            border: 2px solid #f87171;
-            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
-            flex-shrink: 0;
-        }
-
-        main {
-            display: flex;
-            flex: 1;
-            flex-direction: column;
-            gap: 16px;
-            overflow: hidden;
-        }
-
-        .bus-panel {
-            flex: 1;
-            background: #1e293b;
-            border-radius: 16px;
-            padding: 14px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        .panel-title {
-            font-size: 1rem;
-            font-weight: bold;
-            margin-bottom: 8px;
-            color: #f59e0b;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0;
-        }
-        .settings-btn {
-            background: #334155;
-            color: #f8fafc;
-            border: 1px solid #475569;
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            cursor: pointer;
-        }
-
-        .bus-list { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 8px; 
-            overflow-y: auto; 
-            flex: 1; 
-            padding-right: 4px; 
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .bus-item {
-            border-radius: 10px;
-            padding: 8px 10px;
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            align-items: center;
-            gap: 8px;
-            width: 100%;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #ffffff;
-            box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.3);
-        }
-
-        .card-kmb { background-color: #d8121a; }
-        .card-lwb { background-color: #f37021; }
-        .card-ctb { background-color: #ffcc00; color: #000000; border: 1px solid rgba(0, 0, 0, 0.1); }
-        .card-nlb { background-color: #007260; } /* 嶼巴綠色 */
-        
-        .card-ctb .bus-name { color: #000000; text-shadow: none; }
-        .card-ctb .bus-dest { color: #1e293b; text-shadow: none; }
-        .card-ctb .bus-origin-text { color: #000000; }
-
-        .bus-header-grid { 
-            display: grid;
-            grid-template-columns: auto 1fr;
-            column-gap: 6px;
-            row-gap: 2px;
-            align-items: center;
-            flex: 1;
-            overflow: hidden;
-        }
-        
-        .bus-company-tag { 
-            grid-row: 1;
-            grid-column: 1;
-            writing-mode: vertical-rl;
-            text-orientation: upright;
-            font-size: 0.75rem; 
-            padding: 3px 2px; 
-            border-radius: 4px; 
-            font-weight: bold; 
-            background: rgba(15, 23, 42, 0.85);
-            border: 1.5px solid #ffffff;
-            color: #ffffff;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            letter-spacing: 1px;
-            line-height: 1;
-            flex-shrink: 0;
-        }
-
-        .card-kmb .bus-company-tag { color: #ffffff; background: #d8121a; border-color: #ffffff; }
-        .card-lwb .bus-company-tag { color: #ffffff; background: #f37021; border-color: #ffffff; }
-        .card-ctb .bus-company-tag { color: #000000; background: #ffcc00; border-color: #000000; }
-        .card-nlb .bus-company-tag { color: #ffffff; background: #005a4d; border-color: #ffffff; }
-
-        .bus-name { 
-            grid-row: 1;
-            grid-column: 2;
-            font-size: 3.8rem; 
-            font-weight: 700; 
-            letter-spacing: 1px; 
-            line-height: 0.95; 
-            color: #ffffff; 
-            text-shadow: 0 2px 4px rgba(0,0,0,0.4); 
-        }
-
-        .bus-dest { 
-            grid-row: 2;
-            grid-column: 2;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 1px;
-            color: #f1f5f9;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-            width: 100%;
-        }
-        
-        .bus-origin-text { 
-            font-size: 1.1rem; 
-            font-weight: 800; 
-            color: #ffffff; 
-            line-height: 1.2; 
-            text-align: left;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            width: 100%;
-        }
-        
-        .bus-dest-text { 
-            font-size: 0.85rem; 
-            font-weight: 600; 
-            opacity: 0.95; 
-            line-height: 1.2; 
-            text-align: left;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            width: 100%;
-        }
-
-        .eta-group { 
-            display: flex; 
-            flex-direction: column;
-            gap: 3.15px; 
-            align-items: stretch; 
-            width: 36%;
-            margin-left: auto;
-            margin-right: 0;
-            flex-shrink: 0;
-        }
-
-        .eta-next-group {
-            display: flex;
-            flex-direction: row;
-            gap: 4px;
-            width: 100%;
-            transform: translateY(5%);
-        }
-
-        .eta-badge {
-            flex: 1;
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(4px);
-            border-radius: 6px;
-            padding: 4px 0.5px;
-            text-align: center;
-            font-size: 0.97rem;
-            font-weight: bold;
-            color: #e2e8f0;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            white-space: nowrap;
-            transform: scale(0.97, 1.02);
-            transform-origin: center center;
-        }
-        
-        .eta-badge.first {
-            width: 100%;
-            background: rgba(15, 23, 42, 0.85);
-            font-size: 1.87rem;
-            font-weight: 900;
-            padding: 6px 1px;
-            transform: translateY(-5%) scale(0.97, 1.02);
-        }
-
-        .eta-badge.eta-green { color: #34d399; border-color: rgba(52, 211, 153, 0.4); }
-        .eta-badge.eta-red { color: #d8121a; border-color: rgba(216, 18, 26, 0.6); }
-
-        @keyframes flashRedYellow {
-            0%, 49% { color: #d8121a; border-color: rgba(216, 18, 26, 0.8); }
-            50%, 100% { color: #ffcc00; border-color: rgba(255, 204, 0, 0.8); }
-        }
-        @keyframes flashRedGreen {
-            0%, 49% { color: #d8121a; border-color: rgba(216, 18, 26, 0.8); }
-            50%, 100% { color: #34d399; border-color: rgba(52, 211, 153, 0.8); }
-        }
-        @keyframes flashRedYellowGreen {
-            0%, 32% { color: #d8121a; border-color: rgba(216, 18, 26, 0.8); }
-            33%, 65% { color: #ffcc00; border-color: rgba(255, 204, 0, 0.8); }
-            66%, 100% { color: #34d399; border-color: rgba(52, 211, 153, 0.8); }
-        }
-
-        .eta-badge.eta-flash { animation: flashRedYellow 1s infinite; }
-        .eta-badge.eta-flash-green { animation: flashRedGreen 1s infinite; }
-        .eta-badge.eta-flash-three { animation: flashRedYellowGreen 1.2s infinite; }
-
-        .loading-text { text-align: center; color: #94a3b8; padding: 20px; font-size: 0.9rem; }
-
-        #night-screen {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #000000; z-index: 9999;
-            display: none; flex-direction: column; justify-content: center; align-items: center;
-            cursor: pointer; padding: 24px; gap: 16px;
-        }
-        #night-screen.active { display: flex; }
-
-        .night-time-sub-info { display: flex; align-items: center; gap: 12px; justify-content: center; }
-        .night-weather-box { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
-        .night-weather-icon { width: 12vw; height: 12vw; max-width: 80px; max-height: 80px; object-fit: contain; }
-        .night-temp { font-size: 8vw; font-weight: bold; color: #f8fafc; }
-        .night-warnings { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
-        .night-tip { position: absolute; bottom: 24px; color: #334155; font-size: 0.85rem; letter-spacing: 1px; user-select: none; }
-
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.75); display: none; justify-content: center; align-items: center; z-index: 10000;
-        }
-        .modal-overlay.active { display: flex; }
-        .modal-content {
-            background: #1e293b; border-radius: 16px; width: 90%; max-width: 650px; max-height: 85vh;
-            padding: 16px; border: 1px solid #475569; display: flex; flex-direction: column; gap: 12px;
-        }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 8px; }
-        .modal-title { font-size: 1.1rem; font-weight: bold; color: #38bdf8; }
-        .modal-close { background: none; border: none; color: #94a3b8; font-size: 1.6rem; cursor: pointer; padding: 4px; }
-
-        .night-time-section { background: #0f172a; border-radius: 8px; padding: 12px; border: 1px solid #334155; display: flex; flex-direction: column; gap: 8px; }
-        .night-time-title { font-size: 0.95rem; font-weight: bold; color: #f59e0b; }
-        .night-time-inputs { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: #cbd5e1; }
-
-        .config-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; max-height: 45vh; -webkit-overflow-scrolling: touch; }
-        .config-item { background: #0f172a; border-radius: 8px; padding: 10px; border: 1px solid #334155; display: flex; flex-direction: column; gap: 8px; }
-        .config-row { display: flex; gap: 8px; align-items: center; }
-        .config-input, .config-select {
-            background: #1e293b; border: 1px solid #475569; color: #fff; padding: 8px; border-radius: 6px; font-size: 0.9rem; outline: none;
-        }
-        .config-input, .config-route-container { flex: 1; }
-        .config-select.bus-stop { flex: 1.5; }
-        .delete-btn { background: #991b1b; color: #fca5a5; border: none; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; cursor: pointer; }
-
-        .modal-footer { display: flex; justify-content: space-between; border-top: 1px solid #334155; padding-top: 12px; margin-top: 4px; }
-        .action-btn { background: #0284c7; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.95rem; }
-        .add-btn { background: #166534; color: #86efac; }
-        .hint-text { font-size: 0.8rem; color: #94a3b8; }
-
-        @media (min-width: 768px) {
-            body { padding: 24px; gap: 8px; }
-            header { padding-bottom: 16px; border-bottom: 2px solid #334155; }
-            #clock { font-size: 48px; letter-spacing: 4px; }
-            #date, .night-date { font-size: 1.2rem; }
-            .weather-sub-bar { gap: 12px; }
-            .weather-info-box { padding: 4px 14px; border-radius: 30px; gap: 8px; }
-            .weather-icon { width: 48px; height: 48px; }
-            .weather-emoji { font-size: 3.15rem; }
-            .weather-temp { font-size: 2.925rem; }
-            .weather-psr { font-size: 1rem; padding: 3px 10px; border-radius: 16px; }
-            .warning-badge { padding: 9px 21px; font-size: 1.65rem; border-radius: 20px; }
-            .school-notice { font-size: 1.95rem; padding: 16px; border-radius: 16px; margin-bottom: 16px; }
-            .bus-panel { padding: 24px; border-radius: 24px; }
-            .panel-title { font-size: 1.4rem; margin-bottom: 20px; }
-            .settings-btn { font-size: 1.1rem; padding: 10px 20px; }
-            .bus-list { gap: 12px; padding-right: 8px; }
-            .bus-item { padding: 10px 16px; border-radius: 14px; gap: 12px; }
-            .bus-header-grid { column-gap: 8px; }
-            .bus-company-tag { font-size: 0.85rem; padding: 4px 3px; border-radius: 5px; }
-            .bus-name { font-size: 5rem; letter-spacing: 2px; }
-            .bus-dest { gap: 3px; }
-            .bus-origin-text { font-size: 1.6rem; }
-            .bus-dest-text { font-size: 1.15rem; }
-            .eta-group { gap: 5.25px; width: 32%; }
-            .eta-next-group { gap: 6px; }
-            .eta-badge { font-size: 1.27rem; padding: 6px; border-radius: 8px; }
-            .eta-badge.first { font-size: 2.75rem; padding: 6px; border-radius: 10px; }
-            
-            .modal-content { max-width: 800px; padding: 24px; gap: 16px; }
-            .modal-title { font-size: 1.4rem; }
-            .modal-close { font-size: 2.2rem; }
-            .config-item { padding: 16px; gap: 14px; border-radius: 12px; }
-            .config-input, .config-select { font-size: 1.1rem; padding: 12px; }
-            .delete-btn { font-size: 1.05rem; padding: 12px 16px; }
-            .action-btn { font-size: 1.2rem; padding: 14px 24px; }
-            .hint-text { font-size: 1rem; }
-            
-            .night-clock { font-size: 14rem; }
-            .night-date { font-size: 2.5rem; }
-            .night-temp { font-size: 6rem; }
-        }
-    </style>
+<meta charset="UTF-8">
+<title>交通及天氣看板</title>
+<style>
+/* =========================================================
+   基本設定
+========================================================= */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+html,
+body {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+}
+body {
+    background: #0f172a;
+    color: #f8fafc;
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+    height: 100vh;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding:
+        max(10px, env(safe-area-inset-top))
+        max(10px, env(safe-area-inset-right))
+        max(10px, env(safe-area-inset-bottom))
+        max(10px, env(safe-area-inset-left));
+    overflow: hidden;
+}
+/* =========================================================
+   Header
+========================================================= */
+header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #334155;
+    flex-shrink: 0;
+    gap: 8px;
+}
+.header-left {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+.header-right {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 2px;
+}
+.clock-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+#clock,
+.night-clock {
+    font-size: clamp(34px, 6vw, 54px);
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #ffffff;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+}
+.clock-sub-box {
+    display: inline-flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    margin-left: 5px;
+    line-height: 1.05;
+}
+.clock-ampm {
+    font-size: clamp(14px, 2.5vw, 21px);
+    font-weight: 600;
+    line-height: 1.05;
+    display: block;
+    white-space: nowrap !important;
+}
+.clock-seconds {
+    font-size: clamp(14px, 2.5vw, 21px);
+    font-weight: 600;
+    line-height: 1.05;
+    opacity: 0.85;
+    display: block;
+}
+.time-sub-info {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-top: 3px;
+    min-width: 0;
+}
+#date,
+.night-date {
+    font-size: clamp(12px, 1.9vw, 17px);
+    color: #94a3b8;
+    text-align: right;
+    white-space: nowrap;
+}
+/* =========================================================
+   Weather
+========================================================= */
+.weather-sub-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 7px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+.weather-info-box {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: #1e293b;
+    padding: 2px 8px;
+    border-radius: 18px;
+    border: 1px solid #334155;
+    flex-shrink: 0;
+}
+.weather-icon {
+    width: clamp(30px, 5vw, 45px);
+    height: clamp(30px, 5vw, 45px);
+    object-fit: contain;
+}
+.weather-emoji {
+    font-size: clamp(28px, 5vw, 43px);
+    line-height: 1;
+}
+.weather-temp {
+    font-size: clamp(24px, 4vw, 34px);
+    font-weight: bold;
+    color: #38bdf8;
+    white-space: nowrap;
+}
+.weather-psr {
+    font-size: clamp(11px, 1.8vw, 15px);
+    font-weight: 600;
+    color: #38bdf8;
+    background: #1e293b;
+    padding: 2px 7px;
+    border-radius: 12px;
+    border: 1px solid #0284c7;
+    white-space: nowrap;
+}
+.weather-warnings {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+.warning-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 9px;
+    border-radius: 16px;
+    font-size: clamp(12px, 2vw, 18px);
+    font-weight: bold;
+    color: #ffffff;
+    box-shadow:
+        0 2px 4px rgba(0,0,0,0.3);
+    white-space: nowrap;
+}
+.badge-none {
+    background: #334155;
+    color: #94a3b8;
+}
+.badge-yellow-rain {
+    background: #eab308;
+    color: #000;
+}
+.badge-red-rain {
+    background: #dc2626;
+    color: #fff;
+}
+.badge-black-rain {
+    background: #000000;
+    color: #fff;
+    border: 1px solid #475569;
+}
+.badge-tc {
+    background: #ea580c;
+    color: #fff;
+}
+.badge-ts {
+    background: #7c3aed;
+    color: #fff;
+}
+/* =========================================================
+   政府新聞
+========================================================= */
+.school-notice {
+    display: none;
+    width: 100%;
+    background: #dc2626;
+    color: #ffffff;
+    padding: 7px 10px;
+    border-radius: 10px;
+    font-size: clamp(15px, 2.5vw, 23px);
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 8px;
+    border: 2px solid #f87171;
+    box-shadow:
+        0 4px 12px rgba(220,38,38,.4);
+    flex-shrink: 0;
+}
+/* =========================================================
+   Main
+========================================================= */
+main {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+    gap: 8px;
+    overflow: hidden;
+}
+.bus-panel {
+    flex: 1;
+    min-height: 0;
+    background: #1e293b;
+    border-radius: 12px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.panel-title {
+    font-size: clamp(13px, 2vw, 17px);
+    font-weight: bold;
+    margin-bottom: 7px;
+    color: #f59e0b;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+.settings-btn {
+    background: #334155;
+    color: #f8fafc;
+    border: 1px solid #475569;
+    padding: 5px 8px;
+    border-radius: 6px;
+    font-size: clamp(11px, 1.6vw, 14px);
+    cursor: pointer;
+    white-space: nowrap;
+}
+/* =========================================================
+   巴士列表
+========================================================= */
+.bus-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    padding-right: 2px;
+    -webkit-overflow-scrolling: touch;
+}
+.bus-item {
+    min-height: 0;
+    border-radius: 9px;
+    padding: 7px 9px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 7px;
+    width: 100%;
+    border: 1px solid rgba(255,255,255,.2);
+    color: #ffffff;
+    box-shadow:
+        0 3px 5px -1px rgba(0,0,0,.3);
+    flex-shrink: 0;
+}
+.card-kmb {
+    background-color: #d8121a;
+}
+.card-lwb {
+    background-color: #f37021;
+}
+.card-ctb {
+    background-color: #ffcc00;
+    color: #000000;
+}
+.card-nlb {
+    background-color: #00843d;
+    color: #ffffff;
+}
+.card-ctb .bus-name,
+.card-ctb .bus-origin-text {
+    color: #000000;
+    text-shadow: none;
+}
+.card-ctb .bus-dest {
+    color: #1e293b;
+    text-shadow: none;
+}
+.card-nlb .bus-name,
+.card-nlb .bus-origin-text {
+    color: #ffffff;
+}
+.card-nlb .bus-dest {
+    color: #f1f5f9;
+}
+/* =========================================================
+   巴士左側
+========================================================= */
+.bus-header-grid {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 6px;
+    row-gap: 2px;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+.bus-company-tag {
+    grid-row: 1;
+    grid-column: 1;
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    font-size: clamp(9px, 1.5vw, 13px);
+    padding: 3px 2px;
+    border-radius: 4px;
+    font-weight: bold;
+    background: rgba(15,23,42,.85);
+    border: 1.5px solid #ffffff;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        0 2px 4px rgba(0,0,0,.3);
+    letter-spacing: 1px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+.card-kmb .bus-company-tag {
+    background: #d8121a;
+}
+.card-lwb .bus-company-tag {
+    background: #f37021;
+}
+.card-ctb .bus-company-tag {
+    color: #000000;
+    background: #ffcc00;
+    border-color: #000000;
+}
+.card-nlb .bus-company-tag {
+    background: #00843d;
+}
+.bus-name {
+    grid-row: 1;
+    grid-column: 2;
+    font-size: clamp(34px, 7vw, 60px);
+    font-weight: 700;
+    letter-spacing: 1px;
+    line-height: .9;
+    color: #ffffff;
+    text-shadow:
+        0 2px 4px rgba(0,0,0,.4);
+    white-space: nowrap;
+}
+.bus-dest {
+    grid-row: 2;
+    grid-column: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    color: #f1f5f9;
+    text-shadow:
+        0 1px 2px rgba(0,0,0,.5);
+    width: 100%;
+    min-width: 0;
+}
+.bus-origin-text {
+    font-size: clamp(12px, 2vw, 19px);
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.15;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+.bus-dest-text {
+    font-size: clamp(10px, 1.6vw, 15px);
+    font-weight: 600;
+    opacity: .95;
+    line-height: 1.15;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+/* =========================================================
+   ETA
+========================================================= */
+.eta-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    align-items: stretch;
+    width: clamp(135px, 32%, 300px);
+    margin-left: auto;
+    margin-right: 0;
+    flex-shrink: 0;
+}
+.eta-next-group {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    width: 100%;
+}
+.eta-badge {
+    flex: 1;
+    min-width: 0;
+    background: rgba(15,23,42,.85);
+    backdrop-filter: blur(4px);
+    border-radius: 6px;
+    padding: 4px 2px;
+    text-align: center;
+    font-size: clamp(11px, 1.8vw, 16px);
+    font-weight: bold;
+    color: #ffffff;
+    border: 1px solid rgba(255,255,255,.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+.eta-next-group .eta-badge {
+    color: #ffffff !important;
+}
+.eta-badge.first {
+    width: 100%;
+    background: rgba(15,23,42,.85);
+    font-size: clamp(20px, 4vw, 34px);
+    font-weight: 900;
+    padding: 5px 2px;
+    border-radius: 8px;
+}
+.eta-badge.eta-green {
+    color: #34d399;
+    border-color:
+        rgba(52,211,153,.4);
+}
+.eta-badge.eta-red {
+    color: #d8121a;
+    border-color:
+        rgba(216,18,26,.6);
+}
+@keyframes flashRedYellow {
+    0%,49% {
+        color:#d8121a;
+        border-color:rgba(216,18,26,.8);
+    }
+    50%,100% {
+        color:#ffcc00;
+        border-color:rgba(255,204,0,.8);
+    }
+}
+@keyframes flashRedGreen {
+    0%,49% {
+        color:#d8121a;
+        border-color:rgba(216,18,26,.8);
+    }
+    50%,100% {
+        color:#34d399;
+        border-color:rgba(52,211,153,.8);
+    }
+}
+@keyframes flashRedYellowGreen {
+    0%,32% {
+        color:#d8121a;
+        border-color:rgba(216,18,26,.8);
+    }
+    33%,65% {
+        color:#ffcc00;
+        border-color:rgba(255,204,0,.8);
+    }
+    66%,100% {
+        color:#34d399;
+        border-color:rgba(52,211,153,.8);
+    }
+}
+.eta-badge.eta-flash {
+    animation:
+        flashRedYellow 1s infinite;
+}
+.eta-badge.eta-flash-green {
+    animation:
+        flashRedGreen 1s infinite;
+}
+.eta-badge.eta-flash-three {
+    animation:
+        flashRedYellowGreen 1.2s infinite;
+}
+.loading-text {
+    text-align:center;
+    color:#94a3b8;
+    padding:20px;
+    font-size:.9rem;
+}
+/* =========================================================
+   ★ 夜間黑屏 ★
+========================================================= */
+#night-screen {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    min-height: 100vh;
+    background: #000000;
+    z-index: 999999;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    padding:
+        max(20px, env(safe-area-inset-top))
+        max(20px, env(safe-area-inset-right))
+        max(20px, env(safe-area-inset-bottom))
+        max(20px, env(safe-area-inset-left));
+    gap: 8px;
+    overflow: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+}
+#night-screen.active {
+    display: flex;
+}
+/* 夜間時間 */
+#night-clock {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(
+        72px,
+        18vw,
+        170px
+    );
+    font-weight: 700;
+    line-height: .9;
+    letter-spacing: 2px;
+    color: #ffffff;
+}
+/* 夜間日期 */
+.night-time-sub-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.night-date {
+    font-size: clamp(
+        17px,
+        3.8vw,
+        36px
+    );
+    color: #64748b;
+    text-align: center;
+}
+/* 夜間天氣 */
+.night-weather-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+.night-weather-icon {
+    width: clamp(
+        45px,
+        10vw,
+        90px
+    );
+    height: clamp(
+        45px,
+        10vw,
+        90px
+    );
+    object-fit: contain;
+}
+.night-temp {
+    font-size: clamp(
+        38px,
+        8vw,
+        78px
+    );
+    font-weight: bold;
+    color: #f8fafc;
+}
+.night-warnings {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 4px;
+    max-width: 95vw;
+}
+#night-screen .warning-badge {
+    font-size: clamp(
+        14px,
+        2.8vw,
+        26px
+    );
+    padding:
+        5px 12px;
+}
+#night-screen .weather-psr {
+    font-size: clamp(
+        12px,
+        2.2vw,
+        19px
+    );
+}
+.night-tip {
+    position: absolute;
+    bottom:
+        max(12px, env(safe-area-inset-bottom));
+    color: #202020;
+    font-size: 11px;
+    letter-spacing: 1px;
+}
+/* =========================================================
+   Settings Modal
+========================================================= */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.78);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000000;
+    padding: 12px;
+}
+.modal-overlay.active {
+    display: flex;
+}
+.modal-content {
+    background: #1e293b;
+    border-radius: 14px;
+    width: 100%;
+    max-width: 760px;
+    max-height: 94vh;
+    padding: 13px;
+    border: 1px solid #475569;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: hidden;
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #334155;
+    padding-bottom: 7px;
+    flex-shrink: 0;
+}
+.modal-title {
+    font-size: 17px;
+    font-weight: bold;
+    color: #38bdf8;
+}
+.modal-close {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 27px;
+    cursor: pointer;
+    padding: 2px 6px;
+}
+.night-time-section {
+    background: #0f172a;
+    border-radius: 8px;
+    padding: 9px;
+    border: 1px solid #334155;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    flex-shrink: 0;
+}
+.night-time-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #f59e0b;
+}
+.night-time-inputs {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #cbd5e1;
+    flex-wrap: wrap;
+}
+.config-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    max-height: 48vh;
+    -webkit-overflow-scrolling: touch;
+}
+.config-item {
+    background: #0f172a;
+    border-radius: 8px;
+    padding: 8px;
+    border: 1px solid #334155;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+.config-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+.config-input,
+.config-select {
+    min-width: 0;
+    background: #1e293b;
+    border: 1px solid #475569;
+    color: #fff;
+    padding: 7px;
+    border-radius: 6px;
+    font-size: 13px;
+    outline: none;
+}
+.config-input,
+.config-route-container {
+    flex: 1;
+}
+.config-select.bus-stop {
+    flex: 1.5;
+}
+.delete-btn {
+    background: #991b1b;
+    color: #fca5a5;
+    border: none;
+    padding: 7px 9px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.modal-footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    border-top: 1px solid #334155;
+    padding-top: 9px;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+.action-btn {
+    background: #0284c7;
+    color: white;
+    border: none;
+    padding: 9px 13px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+}
+.add-btn {
+    background: #166534;
+    color: #86efac;
+}
+.hint-text {
+    font-size: 11px;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+/* =========================================================
+   iPad mini 2 直式
+   768 × 1024
+========================================================= */
+@media
+(min-width:700px)
+and (max-width:800px)
+and (orientation:portrait) {
+    body {
+        padding: 12px;
+    }
+    header {
+        padding-bottom: 9px;
+        margin-bottom: 9px;
+    }
+    #clock {
+        font-size: 49px;
+    }
+    .clock-ampm,
+    .clock-seconds {
+        font-size: 18px;
+    }
+    #date {
+        font-size: 14px;
+    }
+    .weather-temp {
+        font-size: 30px;
+    }
+    .warning-badge {
+        font-size: 15px;
+        padding: 4px 9px;
+    }
+    main {
+        gap: 9px;
+    }
+    .bus-panel {
+        padding: 10px;
+        border-radius: 12px;
+    }
+    .bus-list {
+        gap: 8px;
+    }
+    .bus-item {
+        padding: 8px 10px;
+    }
+    .bus-name {
+        font-size: 48px;
+    }
+    .bus-origin-text {
+        font-size: 16px;
+    }
+    .bus-dest-text {
+        font-size: 12px;
+    }
+    .eta-group {
+        width: 235px;
+    }
+    .eta-badge {
+        font-size: 13px;
+    }
+    .eta-badge.first {
+        font-size: 27px;
+    }
+    #night-screen {
+        gap: 10px;
+    }
+    #night-clock {
+        font-size: 118px;
+    }
+    .night-date {
+        font-size: 24px;
+    }
+    .night-temp {
+        font-size: 54px;
+    }
+    #night-screen .warning-badge {
+        font-size: 18px;
+    }
+}
+/* =========================================================
+   iPad mini 2 橫式
+   1024 × 768
+========================================================= */
+@media
+(min-width:800px)
+and (max-width:1100px)
+and (orientation:landscape) {
+    body {
+        padding: 10px 14px;
+    }
+    header {
+        padding-bottom: 7px;
+        margin-bottom: 7px;
+    }
+    #clock {
+        font-size: 46px;
+    }
+    .clock-ampm,
+    .clock-seconds {
+        font-size: 17px;
+    }
+    #date {
+        font-size: 14px;
+    }
+    .weather-temp {
+        font-size: 29px;
+    }
+    .warning-badge {
+        font-size: 14px;
+        padding: 3px 8px;
+    }
+    main {
+        gap: 7px;
+    }
+    .bus-panel {
+        padding: 8px 10px;
+        border-radius: 11px;
+    }
+    .panel-title {
+        margin-bottom: 5px;
+    }
+    .bus-list {
+        gap: 6px;
+    }
+    .bus-item {
+        padding: 6px 10px;
+    }
+    .bus-name {
+        font-size: 46px;
+    }
+    .bus-origin-text {
+        font-size: 15px;
+    }
+    .bus-dest-text {
+        font-size: 11px;
+    }
+    .eta-group {
+        width: 245px;
+    }
+    .eta-badge {
+        font-size: 13px;
+        padding: 4px;
+    }
+    .eta-badge.first {
+        font-size: 25px;
+        padding: 5px;
+    }
+    #night-screen {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-content: center;
+        gap: 10px 20px;
+    }
+    #night-clock {
+        width: 100%;
+        font-size: 105px;
+    }
+    .night-time-sub-info {
+        width: auto;
+    }
+    .night-weather-box {
+        width: auto;
+    }
+    .night-warnings {
+        width: 100%;
+    }
+    .night-date {
+        font-size: 23px;
+    }
+    .night-temp {
+        font-size: 52px;
+    }
+    #night-screen .warning-badge {
+        font-size: 17px;
+    }
+}
+/* =========================================================
+   螢幕高度較小時
+========================================================= */
+@media
+(max-height:700px) {
+    #night-screen {
+        gap: 5px;
+    }
+    #night-clock {
+        font-size: min(18vw, 105px);
+    }
+    .night-weather-box {
+        margin-top: 0;
+    }
+    .night-warnings {
+        margin-top: 0;
+    }
+}
+/* =========================================================
+   極窄螢幕
+========================================================= */
+@media
+(max-width:600px) {
+    body {
+        padding: 7px;
+    }
+    header {
+        gap: 5px;
+    }
+    .weather-warnings {
+        max-width: 52vw;
+    }
+    .warning-badge {
+        padding: 3px 6px;
+        font-size: 11px;
+    }
+    .bus-item {
+        padding: 6px;
+    }
+    .eta-group {
+        width: 37%;
+    }
+    .eta-badge.first {
+        font-size: 22px;
+    }
+}
+</style>
 </head>
 <body>
-
-    <!-- 夜間模式畫面 -->
-    <div id="night-screen" onclick="wakeUpNightScreen()">
-        <div id="night-clock" class="night-clock">
+<!-- =======================================================
+     夜間黑屏
+======================================================== -->
+<div id="night-screen"
+     onclick="wakeUpNightScreen()">
+<div id="night-clock"
+     class="night-clock">
+    12:00
+    <div class="clock-sub-box">
+        <span class="clock-ampm">上午</span>
+        <span class="clock-seconds">:00</span>
+    </div>
+</div>
+<div class="night-time-sub-info">
+    <div id="night-date"
+         class="night-date">
+        --年--月--日 星期-
+    </div>
+    <span id="night-weather-psr"
+          class="weather-psr"
+          style="display:none;">
+        💧 降雨機率: --
+    </span>
+</div>
+<div class="night-weather-box">
+    <img id="night-weather-icon"
+         class="night-weather-icon"
+         src=""
+         alt="weather icon"
+         style="display:none;">
+    <span id="night-weather-emoji"
+          class="weather-emoji"
+          style="display:none;">
+        🌙
+    </span>
+    <span id="night-temp"
+          class="night-temp">
+        --°C
+    </span>
+</div>
+<div id="night-warnings"
+     class="night-warnings">
+    <span class="warning-badge badge-none">
+        🌙 天氣良好
+    </span>
+</div>
+<div class="night-tip">
+    輕按一下顯示路線資料
+</div>
+</div>
+<!-- =======================================================
+     主頁 Header
+======================================================== -->
+<header>
+<div class="header-left">
+    <div class="weather-sub-bar">
+        <div class="weather-info-box"
+             id="weather-info-box"
+             style="display:none;">
+            <img id="weather-icon"
+                 class="weather-icon"
+                 src=""
+                 alt="weather icon">
+            <span id="weather-emoji-fallback"
+                  class="weather-emoji"
+                  style="display:none;">
+                🌤️
+            </span>
+            <span id="weather-temp"
+                  class="weather-temp">
+                --°C
+            </span>
+        </div>
+        <div class="weather-warnings"
+             id="weather-warnings">
+            <span class="warning-badge badge-none">
+                ☀️ 天氣良好
+            </span>
+        </div>
+    </div>
+</div>
+<div class="header-right">
+    <div class="clock-container">
+        <div id="clock">
             12:00
             <div class="clock-sub-box">
-                <span class="clock-ampm">上午</span>
-                <span class="clock-seconds">:00</span>
-            </div>
-        </div>
-        <div class="night-time-sub-info">
-            <div id="night-date" class="night-date">--年--月--日 星期-</div>
-            <span id="night-weather-psr" class="weather-psr" style="display:none;">💧 降雨機率: --</span>
-        </div>
-        <div class="night-weather-box">
-            <img id="night-weather-icon" class="night-weather-icon" src="" alt="weather icon" style="display:none;" />
-            <span id="night-weather-emoji" class="weather-emoji" style="display:none;">🌤️</span>
-            <span id="night-temp" class="night-temp">--°C</span>
-        </div>
-        <div id="night-warnings" class="night-warnings">
-            <span class="warning-badge badge-none">☀️ 天氣良好</span>
-        </div>
-        <div class="night-tip">輕按一下顯示路線資料</div>
-    </div>
-
-    <!-- 主頁面 Header 區域 -->
-    <header>
-        <div class="header-left">
-            <div class="weather-sub-bar">
-                <div class="weather-info-box" id="weather-info-box" style="display: none;">
-                    <img id="weather-icon" class="weather-icon" src="" alt="weather icon" />
-                    <span id="weather-emoji-fallback" class="weather-emoji" style="display: none;">🌤️</span>
-                    <span id="weather-temp" class="weather-temp">--°C</span>
-                </div>
-                <div class="weather-warnings" id="weather-warnings">
-                    <span class="warning-badge badge-none">☀️ 天氣良好</span>
-                </div>
-            </div>
-        </div>
-        <div class="header-right">
-            <div class="clock-container">
-                <div id="clock">
-                    12:00
-                    <div class="clock-sub-box">
-                        <span class="clock-ampm">上午</span>
-                        <span class="clock-seconds">:00</span>
-                    </div>
-                </div>
-            </div>
-            <div class="time-sub-info">
-                <span id="weather-psr" class="weather-psr" style="display: none;">💧 降雨機率: --</span>
-                <div id="date">--年--月--日 星期-</div>
-            </div>
-        </div>
-    </header>
-
-    <div id="school-closure-notice" class="school-notice"></div>
-
-    <main>
-        <section class="bus-panel">
-            <div class="panel-title">
-                <span>🚌 交通到站預計時間</span>
-                <button class="settings-btn" onclick="openSettings()">⚙️ 路線設定</button>
-            </div>
-            <div class="bus-list" id="bus-list"></div>
-        </section>
-    </main>
-
-    <!-- 設定彈窗 -->
-    <div class="modal-overlay" id="settings-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">⚙️ 系統及路線設定</div>
-                <button class="modal-close" onclick="closeSettings()">&times;</button>
-            </div>
-            
-            <div class="night-time-section">
-                <div class="night-time-title">🌙 夜間黑屏時間設定</div>
-                <div class="night-time-inputs">
-                    <label>開始：<input type="time" id="night-start-time" class="config-input" style="flex:none; width: 120px;" value="20:00"></label>
-                    <label>結束：<input type="time" id="night-end-time" class="config-input" style="flex:none; width: 120px;" value="05:00"></label>
-                </div>
-            </div>
-
-            <div class="hint-text">
-                💡 當某路線無有效班次時，將顯示「無班次」。
-            </div>
-            <div class="config-list" id="config-list"></div>
-            <div class="modal-footer">
-                <button class="action-btn add-btn" onclick="addNewBusConfig()">+ 新增路線</button>
-                <button class="action-btn" onclick="saveBusConfig()">💾 保存並即時更新</button>
+                <span class="clock-ampm">
+                    上午
+                </span>
+                <span class="clock-seconds">
+                    :00
+                </span>
             </div>
         </div>
     </div>
-
-    <script>
-        var kmbStopsCacheMap = null;
-        var ctbStopsCache = {};
-        
-        var nightWakeTimer = null;
-        var isManuallyWoken = false;
-
-        function getKmbStopsMap(callback) {
-            if (kmbStopsCacheMap) {
-                callback(kmbStopsCacheMap);
-                return;
+    <div class="time-sub-info">
+        <span id="weather-psr"
+              class="weather-psr"
+              style="display:none;">
+            💧 降雨機率: --
+        </span>
+        <div id="date">
+            --年--月--日 星期-
+        </div>
+    </div>
+</div>
+</header>
+<!-- =======================================================
+     政府停課新聞
+======================================================== -->
+<div id="school-closure-notice"
+     class="school-notice">
+</div>
+<!-- =======================================================
+     主內容
+======================================================== -->
+<main>
+<section class="bus-panel">
+    <div class="panel-title">
+        <span>
+            🚌 交通到站預計時間
+        </span>
+        <button class="settings-btn"
+                onclick="openSettings()">
+            ⚙️ 路線設定
+        </button>
+    </div>
+    <div class="bus-list"
+         id="bus-list">
+    </div>
+</section>
+</main>
+<!-- =======================================================
+     設定視窗
+======================================================== -->
+<div class="modal-overlay"
+     id="settings-modal">
+<div class="modal-content">
+    <div class="modal-header">
+        <div class="modal-title">
+            ⚙️ 系統及路線設定
+        </div>
+        <button class="modal-close"
+                onclick="closeSettings()">
+            &times;
+        </button>
+    </div>
+    <div class="night-time-section">
+        <div class="night-time-title">
+            🌙 夜間黑屏時間設定
+        </div>
+        <div class="night-time-inputs">
+            <label>
+                開始：
+                <input type="time"
+                       id="night-start-time"
+                       class="config-input"
+                       style="flex:none;width:120px;"
+                       value="20:00">
+            </label>
+            <label>
+                結束：
+                <input type="time"
+                       id="night-end-time"
+                       class="config-input"
+                       style="flex:none;width:120px;"
+                       value="05:00">
+            </label>
+        </div>
+    </div>
+    <div class="hint-text">
+        💡 當某路線無有效班次時，將顯示「無班次」。
+        NLB 每個方向會自動使用官方 routeId。
+    </div>
+    <div class="config-list"
+         id="config-list">
+    </div>
+    <div class="modal-footer">
+        <button class="action-btn add-btn"
+                onclick="addNewBusConfig()">
+            + 新增路線
+        </button>
+        <button class="action-btn"
+                onclick="saveBusConfig()">
+            💾 保存並即時更新
+        </button>
+    </div>
+</div>
+</div>
+<script>
+/* =========================================================
+   全域資料
+========================================================= */
+var kmbStopsCacheMap = null;
+var ctbStopsCache = {};
+var nightWakeTimer = null;
+var isManuallyWoken = false;
+var currentBuses = [];
+var cachedRawEtas = {};
+var nlbRouteCache = null;
+/* =========================================================
+   預設路線
+========================================================= */
+var defaultBuses = [
+    {
+        company: 'lwb',
+        route: 'E36A',
+        dir: 'inbound',
+        stop: 'TC188',
+        origin_name: '逸東邨雍逸樓',
+        dest_name: '往 元朗(德業街)',
+        offset: 0
+    },
+    {
+        company: 'ctb',
+        route: 'E21B',
+        dir: 'outbound',
+        stop: '001854',
+        origin_name: '逸東邨雍逸樓, 裕東路',
+        dest_name: '往 何文田 (愛民邨)',
+        offset: 0
+    }
+];
+/* =========================================================
+   HTML 安全處理
+========================================================= */
+function escapeHtml(value) {
+    return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+/* =========================================================
+   KMB 車站名稱
+========================================================= */
+function getKmbStopsMap(callback) {
+    if (kmbStopsCacheMap) {
+        callback(kmbStopsCacheMap);
+        return;
+    }
+    fetch(
+        'https://data.etabus.gov.hk/v1/transport/kmb/stop'
+    )
+    .then(function(res) {
+        return res.json();
+    })
+    .then(function(stopsData) {
+        kmbStopsCacheMap = {};
+        if (
+            stopsData &&
+            stopsData.data
+        ) {
+            for (
+                var i = 0;
+                i < stopsData.data.length;
+                i++
+            ) {
+                kmbStopsCacheMap[
+                    stopsData.data[i].stop
+                ] =
+                    stopsData.data[i].name_tc;
             }
-            fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop')
-                .then(function(res) { return res.json(); })
-                .then(function(stopsData) {
-                    kmbStopsCacheMap = {};
-                    if (stopsData && stopsData.data) {
-                        for (var i = 0; i < stopsData.data.length; i++) {
-                            kmbStopsCacheMap[stopsData.data[i].stop] = stopsData.data[i].name_tc;
-                        }
-                    }
-                    callback(kmbStopsCacheMap);
-                })
-                .catch(function(e) {
-                    callback({});
-                });
         }
-
-        function updateClock() {
-            var now = new Date();
-            var hours = now.getHours();
-            var minutes = now.getMinutes();
-            var seconds = now.getSeconds();
-
-            var ampm = hours >= 12 ? '下午' : '上午';
-            var h12 = hours % 12;
-            if (h12 === 0) h12 = 12;
-
-            var m = String(minutes); if (m.length < 2) m = '0' + m;
-            var s = String(seconds); if (s.length < 2) s = '0' + s;
-            var h = String(h12);
-
-            var clockHtml = h + ':' + m + 
-                '<div class="clock-sub-box">' +
-                    '<span class="clock-ampm">' + ampm + '</span>' +
-                    '<span class="clock-seconds">:' + s + '</span>' +
-                '</div>';
-            
-            var clockEl = document.getElementById('clock');
-            if (clockEl) clockEl.innerHTML = clockHtml;
-
-            var nightClockEl = document.getElementById('night-clock');
-            if (nightClockEl) nightClockEl.innerHTML = clockHtml;
-
-            var weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-            var dateStr = now.getFullYear() + '年' + (now.getMonth() + 1) + '月' + now.getDate() + '日 ' + weekDays[now.getDay()];
-            
-            var dateEl = document.getElementById('date');
-            if (dateEl) dateEl.innerText = dateStr;
-
-            var nightDateEl = document.getElementById('night-date');
-            if (nightDateEl) nightDateEl.innerText = dateStr;
-
-            checkNightMode(now);
-        }
-
-        function checkNightMode(now) {
-            var nightScreen = document.getElementById('night-screen');
-            if (!nightScreen) return;
-
-            var startTime = localStorage.getItem('night_mode_start') || "20:00";
-            var endTime = localStorage.getItem('night_mode_end') || "05:00";
-
-            var startParts = startTime.split(':').map(Number);
-            var endParts = endTime.split(':').map(Number);
-
-            var currentMin = now.getHours() * 60 + now.getMinutes();
-            var startMin = startParts[0] * 60 + startParts[1];
-            var endMin = endParts[0] * 60 + endParts[1];
-
-            var isNightTime = false;
-            if (startMin <= endMin) {
-                isNightTime = (currentMin >= startMin && currentMin < endMin);
-            } else {
-                isNightTime = (currentMin >= startMin || currentMin < endMin);
-            }
-
-            if (isNightTime) {
-                if (!isManuallyWoken) {
-                    nightScreen.classList.add('active');
-                }
-            } else {
-                isManuallyWoken = false;
-                nightScreen.classList.remove('active');
-                if (nightWakeTimer) {
-                    clearTimeout(nightWakeTimer);
-                    nightWakeTimer = null;
-                }
-            }
-        }
-
-        function wakeUpNightScreen() {
-            var nightScreen = document.getElementById('night-screen');
-
-            isManuallyWoken = true;
-            if (nightScreen) nightScreen.classList.remove('active');
-
-            if (nightWakeTimer) {
-                clearTimeout(nightWakeTimer);
-            }
-
-            nightWakeTimer = setTimeout(function() {
-                isManuallyWoken = false;
-                checkNightMode(new Date());
-            }, 30000);
-        }
-
-        setInterval(updateClock, 1000);
-        updateClock();
-
-        function fetchWeatherData() {
-            var container = document.getElementById('weather-warnings');
-            var nightContainer = document.getElementById('night-warnings');
-            var weatherBox = document.getElementById('weather-info-box');
-            var weatherIcon = document.getElementById('weather-icon');
-            var nightWeatherIcon = document.getElementById('night-weather-icon');
-            var emojiFallback = document.getElementById('weather-emoji-fallback');
-            var nightEmojiFallback = document.getElementById('night-weather-emoji');
-            var weatherTemp = document.getElementById('weather-temp');
-            var nightTemp = document.getElementById('night-temp');
-            var weatherPsr = document.getElementById('weather-psr');
-            var nightWeatherPsr = document.getElementById('night-weather-psr');
-
-            fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=tc')
-                .then(function(res) { return res.json(); })
-                .then(function(rhrData) {
-                    if (rhrData && rhrData.icon && rhrData.icon.length > 0) {
-                        var iconId = rhrData.icon[0];
-                        var iconSrc = 'weather-icons/pic' + iconId + '.png';
-
-                        if (weatherIcon) {
-                            weatherIcon.style.display = 'block';
-                            if (emojiFallback) emojiFallback.style.display = 'none';
-                            weatherIcon.src = iconSrc;
-                            weatherIcon.onerror = function() {
-                                this.style.display = 'none';
-                                if (emojiFallback) emojiFallback.style.display = 'inline';
-                            };
-                        }
-
-                        if (nightWeatherIcon) {
-                            nightWeatherIcon.style.display = 'block';
-                            if (nightEmojiFallback) nightEmojiFallback.style.display = 'none';
-                            nightWeatherIcon.src = iconSrc;
-                            nightWeatherIcon.onerror = function() {
-                                this.style.display = 'none';
-                                if (nightEmojiFallback) nightEmojiFallback.style.display = 'inline';
-                            };
-                        }
-
-                        if (weatherBox) weatherBox.style.display = 'flex';
-                    }
-
-                    if (rhrData && rhrData.temperature && rhrData.temperature.data) {
-                        var temps = rhrData.temperature.data;
-                        var val = '--';
-                        for (var i = 0; i < temps.length; i++) {
-                            if (temps[i].place === "香港天文台") {
-                                val = temps[i].value;
-                                break;
-                            }
-                        }
-                        if (val === '--' && temps.length > 0) val = temps[0].value;
-                        if (weatherTemp) weatherTemp.innerText = val + '°C';
-                        if (nightTemp) nightTemp.innerText = val + '°C';
-                    }
-                }).catch(function(e) {});
-
-            fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=flw&lang=tc')
-                .then(function(res) { return res.json(); })
-                .then(function(flwData) {
-                    if (flwData && flwData.psr) {
-                        var psrText = flwData.psr;
-                        var psrStr = '💧 降雨機率: ' + psrText;
-                        if (weatherPsr) {
-                            weatherPsr.innerText = psrStr;
-                            weatherPsr.style.display = 'inline-block';
-                        }
-                        if (nightWeatherPsr) {
-                            nightWeatherPsr.innerText = psrStr;
-                            nightWeatherPsr.style.display = 'inline-block';
-                        }
-                    }
-                }).catch(function(e) {});
-
-            fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=tc')
-                .then(function(res) { return res.json(); })
-                .then(function(data) {
-                    var badges = [];
-                    for (var key in data) {
-                        if (data.hasOwnProperty(key)) {
-                            var item = data[key];
-                            if (item && item.actionCode !== "CANCEL") {
-                                if (key === "WRAINA") badges.push('<span class="warning-badge badge-yellow-rain">🌧️ 黃雨</span>');
-                                else if (key === "WRAINR") badges.push('<span class="warning-badge badge-red-rain">🌧️ 紅雨</span>');
-                                else if (key === "WRAINB") badges.push('<span class="warning-badge badge-black-rain">🌧️ 黑雨</span>');
-                                else if (key.indexOf("WTCSGN") === 0) {
-                                    var code = key.replace("WTCSGN", "");
-                                    var tcText = code + "號風球";
-                                    if (code === "L") tcText = "1號戒備";
-                                    else if (code === "M") tcText = "3號強風";
-                                    else if (code === "8NE") tcText = "8號東北";
-                                    else if (code === "8SE") tcText = "8號東南";
-                                    else if (code === "8NW") tcText = "8號西北";
-                                    else if (code === "8SW") tcText = "8號西南";
-                                    else if (code === "9") tcText = "9號烈風";
-                                    else if (code === "10") tcText = "10號颶風";
-                                    badges.push('<span class="warning-badge badge-tc">🌀 ' + tcText + '</span>');
-                                } else if (key === "WTS") {
-                                    badges.push('<span class="warning-badge badge-ts">⛈️ 雷暴</span>');
-                                } else if (key === "SMS") {
-                                    badges.push('<span class="warning-badge badge-tc">💨 強烈季候風</span>');
-                                }
-                            }
-                        }
-                    }
-
-                    var badgeHtml = badges.length > 0 ? badges.join('') : '<span class="warning-badge badge-none">☀️ 天氣良好</span>';
-                    if (container) container.innerHTML = badgeHtml;
-                    if (nightContainer) nightContainer.innerHTML = badgeHtml;
-                }).catch(function(e) {
-                    var defaultHtml = '<span class="warning-badge badge-none">☀️ 天氣良好</span>';
-                    if (container) container.innerHTML = defaultHtml;
-                    if (nightContainer) nightContainer.innerHTML = defaultHtml;
-                });
-        }
-
-        function fetchGovPressRelease() {
-            var schoolNoticeBox = document.getElementById('school-closure-notice');
-            if (!schoolNoticeBox) return;
-            var targetRssUrl = 'https://www.info.gov.hk/gia/rss/general_zh.xml';
-            var proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetRssUrl);
-
-            fetch(proxyUrl)
-                .then(function(response) { return response.json(); })
-                .then(function(responseData) {
-                    var parser = new DOMParser();
-                    var xmlDoc = parser.parseFromString(responseData.contents, "text/xml");
-                    var items = xmlDoc.querySelectorAll("item");
-                    var matchedNotice = "";
-
-                    var limit = items.length > 25 ? 25 : items.length;
-                    for (var i = 0; i < limit; i++) {
-                        var titleEl = items[i].querySelector("title");
-                        var descEl = items[i].querySelector("description");
-                        var title = titleEl ? titleEl.textContent : "";
-                        var description = descEl ? descEl.textContent : "";
-                        var combinedText = title + " " + description;
-
-                        if ((combinedText.indexOf("停課") !== -1 || combinedText.indexOf("所有學校") !== -1) &&
-                            (combinedText.indexOf("教育局") !== -1 || combinedText.indexOf("幼稚園") !== -1 || combinedText.indexOf("中小學") !== -1)) {
-                            matchedNotice = title.replace(/<\/?[^>]+(>|$)/g, "").trim();
-                            break;
-                        }
-                    }
-
-                    if (matchedNotice) {
-                        schoolNoticeBox.innerHTML = '📢 <b>政府新聞公佈：</b> ' + matchedNotice;
-                        schoolNoticeBox.style.display = 'block';
-                    } else {
-                        schoolNoticeBox.style.display = 'none';
-                    }
-                })
-                .catch(function(e) {
-                    schoolNoticeBox.style.display = 'none';
-                });
-        }
-
-        fetchWeatherData();
-        fetchGovPressRelease();
-        setInterval(fetchWeatherData, 60000);
-        setInterval(fetchGovPressRelease, 60000);
-
-        var defaultBuses = [
-            { company: "lwb", route: "E36A", dir: "inbound", stop: "TC188", origin_name: "逸東邨雍逸樓", dest_name: "往 元朗(德業街)", offset: 0 },
-            { company: "ctb", route: "E21B", dir: "outbound", stop: "001854", origin_name: "逸東邨雍逸樓, 裕東路", dest_name: "往 何文田 (愛民邨)", offset: 0 }
+        callback(kmbStopsCacheMap);
+    })
+    .catch(function() {
+        callback({});
+    });
+}
+/* =========================================================
+   時鐘
+========================================================= */
+function updateClock() {
+    var now = new Date();
+    var hours =
+        now.getHours();
+    var minutes =
+        now.getMinutes();
+    var seconds =
+        now.getSeconds();
+    var ampm =
+        hours >= 12
+        ? '下午'
+        : '上午';
+    var h12 =
+        hours % 12;
+    if (h12 === 0) {
+        h12 = 12;
+    }
+    var m =
+        String(minutes);
+    if (m.length < 2) {
+        m = '0' + m;
+    }
+    var s =
+        String(seconds);
+    if (s.length < 2) {
+        s = '0' + s;
+    }
+    var h =
+        String(h12);
+    var clockHtml =
+        h + ':' + m +
+        '<div class="clock-sub-box">' +
+            '<span class="clock-ampm">' +
+                ampm +
+            '</span>' +
+            '<span class="clock-seconds">' +
+                ':' + s +
+            '</span>' +
+        '</div>';
+    var clockEl =
+        document.getElementById('clock');
+    if (clockEl) {
+        clockEl.innerHTML =
+            clockHtml;
+    }
+    var nightClockEl =
+        document.getElementById(
+            'night-clock'
+        );
+    if (nightClockEl) {
+        nightClockEl.innerHTML =
+            clockHtml;
+    }
+    var weekDays = [
+        '星期日',
+        '星期一',
+        '星期二',
+        '星期三',
+        '星期四',
+        '星期五',
+        '星期六'
+    ];
+    var dateStr =
+        now.getFullYear() +
+        '年' +
+        (now.getMonth() + 1) +
+        '月' +
+        now.getDate() +
+        '日 ' +
+        weekDays[
+            now.getDay()
         ];
-
-        var currentBuses = [];
-        var cachedRawEtas = {};
-
-        function loadBusConfigs() {
-            var saved = localStorage.getItem('user_bus_configs_v14');
-            if (saved) {
-                try {
-                    var parsed = JSON.parse(saved);
-                    currentBuses = [];
-                    for (var i = 0; i < parsed.length; i++) {
-                        // 修正：不再過濾掉 nlb (新大嶼山巴士)
-                        if (parsed[i].company !== 'mtr') {
-                            currentBuses.push(parsed[i]);
-                        }
-                    }
-                } catch(e) {
-                    currentBuses = defaultBuses;
+    var dateEl =
+        document.getElementById(
+            'date'
+        );
+    if (dateEl) {
+        dateEl.innerText =
+            dateStr;
+    }
+    var nightDateEl =
+        document.getElementById(
+            'night-date'
+        );
+    if (nightDateEl) {
+        nightDateEl.innerText =
+            dateStr;
+    }
+    checkNightMode(now);
+}
+/* =========================================================
+   夜間模式
+========================================================= */
+function checkNightMode(now) {
+    var nightScreen =
+        document.getElementById(
+            'night-screen'
+        );
+    if (!nightScreen) {
+        return;
+    }
+    var startTime =
+        localStorage.getItem(
+            'night_mode_start'
+        ) ||
+        '20:00';
+    var endTime =
+        localStorage.getItem(
+            'night_mode_end'
+        ) ||
+        '05:00';
+    var startParts =
+        startTime.split(':').map(Number);
+    var endParts =
+        endTime.split(':').map(Number);
+    var currentMin =
+        now.getHours() * 60 +
+        now.getMinutes();
+    var startMin =
+        startParts[0] * 60 +
+        startParts[1];
+    var endMin =
+        endParts[0] * 60 +
+        endParts[1];
+    var isNightTime = false;
+    if (startMin <= endMin) {
+        isNightTime =
+            currentMin >= startMin &&
+            currentMin < endMin;
+    } else {
+        isNightTime =
+            currentMin >= startMin ||
+            currentMin < endMin;
+    }
+    if (isNightTime) {
+        if (!isManuallyWoken) {
+            nightScreen.classList.add(
+                'active'
+            );
+        }
+    } else {
+        isManuallyWoken = false;
+        nightScreen.classList.remove(
+            'active'
+        );
+        if (nightWakeTimer) {
+            clearTimeout(
+                nightWakeTimer
+            );
+            nightWakeTimer = null;
+        }
+    }
+}
+/* =========================================================
+   手動喚醒
+========================================================= */
+function wakeUpNightScreen() {
+    var nightScreen =
+        document.getElementById(
+            'night-screen'
+        );
+    isManuallyWoken = true;
+    if (nightScreen) {
+        nightScreen.classList.remove(
+            'active'
+        );
+    }
+    if (nightWakeTimer) {
+        clearTimeout(
+            nightWakeTimer
+        );
+    }
+    nightWakeTimer =
+        setTimeout(function() {
+            isManuallyWoken = false;
+            checkNightMode(
+                new Date()
+            );
+        }, 30000);
+}
+/* =========================================================
+   啟動時鐘
+========================================================= */
+setInterval(
+    updateClock,
+    1000
+);
+updateClock();
+/* =========================================================
+   天氣
+========================================================= */
+function fetchWeatherData() {
+    var container =
+        document.getElementById(
+            'weather-warnings'
+        );
+    var nightContainer =
+        document.getElementById(
+            'night-warnings'
+        );
+    var weatherBox =
+        document.getElementById(
+            'weather-info-box'
+        );
+    var weatherIcon =
+        document.getElementById(
+            'weather-icon'
+        );
+    var nightWeatherIcon =
+        document.getElementById(
+            'night-weather-icon'
+        );
+    var emojiFallback =
+        document.getElementById(
+            'weather-emoji-fallback'
+        );
+    var nightEmojiFallback =
+        document.getElementById(
+            'night-weather-emoji'
+        );
+    var weatherTemp =
+        document.getElementById(
+            'weather-temp'
+        );
+    var nightTemp =
+        document.getElementById(
+            'night-temp'
+        );
+    var weatherPsr =
+        document.getElementById(
+            'weather-psr'
+        );
+    var nightWeatherPsr =
+        document.getElementById(
+            'night-weather-psr'
+        );
+    var currentHour =
+        new Date().getHours();
+    var isNightNow =
+        currentHour >= 18 ||
+        currentHour < 6;
+    /* -----------------------------------------------------
+       即時天氣
+    ----------------------------------------------------- */
+    fetch(
+        'https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=tc'
+    )
+    .then(function(res) {
+        return res.json();
+    })
+    .then(function(rhrData) {
+        if (
+            rhrData &&
+            rhrData.icon &&
+            rhrData.icon.length > 0
+        ) {
+            var iconId =
+                rhrData.icon[0];
+            var iconSrc =
+                'weather-icons/pic' +
+                iconId +
+                '.png';
+            if (weatherIcon) {
+                weatherIcon.style.display =
+                    'block';
+                if (emojiFallback) {
+                    emojiFallback.style.display =
+                        'none';
                 }
-            } else {
-                currentBuses = defaultBuses;
+                weatherIcon.src =
+                    iconSrc;
+                weatherIcon.onerror =
+                    function() {
+                        this.style.display =
+                            'none';
+                        if (emojiFallback) {
+                            emojiFallback.style.display =
+                                'inline';
+                            emojiFallback.innerText =
+                                isNightNow
+                                ? '🌙'
+                                : '🌤️';
+                        }
+                    };
+            }
+            if (nightWeatherIcon) {
+                nightWeatherIcon.style.display =
+                    'block';
+                if (nightEmojiFallback) {
+                    nightEmojiFallback.style.display =
+                        'none';
+                }
+                nightWeatherIcon.src =
+                    iconSrc;
+                nightWeatherIcon.onerror =
+                    function() {
+                        this.style.display =
+                            'none';
+                        if (nightEmojiFallback) {
+                            nightEmojiFallback.style.display =
+                                'inline';
+                            nightEmojiFallback.innerText =
+                                '🌙';
+                        }
+                    };
+            }
+            if (weatherBox) {
+                weatherBox.style.display =
+                    'flex';
             }
         }
-
-        function getKMBSeta(route, stopCode, dir, callback) {
-            if (!stopCode) { callback([]); return; }
-            fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/' + stopCode)
-                .then(function(res) { return res.json(); })
-                .then(function(etaData) {
-                    var kmbDir = dir === 'inbound' ? 'I' : 'O';
-                    var list = [];
-                    var data = etaData.data || [];
-                    for (var i = 0; i < data.length; i++) {
-                        if (data[i].route.toUpperCase() === route.toUpperCase() && (!data[i].dir || data[i].dir === kmbDir)) {
-                            list.push(data[i]);
-                        }
+        if (
+            rhrData &&
+            rhrData.temperature &&
+            rhrData.temperature.data
+        ) {
+            var temps =
+                rhrData.temperature.data;
+            var val = '--';
+            for (
+                var i = 0;
+                i < temps.length;
+                i++
+            ) {
+                if (
+                    temps[i].place ===
+                    '香港天文台'
+                ) {
+                    val =
+                        temps[i].value;
+                    break;
+                }
+            }
+            if (
+                val === '--' &&
+                temps.length > 0
+            ) {
+                val =
+                    temps[0].value;
+            }
+            if (weatherTemp) {
+                weatherTemp.innerText =
+                    val + '°C';
+            }
+            if (nightTemp) {
+                nightTemp.innerText =
+                    val + '°C';
+            }
+        }
+    })
+    .catch(function() {});
+    /* -----------------------------------------------------
+       降雨機率
+    ----------------------------------------------------- */
+    fetch(
+        'https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=flw&lang=tc'
+    )
+    .then(function(res) {
+        return res.json();
+    })
+    .then(function(flwData) {
+        if (
+            flwData &&
+            flwData.psr
+        ) {
+            var psrText =
+                flwData.psr;
+            var psrStr =
+                '💧 降雨機率: ' +
+                psrText;
+            if (weatherPsr) {
+                weatherPsr.innerText =
+                    psrStr;
+                weatherPsr.style.display =
+                    'inline-block';
+            }
+            if (nightWeatherPsr) {
+                nightWeatherPsr.innerText =
+                    psrStr;
+                nightWeatherPsr.style.display =
+                    'inline-block';
+            }
+        }
+    })
+    .catch(function() {});
+    /* -----------------------------------------------------
+       天氣警告
+    ----------------------------------------------------- */
+    fetch(
+        'https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=tc'
+    )
+    .then(function(res) {
+        return res.json();
+    })
+    .then(function(data) {
+        var badges = [];
+        for (var key in data) {
+            if (
+                !data.hasOwnProperty(key)
+            ) {
+                continue;
+            }
+            var item =
+                data[key];
+            if (
+                item &&
+                item.actionCode !==
+                'CANCEL'
+            ) {
+                if (key === 'WRAINA') {
+                    badges.push(
+                        '<span class="warning-badge badge-yellow-rain">' +
+                        '🌧️ 黃雨' +
+                        '</span>'
+                    );
+                } else if (
+                    key === 'WRAINR'
+                ) {
+                    badges.push(
+                        '<span class="warning-badge badge-red-rain">' +
+                        '🌧️ 紅雨' +
+                        '</span>'
+                    );
+                } else if (
+                    key === 'WRAINB'
+                ) {
+                    badges.push(
+                        '<span class="warning-badge badge-black-rain">' +
+                        '🌧️ 黑雨' +
+                        '</span>'
+                    );
+                } else if (
+                    key.indexOf('WTCSGN') === 0
+                ) {
+                    var code =
+                        key.replace(
+                            'WTCSGN',
+                            ''
+                        );
+                    var tcText =
+                        code + '號風球';
+                    if (code === 'L') {
+                        tcText =
+                            '1號戒備';
+                    } else if (code === 'M') {
+                        tcText =
+                            '3號強風';
+                    } else if (
+                        code === '8NE'
+                    ) {
+                        tcText =
+                            '8號東北';
+                    } else if (
+                        code === '8SE'
+                    ) {
+                        tcText =
+                            '8號東南';
+                    } else if (
+                        code === '8NW'
+                    ) {
+                        tcText =
+                            '8號西北';
+                    } else if (
+                        code === '8SW'
+                    ) {
+                        tcText =
+                            '8號西南';
+                    } else if (code === '9') {
+                        tcText =
+                            '9號烈風';
+                    } else if (code === '10') {
+                        tcText =
+                            '10號颶風';
                     }
-                    callback(list);
-                })
-                .catch(function(e) { callback([]); });
-        }
-
-        function getCTBETA(route, stopIdOrName, dir, callback) {
-            if (!stopIdOrName) { callback([]); return; }
-            var ctbDir = dir === 'inbound' ? 'inbound' : 'outbound';
-            var stopId = stopIdOrName;
-            
-            function fetchEta(finalStopId) {
-                fetch('https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/' + finalStopId + '/' + route.toUpperCase())
-                    .then(function(res) { return res.json(); })
-                    .then(function(etaData) {
-                        var list = [];
-                        var data = etaData.data || [];
-                        var targetDirCode = ctbDir === 'inbound' ? 'I' : 'O';
-                        for (var i = 0; i < data.length; i++) {
-                            if (data[i].dir === targetDirCode) {
-                                list.push(data[i]);
-                            }
-                        }
-                        callback(list);
-                    })
-                    .catch(function(e) { callback([]); });
-            }
-
-            if (/[\u4e00-\u9fa5]/.test(stopIdOrName)) {
-                fetch('https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/' + route.toUpperCase() + '/' + ctbDir)
-                    .then(function(res) { return res.json(); })
-                    .then(function(stopsData) {
-                        if (stopsData.data && stopsData.data.length > 0) {
-                            stopId = stopsData.data[0].stop;
-                        }
-                        fetchEta(stopId);
-                    })
-                    .catch(function(e) { fetchEta(stopId); });
-            } else {
-                fetchEta(stopId);
+                    badges.push(
+                        '<span class="warning-badge badge-tc">🌀 ' +
+                        tcText +
+                        '</span>'
+                    );
+                } else if (key === 'WTS') {
+                    badges.push(
+                        '<span class="warning-badge badge-ts">' +
+                        '⛈️ 雷暴' +
+                        '</span>'
+                    );
+                } else if (key === 'SMS') {
+                    badges.push(
+                        '<span class="warning-badge badge-tc">' +
+                        '💨 強烈季候風' +
+                        '</span>'
+                    );
+                }
             }
         }
-
-        // 新增大嶼山巴士 ETA 抓取
-        function getNLBETA(routeId, stopId, callback) {
-            if (!routeId || !stopId) { callback([]); return; }
-            fetch('https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=eta&routeId=' + routeId + '&stopId=' + stopId + '&language=zh')
-                .then(function(res) { return res.json(); })
-                .then(function(etaData) {
-                    var list = [];
-                    var data = etaData.estimatedArrivals || [];
-                    for (var i = 0; i < data.length; i++) {
-                        if (data[i].estimatedArrivalTime) {
-                            // 轉換格式以支援 iOS Safari
-                            var timeStr = data[i].estimatedArrivalTime.replace(' ', 'T') + '+08:00';
-                            list.push({ eta: timeStr });
-                        }
+        var fineWeatherIcon =
+            isNightNow
+            ? '🌙'
+            : '☀️';
+        var badgeHtml =
+            badges.length > 0
+            ? badges.join('')
+            : '<span class="warning-badge badge-none">' +
+              fineWeatherIcon +
+              ' 天氣良好</span>';
+        var nightBadgeHtml =
+            badges.length > 0
+            ? badges.join('')
+            : '<span class="warning-badge badge-none">' +
+              '🌙 天氣良好</span>';
+        if (container) {
+            container.innerHTML =
+                badgeHtml;
+        }
+        if (nightContainer) {
+            nightContainer.innerHTML =
+                nightBadgeHtml;
+        }
+    })
+    .catch(function() {
+        var fineWeatherIcon =
+            isNightNow
+            ? '🌙'
+            : '☀️';
+        if (container) {
+            container.innerHTML =
+                '<span class="warning-badge badge-none">' +
+                fineWeatherIcon +
+                ' 天氣良好</span>';
+        }
+        if (nightContainer) {
+            nightContainer.innerHTML =
+                '<span class="warning-badge badge-none">' +
+                '🌙 天氣良好</span>';
+        }
+    });
+}
+/* =========================================================
+   政府新聞
+========================================================= */
+function fetchGovPressRelease() {
+    var schoolNoticeBox =
+        document.getElementById(
+            'school-closure-notice'
+        );
+    if (!schoolNoticeBox) {
+        return;
+    }
+    var targetRssUrl =
+        'https://www.info.gov.hk/gia/rss/general_zh.xml';
+    var proxyUrl =
+        'https://api.allorigins.win/get?url=' +
+        encodeURIComponent(
+            targetRssUrl
+        );
+    fetch(proxyUrl)
+    .then(function(response) {
+        return response.json();
+    })
+    .then(function(responseData) {
+        var parser =
+            new DOMParser();
+        var xmlDoc =
+            parser.parseFromString(
+                responseData.contents,
+                'text/xml'
+            );
+        var items =
+            xmlDoc.querySelectorAll(
+                'item'
+            );
+        var matchedNotice = '';
+        var limit =
+            items.length > 25
+            ? 25
+            : items.length;
+        for (
+            var i = 0;
+            i < limit;
+            i++
+        ) {
+            var titleEl =
+                items[i].querySelector(
+                    'title'
+                );
+            var descEl =
+                items[i].querySelector(
+                    'description'
+                );
+            var title =
+                titleEl
+                ? titleEl.textContent
+                : '';
+            var description =
+                descEl
+                ? descEl.textContent
+                : '';
+            var combinedText =
+                title +
+                ' ' +
+                description;
+            if (
+                (
+                    combinedText.indexOf('停課') !== -1 ||
+                    combinedText.indexOf('所有學校') !== -1
+                )
+                &&
+                (
+                    combinedText.indexOf('教育局') !== -1 ||
+                    combinedText.indexOf('幼稚園') !== -1 ||
+                    combinedText.indexOf('中小學') !== -1
+                )
+            ) {
+                matchedNotice =
+                    title
+                    .replace(
+                        /<\/?[^>]+(>|$)/g,
+                        ''
+                    )
+                    .trim();
+                break;
+            }
+        }
+        if (matchedNotice) {
+            schoolNoticeBox.innerHTML =
+                '📢 <b>政府新聞公佈：</b> ' +
+                matchedNotice;
+            schoolNoticeBox.style.display =
+                'block';
+        } else {
+            schoolNoticeBox.style.display =
+                'none';
+        }
+    })
+    .catch(function() {
+        schoolNoticeBox.style.display =
+            'none';
+    });
+}
+/* =========================================================
+   載入設定
+========================================================= */
+function loadBusConfigs() {
+    var saved =
+        localStorage.getItem(
+            'user_bus_configs_v15'
+        );
+    if (!saved) {
+        saved =
+            localStorage.getItem(
+                'user_bus_configs_v14'
+            );
+    }
+    if (saved) {
+        try {
+            var parsed =
+                JSON.parse(saved);
+            currentBuses = [];
+            for (
+                var i = 0;
+                i < parsed.length;
+                i++
+            ) {
+                if (
+                    parsed[i].company !== 'mtr'
+                ) {
+                    currentBuses.push({
+                        company:
+                            parsed[i].company ||
+                            'kmb',
+                        route:
+                            parsed[i].route ||
+                            '',
+                        dir:
+                            parsed[i].dir ||
+                            'outbound',
+                        stop:
+                            parsed[i].stop ||
+                            '',
+                        origin_name:
+                            parsed[i].origin_name ||
+                            '',
+                        dest_name:
+                            parsed[i].dest_name ||
+                            '',
+                        offset:
+                            parseFloat(
+                                parsed[i].offset ||
+                                0
+                            ),
+                        nlb_route_id:
+                            parsed[i].nlb_route_id ||
+                            ''
+                    });
+                }
+            }
+            for (
+                var j = 0;
+                j < currentBuses.length;
+                j++
+            ) {
+                if (
+                    currentBuses[j].company ===
+                    'nlb'
+                    &&
+                    !currentBuses[j].nlb_route_id
+                ) {
+                    currentBuses[j].nlb_route_id =
+                        currentBuses[j].dir;
+                }
+            }
+        } catch(e) {
+            currentBuses =
+                defaultBuses.map(
+                    function(bus) {
+                        return Object.assign(
+                            {},
+                            bus
+                        );
                     }
-                    callback(list);
-                })
-                .catch(function(e) { callback([]); });
+                );
         }
-
-        function fetchBusData() {
-            loadBusConfigs();
-            var busListContainer = document.getElementById('bus-list');
-            if (!busListContainer) return;
-
-            if (currentBuses.length === 0) {
-                busListContainer.innerHTML = '<div class="loading-text">尚未設定任何路線</div>';
-                return;
+    } else {
+        currentBuses =
+            defaultBuses.map(
+                function(bus) {
+                    return Object.assign(
+                        {},
+                        bus
+                    );
+                }
+            );
+    }
+}
+/* =========================================================
+   KMB ETA
+========================================================= */
+function getKMBSeta(
+    route,
+    stopCode,
+    dir,
+    callback
+) {
+    if (!stopCode) {
+        callback([]);
+        return;
+    }
+    fetch(
+        'https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/' +
+        stopCode
+    )
+    .then(function(res) {
+        return res.json();
+    })
+    .then(function(etaData) {
+        var kmbDir =
+            dir === 'inbound'
+            ? 'I'
+            : 'O';
+        var list = [];
+        var data =
+            etaData.data || [];
+        for (
+            var i = 0;
+            i < data.length;
+            i++
+        ) {
+            if (
+                data[i].route.toUpperCase() ===
+                route.toUpperCase()
+                &&
+                (
+                    !data[i].dir ||
+                    data[i].dir === kmbDir
+                )
+            ) {
+                list.push(
+                    data[i]
+                );
             }
-
-            // 加入 nlb 的排序權重
-            var companyOrder = { kmb: 1, lwb: 2, ctb: 3, nlb: 4 };
-            currentBuses.sort(function(a, b) {
-                var oA = companyOrder[a.company] || 99;
-                var oB = companyOrder[b.company] || 99;
-                return oA - oB;
+        }
+        callback(list);
+    })
+    .catch(function() {
+        callback([]);
+    });
+}
+/* =========================================================
+   CTB ETA
+========================================================= */
+function getCTBETA(
+    route,
+    stopIdOrName,
+    dir,
+    callback
+) {
+    if (!stopIdOrName) {
+        callback([]);
+        return;
+    }
+    var ctbDir =
+        dir === 'inbound'
+        ? 'inbound'
+        : 'outbound';
+    var stopId =
+        stopIdOrName;
+    function fetchEta(finalStopId) {
+        fetch(
+            'https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/' +
+            finalStopId +
+            '/' +
+            route.toUpperCase()
+        )
+        .then(function(res) {
+            return res.json();
+        })
+        .then(function(etaData) {
+            var list = [];
+            var data =
+                etaData.data || [];
+            var targetDirCode =
+                ctbDir === 'inbound'
+                ? 'I'
+                : 'O';
+            for (
+                var i = 0;
+                i < data.length;
+                i++
+            ) {
+                if (
+                    data[i].dir ===
+                    targetDirCode
+                ) {
+                    list.push(
+                        data[i]
+                    );
+                }
+            }
+            callback(list);
+        })
+        .catch(function() {
+            callback([]);
+        });
+    }
+    if (
+        /[\u4e00-\u9fa5]/.test(
+            stopIdOrName
+        )
+    ) {
+        fetch(
+            'https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/' +
+            route.toUpperCase() +
+            '/' +
+            ctbDir
+        )
+        .then(function(res) {
+            return res.json();
+        })
+        .then(function(stopsData) {
+            if (
+                stopsData.data &&
+                stopsData.data.length > 0
+            ) {
+                stopId =
+                    stopsData.data[0].stop;
+            }
+            fetchEta(stopId);
+        })
+        .catch(function() {
+            fetchEta(stopId);
+        });
+    } else {
+        fetchEta(stopId);
+    }
+}
+/* =========================================================
+   NLB 路線
+========================================================= */
+function getNLBRouteList(callback) {
+    if (nlbRouteCache) {
+        callback(nlbRouteCache);
+        return;
+    }
+    fetch(
+        'https://rt.data.gov.hk/v2/transport/nlb/route.php?action=list'
+    )
+    .then(function(res) {
+        return res.json();
+    })
+    .then(function(data) {
+        nlbRouteCache =
+            data && data.routes
+            ? data.routes
+            : [];
+        callback(nlbRouteCache);
+    })
+    .catch(function() {
+        callback([]);
+    });
+}
+/* =========================================================
+   NLB 車站
+========================================================= */
+function getNLBStops(
+    routeId,
+    callback
+) {
+    if (!routeId) {
+        callback([]);
+        return;
+    }
+    fetch(
+        'https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=list&routeId=' +
+        encodeURIComponent(routeId)
+    )
+    .then(function(res) {
+        return res.json();
+    })
+    .then(function(data) {
+        callback(
+            data && data.stops
+            ? data.stops
+            : []
+        );
+    })
+    .catch(function() {
+        callback([]);
+    });
+}
+/* =========================================================
+   NLB ETA
+========================================================= */
+function getNLBETA(
+    routeId,
+    stopId,
+    callback
+) {
+    if (
+        !routeId ||
+        !stopId
+    ) {
+        callback([]);
+        return;
+    }
+    var url =
+        'https://rt.data.gov.hk/v2/transport/nlb/stop.php' +
+        '?action=estimatedArrivals' +
+        '&routeId=' +
+        encodeURIComponent(routeId) +
+        '&stopId=' +
+        encodeURIComponent(stopId) +
+        '&language=zh';
+    fetch(url)
+    .then(function(res) {
+        return res.json();
+    })
+    .then(function(data) {
+        var list = [];
+        if (
+            data &&
+            data.estimatedArrivals
+        ) {
+            for (
+                var i = 0;
+                i < data.estimatedArrivals.length;
+                i++
+            ) {
+                var item =
+                    data.estimatedArrivals[i];
+                if (
+                    !item ||
+                    !item.estimatedArrivalTime
+                ) {
+                    continue;
+                }
+                var etaString =
+                    String(
+                        item.estimatedArrivalTime
+                    )
+                    .replace(
+                        ' ',
+                        'T'
+                    );
+                if (
+                    !/[+-]\d\d:\d\d$/.test(
+                        etaString
+                    )
+                ) {
+                    etaString +=
+                        '+08:00';
+                }
+                list.push({
+                    eta:
+                        etaString,
+                    routeVariantName:
+                        item.routeVariantName ||
+                        '',
+                    departed:
+                        item.departed,
+                    noGPS:
+                        item.noGPS
+                });
+            }
+        }
+        callback(list);
+    })
+    .catch(function() {
+        callback([]);
+    });
+}
+/* =========================================================
+   ETA 處理
+========================================================= */
+function buildEtaObjects(
+    rawEtas,
+    now,
+    busOffset
+) {
+    var etas = [];
+    if (
+        rawEtas &&
+        rawEtas.length > 0
+    ) {
+        for (
+            var j = 0;
+            j < rawEtas.length;
+            j++
+        ) {
+            var item =
+                rawEtas[j];
+            if (
+                !item ||
+                !item.eta
+            ) {
+                continue;
+            }
+            var etaDate =
+                new Date(item.eta);
+            if (
+                isNaN(
+                    etaDate.getTime()
+                )
+            ) {
+                continue;
+            }
+            var totalDiffSeconds =
+                Math.round(
+                    (
+                        etaDate.getTime() -
+                        now.getTime()
+                    ) / 1000
+                )
+                +
+                (
+                    busOffset * 60
+                );
+            if (
+                totalDiffSeconds < -15
+            ) {
+                continue;
+            }
+            var mVal =
+                Math.round(
+                    totalDiffSeconds / 60
+                );
+            var displayText =
+                mVal <= 0
+                ? '將到站'
+                : mVal + ' 分鐘';
+            etas.push({
+                text:
+                    displayText,
+                mins:
+                    Math.max(
+                        0,
+                        mVal
+                    )
             });
-
-            var now = new Date();
-            var completedCount = 0;
-            var busResults = new Array(currentBuses.length);
-
-            function checkDone() {
-                completedCount++;
-                if (completedCount === currentBuses.length) {
-                    var finalHtml = '';
-                    for (var k = 0; k < busResults.length; k++) {
-                        if (busResults[k]) {
-                            finalHtml += busResults[k];
-                        }
-                    }
-                    busListContainer.innerHTML = finalHtml;
+        }
+    }
+    var uniqueEtas = [];
+    var seen = {};
+    for (
+        var x = 0;
+        x < etas.length;
+        x++
+    ) {
+        var key =
+            etas[x].text +
+            '_' +
+            etas[x].mins;
+        if (!seen[key]) {
+            seen[key] = true;
+            uniqueEtas.push(
+                etas[x]
+            );
+        }
+    }
+    etas =
+        uniqueEtas;
+    if (
+        etas.length === 0
+    ) {
+        etas = [
+            {
+                text:'無班次',
+                mins:-1
+            },
+            {
+                text:'-',
+                mins:-1
+            },
+            {
+                text:'-',
+                mins:-1
+            }
+        ];
+    } else {
+        while (
+            etas.length < 3
+        ) {
+            etas.push({
+                text:'-',
+                mins:-1
+            });
+        }
+    }
+    return etas.slice(0,3);
+}
+/* =========================================================
+   巴士資料
+========================================================= */
+function fetchBusData() {
+    if (
+        !currentBuses ||
+        currentBuses.length === 0
+    ) {
+        loadBusConfigs();
+    }
+    var busListContainer =
+        document.getElementById(
+            'bus-list'
+        );
+    if (!busListContainer) {
+        return;
+    }
+    if (
+        currentBuses.length === 0
+    ) {
+        busListContainer.innerHTML =
+            '<div class="loading-text">' +
+            '尚未設定任何路線' +
+            '</div>';
+        return;
+    }
+    var companyOrder = {
+        kmb:1,
+        lwb:2,
+        ctb:3,
+        nlb:4
+    };
+    currentBuses.sort(
+        function(a,b) {
+            var oA =
+                companyOrder[a.company] ||
+                99;
+            var oB =
+                companyOrder[b.company] ||
+                99;
+            return oA - oB;
+        }
+    );
+    var now =
+        new Date();
+    var completedCount = 0;
+    var busResults =
+        new Array(
+            currentBuses.length
+        );
+    function checkDone() {
+        completedCount++;
+        if (
+            completedCount ===
+            currentBuses.length
+        ) {
+            var finalHtml = '';
+            for (
+                var k = 0;
+                k < busResults.length;
+                k++
+            ) {
+                if (
+                    busResults[k]
+                ) {
+                    finalHtml +=
+                        busResults[k];
                 }
             }
-
-            var loopFn = function(index) {
-                var bus = currentBuses[index];
-                var busDir = bus.dir || 'outbound';
-                var busOffset = parseFloat(bus.offset || 0);
-                var busKey = bus.company + '_' + bus.route + '_' + busDir + '_' + bus.stop;
-
-                var processEtas = function(rawEtas) {
-                    if (rawEtas && rawEtas.length > 0) {
-                        cachedRawEtas[busKey] = rawEtas;
-                    } else if (cachedRawEtas[busKey]) {
-                        rawEtas = cachedRawEtas[busKey];
+            busListContainer.innerHTML =
+                finalHtml;
+        }
+    }
+    var loopFn =
+        function(index) {
+            var bus =
+                currentBuses[index];
+            var busDir =
+                bus.dir ||
+                'outbound';
+            var busOffset =
+                parseFloat(
+                    bus.offset ||
+                    0
+                );
+            var busKey =
+                bus.company +
+                '_' +
+                bus.route +
+                '_' +
+                busDir +
+                '_' +
+                bus.stop;
+            function processEtas(
+                rawEtas
+            ) {
+                if (
+                    rawEtas &&
+                    rawEtas.length > 0
+                ) {
+                    cachedRawEtas[
+                        busKey
+                    ] =
+                        rawEtas;
+                } else if (
+                    cachedRawEtas[
+                        busKey
+                    ]
+                ) {
+                    rawEtas =
+                        cachedRawEtas[
+                            busKey
+                        ];
+                }
+                var etas =
+                    buildEtaObjects(
+                        rawEtas,
+                        now,
+                        busOffset
+                    );
+                var companyTag = '';
+                var cardClass =
+                    'card-kmb';
+                if (
+                    bus.company === 'kmb'
+                ) {
+                    companyTag =
+                        '<span class="bus-company-tag">九巴</span>';
+                    cardClass =
+                        'card-kmb';
+                } else if (
+                    bus.company === 'lwb'
+                ) {
+                    companyTag =
+                        '<span class="bus-company-tag">龍運</span>';
+                    cardClass =
+                        'card-lwb';
+                } else if (
+                    bus.company === 'ctb'
+                ) {
+                    companyTag =
+                        '<span class="bus-company-tag">城巴</span>';
+                    cardClass =
+                        'card-ctb';
+                } else if (
+                    bus.company === 'nlb'
+                ) {
+                    companyTag =
+                        '<span class="bus-company-tag">嶼巴</span>';
+                    cardClass =
+                        'card-nlb';
+                }
+                var originText =
+                    bus.origin_name
+                    ?
+                    '<span class="bus-origin-text">' +
+                    escapeHtml(
+                        bus.origin_name
+                    ) +
+                    '</span>'
+                    :
+                    '';
+                var destDisplay =
+                    bus.dest_name ||
+                    '';
+                if (
+                    bus.company === 'nlb'
+                ) {
+                    destDisplay =
+                        destDisplay.replace(
+                            /^往\s*/,
+                            ''
+                        );
+                }
+                var destText =
+                    destDisplay
+                    ?
+                    '<span class="bus-dest-text">' +
+                    escapeHtml(
+                        destDisplay
+                    ) +
+                    '</span>'
+                    :
+                    '';
+                var displayRoute =
+                    escapeHtml(
+                        String(
+                            bus.route ||
+                            ''
+                        )
+                        .toUpperCase()
+                    );
+                function getEtaClass(
+                    etaObj
+                ) {
+                    if (
+                        etaObj.mins < 0
+                    ) {
+                        return '';
                     }
-
-                    var etas = [];
-                    if (rawEtas && rawEtas.length > 0) {
-                        for (var j = 0; j < rawEtas.length; j++) {
-                            var item = rawEtas[j];
-                            if (!item || !item.eta) continue;
-                            
-                            var totalDiffSeconds = Math.round((new Date(item.eta) - now) / 1000) + (busOffset * 60);
-                            
-                            if (totalDiffSeconds < -15) continue;
-                            
-                            var mVal = Math.round(totalDiffSeconds / 60);
-                            var displayText = '';
-                            
-                            if (mVal <= 0) {
-                                displayText = '將到站';
-                            } else {
-                                displayText = mVal + ' 分鐘';
-                            }
-                            
-                            etas.push({ text: displayText, mins: Math.max(0, mVal) });
-                        }
+                    if (
+                        etaObj.mins === 0
+                    ) {
+                        return 'eta-flash-three';
                     }
-
-                    if (etas.length === 0) {
-                        etas = [{ text: '無班次', mins: -1 }, { text: '-', mins: -1 }, { text: '-', mins: -1 }];
-                    } else {
-                        while (etas.length < 3) { etas.push({ text: '-', mins: -1 }); }
+                    if (
+                        etaObj.mins <= 5
+                    ) {
+                        return 'eta-flash';
                     }
-
-                    var companyTag = '';
-                    var cardClass = 'card-kmb';
-
-                    if (bus.company === 'kmb') {
-                        companyTag = '<span class="bus-company-tag">九巴</span>';
-                        cardClass = 'card-kmb';
-                    } else if (bus.company === 'lwb') {
-                        companyTag = '<span class="bus-company-tag">龍運</span>';
-                        cardClass = 'card-lwb';
-                    } else if (bus.company === 'ctb') {
-                        companyTag = '<span class="bus-company-tag">城巴</span>';
-                        cardClass = 'card-ctb';
-                    } else if (bus.company === 'nlb') {
-                        companyTag = '<span class="bus-company-tag">嶼巴</span>';
-                        cardClass = 'card-nlb';
+                    if (
+                        etaObj.mins <= 10
+                    ) {
+                        return 'eta-flash-green';
                     }
-
-                    var originText = bus.origin_name ? '<span class="bus-origin-text">' + bus.origin_name + '</span>' : '';
-                    var destText = bus.dest_name ? '<span class="bus-dest-text">' + bus.dest_name + '</span>' : '';
-                    
-                    var displayRoute = bus.route.toUpperCase();
-
-                    function getEtaClass(etaObj) {
-                        if (etaObj.mins < 0) return '';
-                        if (etaObj.mins === 0) return 'eta-flash-three';
-                        if (etaObj.mins <= 5) return 'eta-flash';
-                        if (etaObj.mins <= 10) return 'eta-flash-green';
-                        return 'eta-green';
-                    }
-
-                    busResults[index] = '<div class="bus-item ' + cardClass + '">' +
-                        '<div class="bus-header-grid">' +
-                            companyTag + 
-                            '<div class="bus-name">' + displayRoute + '</div>' + 
-                            '<div class="bus-dest">' + 
-                                originText + 
-                                destText + 
-                            '</div>' +
-                        '</div>' +
-                        '<div class="eta-group">' +
-                            '<div class="eta-badge first ' + getEtaClass(etas[0]) + '">' + etas[0].text + '</div>' +
-                            '<div class="eta-next-group">' +
-                                '<div class="eta-badge ' + getEtaClass(etas[1]) + '">' + etas[1].text + '</div>' +
-                                '<div class="eta-badge ' + getEtaClass(etas[2]) + '">' + etas[2].text + '</div>' +
-                            '</div>' +
-                        '</div>' +
+                    return 'eta-green';
+                }
+                busResults[index] =
+                    '<div class="bus-item ' +
+                    cardClass +
+                    '">' +
+                    '<div class="bus-header-grid">' +
+                    companyTag +
+                    '<div class="bus-name">' +
+                    displayRoute +
+                    '</div>' +
+                    '<div class="bus-dest">' +
+                    originText +
+                    destText +
+                    '</div>' +
+                    '</div>' +
+                    '<div class="eta-group">' +
+                    '<div class="eta-badge first ' +
+                    getEtaClass(etas[0]) +
+                    '">' +
+                    etas[0].text +
+                    '</div>' +
+                    '<div class="eta-next-group">' +
+                    '<div class="eta-badge ' +
+                    getEtaClass(etas[1]) +
+                    '">' +
+                    etas[1].text +
+                    '</div>' +
+                    '<div class="eta-badge ' +
+                    getEtaClass(etas[2]) +
+                    '">' +
+                    etas[2].text +
+                    '</div>' +
+                    '</div>' +
+                    '</div>' +
                     '</div>';
-
-                    checkDone();
-                };
-
-                if (bus.company === 'kmb' || bus.company === 'lwb') {
-                    getKMBSeta(bus.route, bus.stop, busDir, processEtas);
-                } else if (bus.company === 'ctb') {
-                    getCTBETA(bus.route, bus.stop, busDir, processEtas);
-                } else if (bus.company === 'nlb') {
-                    getNLBETA(busDir, bus.stop, processEtas); // NLB 的 busDir 儲存的是 routeId
-                } else {
-                    processEtas([]);
-                }
-            };
-
-            for (var i = 0; i < currentBuses.length; i++) {
-                loopFn(i);
+                checkDone();
             }
-        }
-
-        fetchBusData();
-        setInterval(fetchBusData, 30000);
-
-        function openSettings() {
-            loadBusConfigs();
-            
-            var startEl = document.getElementById('night-start-time');
-            var endEl = document.getElementById('night-end-time');
-            if (startEl) startEl.value = localStorage.getItem('night_mode_start') || "20:00";
-            if (endEl) endEl.value = localStorage.getItem('night_mode_end') || "05:00";
-
-            renderSettingsList();
-            var modal = document.getElementById('settings-modal');
-            if (modal) modal.classList.add('active');
-        }
-
-        function closeSettings() {
-            var modal = document.getElementById('settings-modal');
-            if (modal) modal.classList.remove('active');
-        }
-
-        function renderSettingsList() {
-            var container = document.getElementById('config-list');
-            if (!container) return;
-            container.innerHTML = '';
-
-            var generateOffsetOptions = function(selectedVal) {
-                var options = '';
-                for (var sec = -180; sec <= 180; sec += 30) {
-                    var val = sec / 60;
-                    var label = val === 0 ? '無微調 (0分)' : (val > 0 ? '+' + val + ' 分鐘 (+' + sec + '秒)' : val + ' 分鐘 (' + sec + '秒)');
-                    var selected = (parseFloat(selectedVal) === val) ? 'selected' : '';
-                    options += '<option value="' + val + '" ' + selected + '>' + label + '</option>';
-                }
-                return options;
-            };
-
-            for (var i = 0; i < currentBuses.length; i++) {
-                var bus = currentBuses[i];
-                var busDir = bus.dir || 'outbound';
-                var busOffset = bus.offset !== undefined ? bus.offset : 0;
-
-                var itemHtml = '<div class="config-item" data-index="' + i + '" data-current-stop="' + bus.stop + '" data-current-dir="' + busDir + '">' +
-                    '<div class="config-row">' +
-                        '<select class="config-select bus-company" onchange="onCompanyChanged(' + i + ')">' +
-                            '<option value="kmb" ' + (bus.company === 'kmb' ? 'selected' : '') + '>九巴 (KMB)</option>' +
-                            '<option value="lwb" ' + (bus.company === 'lwb' ? 'selected' : '') + '>龍運 (LWB)</option>' +
-                            '<option value="ctb" ' + (bus.company === 'ctb' ? 'selected' : '') + '>城巴 (CTB)</option>' +
-                            '<option value="nlb" ' + (bus.company === 'nlb' ? 'selected' : '') + '>嶼巴 (NLB)</option>' +
-                        '</select>' +
-                        '<div class="config-route-container">' +
-                            renderRouteControl(bus.company, bus.route, i) +
-                        '</div>' +
-                        '<select class="config-select bus-dir" onchange="onDirectionChanged(' + i + ')">' +
-                            '<option value="' + busDir + '" selected>方向載入中...</option>' +
-                        '</select>' +
-                        '<button class="delete-btn" onclick="deleteBusConfig(' + i + ')">刪除</button>' +
-                    '</div>' +
-                    '<div class="config-row">' +
-                        '<select class="config-select bus-stop" onchange="handleStopChange(' + i + ')">' +
-                            '<option value="' + bus.stop + '" selected>' + (bus.stop ? '已選代碼: ' + bus.stop : '請選擇車站...') + '</option>' +
-                        '</select>' +
-                        '<input type="text" class="config-input bus-origin" placeholder="起點站名" value="' + (bus.origin_name || '') + '">' +
-                        '<input type="text" class="config-input bus-dest" placeholder="目的地" value="' + (bus.dest_name || '') + '">' +
-                        '<select class="config-select bus-offset" title="時間微調">' + generateOffsetOptions(busOffset) + '</select>' +
-                    '</div>' +
-                '</div>';
-                container.innerHTML += itemHtml;
-                loadStopOptions(i, false);
-            }
-        }
-
-        function renderRouteControl(company, currentRoute, index) {
-            return '<input type="text" class="config-input bus-route" placeholder="路線 (例: E33)" value="' + currentRoute + '" onchange="onBusMetaChanged(' + index + ')">';
-        }
-
-        function onCompanyChanged(index) {
-            var items = document.querySelectorAll('.config-item');
-            var item = items[index];
-            if (!item) return;
-
-            var company = item.querySelector('.bus-company').value;
-            var routeContainer = item.querySelector('.config-route-container');
-            
-            routeContainer.innerHTML = renderRouteControl(company, '', index);
-            onBusMetaChanged(index);
-        }
-
-        function onBusMetaChanged(index) {
-            updateDirectionOptions(index, true, function() {
-                loadStopOptions(index, true);
-            });
-        }
-
-        function onDirectionChanged(index) {
-            var items = document.querySelectorAll('.config-item');
-            var item = items[index];
-            if (!item) return;
-            var dirSelect = item.querySelector('.bus-dir');
-            item.setAttribute('data-current-dir', dirSelect.value);
-            var selectedOpt = dirSelect.options[dirSelect.selectedIndex];
-            var destInput = item.querySelector('.bus-dest');
-            if (selectedOpt && selectedOpt.text) {
-                // 移除嶼巴選項中括號內的路徑描述，只保留目的地
-                var destClean = selectedOpt.text.replace(/ \(.+\)$/, '');
-                destInput.value = destClean;
-            }
-            loadStopOptions(index, false);
-        }
-
-        function updateDirectionOptions(index, isUserAction, callback) {
-            var items = document.querySelectorAll('.config-item');
-            var item = items[index];
-            if (!item) { if (callback) callback(); return; }
-
-            var company = item.querySelector('.bus-company').value;
-            var routeInput = item.querySelector('.bus-route');
-            var route = routeInput.value.trim().toUpperCase();
-            var dirSelect = item.querySelector('.bus-dir');
-            var currentDir = item.getAttribute('data-current-dir') || 'outbound';
-            var destInput = item.querySelector('.bus-dest');
-
-            if (!route) {
-                dirSelect.innerHTML = '<option value="outbound">請先輸入路線...</option>';
-                if (callback) callback();
-                return;
-            }
-
-            dirSelect.innerHTML = '<option value="' + currentDir + '">方向載入中...</option>';
-
-            if (company === 'kmb' || company === 'lwb') {
-                var destO = '', destI = '';
-                fetch('https://data.etabus.gov.hk/v1/transport/kmb/route/' + route + '/outbound/1')
-                    .then(function(res) { return res.json(); })
-                    .then(function(d) {
-                        if (d && d.data && d.data.dest_tc) destO = d.data.dest_tc;
-                        return fetch('https://data.etabus.gov.hk/v1/transport/kmb/route/' + route + '/inbound/1');
-                    })
-                    .then(function(res) { return res.json(); })
-                    .then(function(d) {
-                        if (d && d.data && d.data.dest_tc) destI = d.data.dest_tc;
-                        var html = '<option value="outbound">往 ' + (destO || '去程終點') + '</option>' +
-                                   '<option value="inbound">往 ' + (destI || '回程終點') + '</option>';
-                        dirSelect.innerHTML = html;
-                        finalizeDir(dirSelect, item, currentDir, isUserAction, destInput, callback);
-                    })
-                    .catch(function(e) {
-                        dirSelect.innerHTML = '<option value="outbound">往 去程</option><option value="inbound">往 回程</option>';
-                        finalizeDir(dirSelect, item, currentDir, isUserAction, destInput, callback);
-                    });
-            } else if (company === 'ctb') {
-                fetch('https://rt.data.gov.hk/v2/transport/citybus/route/CTB/' + route)
-                    .then(function(res) { return res.json(); })
-                    .then(function(data) {
-                        var html = '';
-                        if (data && data.data) {
-                            var destO = data.data.dest_tc || '去程終點';
-                            var destI = data.data.orig_tc || '回程終點';
-                            html = '<option value="outbound">往 ' + destO + '</option>' +
-                                   '<option value="inbound">往 ' + destI + '</option>';
-                        } else {
-                            html = '<option value="outbound">往 去程</option><option value="inbound">往 回程</option>';
-                        }
-                        dirSelect.innerHTML = html;
-                        finalizeDir(dirSelect, item, currentDir, isUserAction, destInput, callback);
-                    })
-                    .catch(function(e) {
-                        dirSelect.innerHTML = '<option value="outbound">往 去程</option><option value="inbound">往 回程</option>';
-                        finalizeDir(dirSelect, item, currentDir, isUserAction, destInput, callback);
-                    });
-            } else if (company === 'nlb') {
-                // 新增大嶼山巴士路線搜尋
-                fetch('https://rt.data.gov.hk/v2/transport/nlb/route.php?action=list')
-                    .then(function(res) { return res.json(); })
-                    .then(function(data) {
-                        var html = '';
-                        if (data && data.routes) {
-                            var matches = data.routes.filter(function(r) { return r.routeNo.toUpperCase() === route; });
-                            if (matches.length > 0) {
-                                matches.forEach(function(m) {
-                                    var destName = m.routeName_c; // e.g., "東涌站 > 大澳"
-                                    var shortDest = destName.split('>').pop().trim();
-                                    html += '<option value="' + m.routeId + '">往 ' + shortDest + ' (' + destName + ')</option>';
-                                });
-                            } else {
-                                html = '<option value="">找不到此路線</option>';
-                            }
-                        }
-                        dirSelect.innerHTML = html;
-                        finalizeDir(dirSelect, item, currentDir, isUserAction, destInput, callback);
-                    }).catch(function(e) {
-                        dirSelect.innerHTML = '<option value="">載入失敗</option>';
-                        finalizeDir(dirSelect, item, currentDir, isUserAction, destInput, callback);
-                    });
+            if (
+                bus.company === 'kmb' ||
+                bus.company === 'lwb'
+            ) {
+                getKMBSeta(
+                    bus.route,
+                    bus.stop,
+                    busDir,
+                    processEtas
+                );
+            } else if (
+                bus.company === 'ctb'
+            ) {
+                getCTBETA(
+                    bus.route,
+                    bus.stop,
+                    busDir,
+                    processEtas
+                );
+            } else if (
+                bus.company === 'nlb'
+            ) {
+                var nlbRouteId =
+                    bus.nlb_route_id ||
+                    bus.dir;
+                getNLBETA(
+                    nlbRouteId,
+                    bus.stop,
+                    processEtas
+                );
             } else {
-                dirSelect.innerHTML = '<option value="outbound">往 去程</option><option value="inbound">往 回程</option>';
-                finalizeDir(dirSelect, item, currentDir, isUserAction, destInput, callback);
+                processEtas([]);
             }
+        };
+    for (
+        var i = 0;
+        i < currentBuses.length;
+        i++
+    ) {
+        loopFn(i);
+    }
+}
+/* =========================================================
+   設定視窗
+========================================================= */
+function openSettings() {
+    loadBusConfigs();
+    var startEl =
+        document.getElementById(
+            'night-start-time'
+        );
+    var endEl =
+        document.getElementById(
+            'night-end-time'
+        );
+    if (startEl) {
+        startEl.value =
+            localStorage.getItem(
+                'night_mode_start'
+            ) ||
+            '20:00';
+    }
+    if (endEl) {
+        endEl.value =
+            localStorage.getItem(
+                'night_mode_end'
+            ) ||
+            '05:00';
+    }
+    renderSettingsList();
+    var modal =
+        document.getElementById(
+            'settings-modal'
+        );
+    if (modal) {
+        modal.classList.add(
+            'active'
+        );
+    }
+}
+function closeSettings() {
+    var modal =
+        document.getElementById(
+            'settings-modal'
+        );
+    if (modal) {
+        modal.classList.remove(
+            'active'
+        );
+    }
+}
+/* =========================================================
+   路線設定列表
+========================================================= */
+function renderSettingsList() {
+    var container =
+        document.getElementById(
+            'config-list'
+        );
+    if (!container) {
+        return;
+    }
+    container.innerHTML = '';
+    function generateOffsetOptions(
+        selectedVal
+    ) {
+        var options = '';
+        for (
+            var sec = -180;
+            sec <= 180;
+            sec += 30
+        ) {
+            var val =
+                sec / 60;
+            var label =
+                val === 0
+                ?
+                '無微調 (0分)'
+                :
+                (
+                    val > 0
+                    ?
+                    '+' +
+                    val +
+                    ' 分鐘 (+' +
+                    sec +
+                    '秒)'
+                    :
+                    val +
+                    ' 分鐘 (' +
+                    sec +
+                    '秒)'
+                );
+            var selected =
+                parseFloat(
+                    selectedVal
+                ) === val
+                ?
+                'selected'
+                :
+                '';
+            options +=
+                '<option value="' +
+                val +
+                '" ' +
+                selected +
+                '>' +
+                label +
+                '</option>';
         }
-
-        function finalizeDir(dirSelect, item, currentDir, isUserAction, destInput, callback) {
-            // 嘗試設定成已儲存的方向 (若存在的話)
-            var hasMatch = Array.from(dirSelect.options).some(opt => opt.value === currentDir);
-            
-            if (!isUserAction && currentDir && hasMatch) {
-                dirSelect.value = currentDir;
+        return options;
+    }
+    for (
+        var i = 0;
+        i < currentBuses.length;
+        i++
+    ) {
+        var bus =
+            currentBuses[i];
+        var busDir =
+            bus.dir ||
+            'outbound';
+        var busOffset =
+            bus.offset !== undefined
+            ? bus.offset
+            : 0;
+        var itemHtml =
+            '<div class="config-item" ' +
+            'data-index="' +
+            i +
+            '" ' +
+            'data-current-stop="' +
+            escapeHtml(
+                bus.stop || ''
+            ) +
+            '" ' +
+            'data-current-dir="' +
+            escapeHtml(
+                busDir
+            ) +
+            '">' +
+            '<div class="config-row">' +
+            '<select class="config-select bus-company" ' +
+            'onchange="onCompanyChanged(' +
+            i +
+            ')">' +
+            '<option value="kmb" ' +
+            (
+                bus.company === 'kmb'
+                ? 'selected'
+                : ''
+            ) +
+            '>九巴 (KMB)</option>' +
+            '<option value="lwb" ' +
+            (
+                bus.company === 'lwb'
+                ? 'selected'
+                : ''
+            ) +
+            '>龍運 (LWB)</option>' +
+            '<option value="ctb" ' +
+            (
+                bus.company === 'ctb'
+                ? 'selected'
+                : ''
+            ) +
+            '>城巴 (CTB)</option>' +
+            '<option value="nlb" ' +
+            (
+                bus.company === 'nlb'
+                ? 'selected'
+                : ''
+            ) +
+            '>新大嶼山巴士 (NLB)</option>' +
+            '</select>' +
+            '<div class="config-route-container">' +
+            renderRouteControl(
+                bus.company,
+                bus.route,
+                i
+            ) +
+            '</div>' +
+            '<select class="config-select bus-dir" ' +
+            'onchange="onDirectionChanged(' +
+            i +
+            ')">' +
+            '<option value="' +
+            escapeHtml(busDir) +
+            '" selected>' +
+            '方向載入中...' +
+            '</option>' +
+            '</select>' +
+            '<button class="delete-btn" ' +
+            'onclick="deleteBusConfig(' +
+            i +
+            ')">' +
+            '刪除' +
+            '</button>' +
+            '</div>' +
+            '<div class="config-row">' +
+            '<select class="config-select bus-stop" ' +
+            'onchange="handleStopChange(' +
+            i +
+            ')">' +
+            '<option value="' +
+            escapeHtml(
+                bus.stop || ''
+            ) +
+            '" selected>' +
+            (
+                bus.stop
+                ?
+                '已選代碼: ' +
+                escapeHtml(
+                    bus.stop
+                )
+                :
+                '請選擇車站...'
+            ) +
+            '</option>' +
+            '</select>' +
+            '<input type="text" ' +
+            'class="config-input bus-origin" ' +
+            'placeholder="起點站名" ' +
+            'value="' +
+            escapeHtml(
+                bus.origin_name || ''
+            ) +
+            '">' +
+            '<input type="text" ' +
+            'class="config-input bus-dest" ' +
+            'placeholder="目的地" ' +
+            'value="' +
+            escapeHtml(
+                bus.dest_name || ''
+            ) +
+            '">' +
+            '<select class="config-select bus-offset" ' +
+            'title="時間微調">' +
+            generateOffsetOptions(
+                busOffset
+            ) +
+            '</select>' +
+            '</div>' +
+            '</div>';
+        container.innerHTML +=
+            itemHtml;
+        loadStopOptions(
+            i,
+            false
+        );
+        updateDirectionOptions(
+            i,
+            false,
+            null
+        );
+    }
+}
+/* =========================================================
+   路線輸入
+========================================================= */
+function renderRouteControl(
+    company,
+    currentRoute,
+    index
+) {
+    return (
+        '<input type="text" ' +
+        'class="config-input bus-route" ' +
+        'placeholder="' +
+        (
+            company === 'nlb'
+            ?
+            '路線 (例: 3M、11、B6)'
+            :
+            '路線 (例: E33)'
+        ) +
+        '" ' +
+        'value="' +
+        escapeHtml(
+            currentRoute || ''
+        ) +
+        '" ' +
+        'onchange="onBusMetaChanged(' +
+        index +
+        ')">'
+    );
+}
+/* =========================================================
+   同步設定
+========================================================= */
+function syncConfigItemToBus(index) {
+    var items =
+        document.querySelectorAll(
+            '.config-item'
+        );
+    var item =
+        items[index];
+    if (!item) {
+        return;
+    }
+    if (!currentBuses[index]) {
+        currentBuses[index] = {
+            company:'kmb',
+            route:'',
+            dir:'outbound',
+            stop:'',
+            origin_name:'',
+            dest_name:'',
+            offset:0
+        };
+    }
+    var companyEl =
+        item.querySelector(
+            '.bus-company'
+        );
+    var routeEl =
+        item.querySelector(
+            '.bus-route'
+        );
+    var dirEl =
+        item.querySelector(
+            '.bus-dir'
+        );
+    var stopEl =
+        item.querySelector(
+            '.bus-stop'
+        );
+    var originEl =
+        item.querySelector(
+            '.bus-origin'
+        );
+    var destEl =
+        item.querySelector(
+            '.bus-dest'
+        );
+    var offsetEl =
+        item.querySelector(
+            '.bus-offset'
+        );
+    if (companyEl) {
+        currentBuses[index].company =
+            companyEl.value;
+    }
+    if (routeEl) {
+        currentBuses[index].route =
+            routeEl.value
+            .trim()
+            .toUpperCase();
+    }
+    if (dirEl) {
+        currentBuses[index].dir =
+            dirEl.value ||
+            'outbound';
+    }
+    if (
+        stopEl &&
+        stopEl.value
+    ) {
+        currentBuses[index].stop =
+            stopEl.value;
+    }
+    if (originEl) {
+        currentBuses[index].origin_name =
+            originEl.value.trim();
+    }
+    if (destEl) {
+        currentBuses[index].dest_name =
+            destEl.value.trim();
+    }
+    if (offsetEl) {
+        currentBuses[index].offset =
+            parseFloat(
+                offsetEl.value ||
+                0
+            );
+    }
+    if (
+        currentBuses[index].company ===
+        'nlb'
+    ) {
+        currentBuses[index].nlb_route_id =
+            currentBuses[index].dir;
+    }
+}
+/* =========================================================
+   公司改變
+========================================================= */
+function onCompanyChanged(index) {
+    syncConfigItemToBus(index);
+    var items =
+        document.querySelectorAll(
+            '.config-item'
+        );
+    var item =
+        items[index];
+    if (!item) {
+        return;
+    }
+    var company =
+        item.querySelector(
+            '.bus-company'
+        ).value;
+    var routeContainer =
+        item.querySelector(
+            '.config-route-container'
+        );
+    currentBuses[index].company =
+        company;
+    currentBuses[index].route =
+        '';
+    currentBuses[index].dir =
+        'outbound';
+    currentBuses[index].stop =
+        '';
+    currentBuses[index].origin_name =
+        '';
+    currentBuses[index].dest_name =
+        '';
+    item.setAttribute(
+        'data-current-dir',
+        'outbound'
+    );
+    item.setAttribute(
+        'data-current-stop',
+        ''
+    );
+    routeContainer.innerHTML =
+        renderRouteControl(
+            company,
+            '',
+            index
+        );
+    onBusMetaChanged(index);
+}
+/* =========================================================
+   路線改變
+========================================================= */
+function onBusMetaChanged(index) {
+    syncConfigItemToBus(index);
+    updateDirectionOptions(
+        index,
+        true,
+        function() {
+            syncConfigItemToBus(
+                index
+            );
+            loadStopOptions(
+                index,
+                true
+            );
+        }
+    );
+}
+/* =========================================================
+   方向改變
+========================================================= */
+function onDirectionChanged(index) {
+    var items =
+        document.querySelectorAll(
+            '.config-item'
+        );
+    var item =
+        items[index];
+    if (!item) {
+        return;
+    }
+    var dirSelect =
+        item.querySelector(
+            '.bus-dir'
+        );
+    var destInput =
+        item.querySelector(
+            '.bus-dest'
+        );
+    var newDir =
+        dirSelect.value;
+    currentBuses[index].dir =
+        newDir;
+    currentBuses[index].stop =
+        '';
+    item.setAttribute(
+        'data-current-dir',
+        newDir
+    );
+    item.setAttribute(
+        'data-current-stop',
+        ''
+    );
+    var selectedOpt =
+        dirSelect.options[
+            dirSelect.selectedIndex
+        ];
+    if (
+        selectedOpt &&
+        selectedOpt.text &&
+        destInput
+    ) {
+        destInput.value =
+            selectedOpt.text;
+        currentBuses[index].dest_name =
+            selectedOpt.text;
+    }
+    if (
+        currentBuses[index].company ===
+        'nlb'
+    ) {
+        currentBuses[index].nlb_route_id =
+            newDir;
+    }
+    loadStopOptions(
+        index,
+        false
+    );
+}
+/* =========================================================
+   方向選項
+========================================================= */
+function updateDirectionOptions(
+    index,
+    isUserAction,
+    callback
+) {
+    var items =
+        document.querySelectorAll(
+            '.config-item'
+        );
+    var item =
+        items[index];
+    if (!item) {
+        if (callback) {
+            callback();
+        }
+        return;
+    }
+    var company =
+        item.querySelector(
+            '.bus-company'
+        ).value;
+    var routeInput =
+        item.querySelector(
+            '.bus-route'
+        );
+    var route =
+        routeInput.value
+        .trim()
+        .toUpperCase();
+    var dirSelect =
+        item.querySelector(
+            '.bus-dir'
+        );
+    var currentDir =
+        item.getAttribute(
+            'data-current-dir'
+        ) ||
+        currentBuses[index].dir ||
+        'outbound';
+    var destInput =
+        item.querySelector(
+            '.bus-dest'
+        );
+    if (!route) {
+        dirSelect.innerHTML =
+            '<option value="outbound">' +
+            '請先輸入路線...' +
+            '</option>';
+        if (callback) {
+            callback();
+        }
+        return;
+    }
+    dirSelect.innerHTML =
+        '<option value="' +
+        escapeHtml(currentDir) +
+        '">' +
+        '方向載入中...' +
+        '</option>';
+    /* -----------------------------------------------------
+       KMB / LWB
+    ----------------------------------------------------- */
+    if (
+        company === 'kmb' ||
+        company === 'lwb'
+    ) {
+        var destO = '';
+        var destI = '';
+        fetch(
+            'https://data.etabus.gov.hk/v1/transport/kmb/route/' +
+            route +
+            '/outbound/1'
+        )
+        .then(function(res) {
+            return res.json();
+        })
+        .then(function(d) {
+            if (
+                d &&
+                d.data &&
+                d.data.dest_tc
+            ) {
+                destO =
+                    d.data.dest_tc;
+            }
+            return fetch(
+                'https://data.etabus.gov.hk/v1/transport/kmb/route/' +
+                route +
+                '/inbound/1'
+            );
+        })
+        .then(function(res) {
+            return res.json();
+        })
+        .then(function(d) {
+            if (
+                d &&
+                d.data &&
+                d.data.dest_tc
+            ) {
+                destI =
+                    d.data.dest_tc;
+            }
+            var html =
+                '<option value="outbound">' +
+                '往 ' +
+                escapeHtml(
+                    destO ||
+                    '去程終點'
+                ) +
+                '</option>' +
+                '<option value="inbound">' +
+                '往 ' +
+                escapeHtml(
+                    destI ||
+                    '回程終點'
+                ) +
+                '</option>';
+            dirSelect.innerHTML =
+                html;
+            finalizeDir(
+                dirSelect,
+                item,
+                currentDir,
+                isUserAction,
+                destInput,
+                callback
+            );
+        })
+        .catch(function() {
+            dirSelect.innerHTML =
+                '<option value="outbound">往 去程</option>' +
+                '<option value="inbound">往 回程</option>';
+            finalizeDir(
+                dirSelect,
+                item,
+                currentDir,
+                isUserAction,
+                destInput,
+                callback
+            );
+        });
+    /* -----------------------------------------------------
+       CTB
+    ----------------------------------------------------- */
+    } else if (
+        company === 'ctb'
+    ) {
+        fetch(
+            'https://rt.data.gov.hk/v2/transport/citybus/route/CTB/' +
+            route
+        )
+        .then(function(res) {
+            return res.json();
+        })
+        .then(function(data) {
+            var html = '';
+            if (
+                data &&
+                data.data
+            ) {
+                var destO =
+                    data.data.dest_tc ||
+                    '去程終點';
+                var destI =
+                    data.data.orig_tc ||
+                    '回程終點';
+                html =
+                    '<option value="outbound">' +
+                    '往 ' +
+                    escapeHtml(
+                        destO
+                    ) +
+                    '</option>' +
+                    '<option value="inbound">' +
+                    '往 ' +
+                    escapeHtml(
+                        destI
+                    ) +
+                    '</option>';
             } else {
-                dirSelect.selectedIndex = 0;
-                item.setAttribute('data-current-dir', dirSelect.value);
+                html =
+                    '<option value="outbound">往 去程</option>' +
+                    '<option value="inbound">往 回程</option>';
             }
-            if (isUserAction && dirSelect.options[dirSelect.selectedIndex]) {
-                var destClean = dirSelect.options[dirSelect.selectedIndex].text.replace(/ \(.+\)$/, '');
-                destInput.value = destClean;
-            }
-            if (callback) callback();
-        }
-
-        function loadStopOptions(index, isUserAction) {
-            var items = document.querySelectorAll('.config-item');
-            var item = items[index];
-            if (!item) return;
-
-            updateDirectionOptions(index, isUserAction, function() {
-                var company = item.querySelector('.bus-company').value;
-                var route = item.querySelector('.bus-route').value.trim().toUpperCase();
-                var dirSelect = item.querySelector('.bus-dir');
-                var dir = dirSelect.value || 'outbound';
-                item.setAttribute('data-current-dir', dir);
-
-                var stopSelect = item.querySelector('.bus-stop');
-                var originInput = item.querySelector('.bus-origin');
-
-                if (!route) {
-                    stopSelect.innerHTML = '<option value="">請先輸入路線...</option>';
+            dirSelect.innerHTML =
+                html;
+            finalizeDir(
+                dirSelect,
+                item,
+                currentDir,
+                isUserAction,
+                destInput,
+                callback
+            );
+        })
+        .catch(function() {
+            dirSelect.innerHTML =
+                '<option value="outbound">往 去程</option>' +
+                '<option value="inbound">往 回程</option>';
+            finalizeDir(
+                dirSelect,
+                item,
+                currentDir,
+                isUserAction,
+                destInput,
+                callback
+            );
+        });
+    /* -----------------------------------------------------
+       NLB
+    ----------------------------------------------------- */
+    } else if (
+        company === 'nlb'
+    ) {
+        getNLBRouteList(
+            function(routes) {
+                var matched = [];
+                for (
+                    var i = 0;
+                    i < routes.length;
+                    i++
+                ) {
+                    var routeNo =
+                        routes[i].routeNo;
+                    if (
+                        String(routeNo)
+                        .toUpperCase() ===
+                        route.toUpperCase()
+                    ) {
+                        matched.push(
+                            routes[i]
+                        );
+                    }
+                }
+                if (
+                    matched.length === 0
+                ) {
+                    dirSelect.innerHTML =
+                        '<option value="">' +
+                        '找不到 NLB 路線' +
+                        '</option>';
+                    if (callback) {
+                        callback();
+                    }
                     return;
                 }
-
-                var initialStop = item.getAttribute('data-current-stop') || '';
-                stopSelect.innerHTML = '<option value="' + initialStop + '">載入車站中...</option>';
-                var optionsHtml = '<option value="">請選擇車站...</option>';
-
-                if (company === 'kmb' || company === 'lwb') {
-                    var dirCode = dir === 'inbound' ? 'inbound' : 'outbound';
-                    fetch('https://data.etabus.gov.hk/v1/transport/kmb/route-stop/' + route + '/' + dirCode + '/1')
-                        .then(function(res) { return res.json(); })
-                        .then(function(data) {
-                            if (!data.data || data.data.length === 0) {
-                                return fetch('https://data.etabus.gov.hk/v1/transport/kmb/route-stop/' + route + '/' + dirCode + '/2')
-                                    .then(function(r) { return r.json(); });
-                            }
-                            return data;
-                        })
-                        .then(function(data) {
-                            if (data && data.data && data.data.length > 0) {
-                                getKmbStopsMap(function(stopMap) {
-                                    for (var i = 0; i < data.data.length; i++) {
-                                        var sId = data.data[i].stop;
-                                        var name = stopMap[sId] || sId;
-                                        optionsHtml += '<option value="' + sId + '">' + (i + 1) + '. ' + name + '</option>';
-                                    }
-                                    stopSelect.innerHTML = optionsHtml;
-                                    applyStopSelection(item, stopSelect, initialStop, isUserAction, originInput);
-                                });
-                            } else {
-                                stopSelect.innerHTML = '<option value="">找不到該路線或方向</option>';
-                            }
-                        })
-                        .catch(function(e) {
-                            stopSelect.innerHTML = '<option value="">載入失敗</option>';
-                        });
-                } else if (company === 'ctb') {
-                    var ctbDir = dir === 'inbound' ? 'inbound' : 'outbound';
-                    fetch('https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/' + route + '/' + ctbDir)
-                        .then(function(res) { return res.json(); })
-                        .then(function(data) {
-                            if (data && data.data && data.data.length > 0) {
-                                var stops = data.data;
-                                var stopNames = new Array(stops.length);
-
-                                var fetchStopName = function(idx) {
-                                    if (idx >= stops.length) {
-                                        for (var j = 0; j < stops.length; j++) {
-                                            var sId = stops[j].stop;
-                                            var name = stopNames[j] || ('代碼: ' + sId);
-                                            optionsHtml += '<option value="' + sId + '">' + (j + 1) + '. ' + name + '</option>';
-                                        }
-                                        stopSelect.innerHTML = optionsHtml;
-                                        applyStopSelection(item, stopSelect, initialStop, isUserAction, originInput);
-                                        return;
-                                    }
-                                    var sId = stops[idx].stop;
-                                    if (ctbStopsCache[sId]) {
-                                        stopNames[idx] = ctbStopsCache[sId];
-                                        fetchStopName(idx + 1);
-                                    } else {
-                                        fetch('https://rt.data.gov.hk/v2/transport/citybus/stop/' + sId)
-                                            .then(function(r) { return r.json(); })
-                                            .then(function(d) {
-                                                if (d && d.data && d.data.name_tc) {
-                                                    ctbStopsCache[sId] = d.data.name_tc;
-                                                    stopNames[idx] = d.data.name_tc;
-                                                } else {
-                                                    stopNames[idx] = sId;
-                                                }
-                                                fetchStopName(idx + 1);
-                                            })
-                                            .catch(function(e) {
-                                                stopNames[idx] = sId;
-                                                fetchStopName(idx + 1);
-                                            });
-                                    }
-                                };
-                                fetchStopName(0);
-                            } else {
-                                stopSelect.innerHTML = '<option value="">找不到該路線或方向</option>';
-                            }
-                        })
-                        .catch(function(e) {
-                            stopSelect.innerHTML = '<option value="">載入失敗</option>';
-                        });
-                } else if (company === 'nlb') {
-                    // 新增大嶼山巴士車站載入 (NLB 的方向 dir 實際上存的是 routeId)
-                    var nlbRouteId = dir; 
-                    if (!nlbRouteId || nlbRouteId === 'outbound' || nlbRouteId === 'inbound') {
-                        stopSelect.innerHTML = '<option value="">請重新選擇方向</option>';
-                        return;
+                var html = '';
+                for (
+                    var j = 0;
+                    j < matched.length;
+                    j++
+                ) {
+                    var r =
+                        matched[j];
+                    var routeId =
+                        r.routeId;
+                    var routeName =
+                        r.routeName_c ||
+                        r.routeName_tc ||
+                        r.routeName_e ||
+                        '';
+                    html +=
+                        '<option value="' +
+                        escapeHtml(routeId) +
+                        '">' +
+                        '往 ' +
+                        escapeHtml(
+                            routeName
+                        ) +
+                        '</option>';
+                }
+                dirSelect.innerHTML =
+                    html;
+                finalizeDir(
+                    dirSelect,
+                    item,
+                    currentDir,
+                    isUserAction,
+                    destInput,
+                    callback
+                );
+            }
+        );
+    }
+}
+/* =========================================================
+   完成方向設定
+========================================================= */
+function finalizeDir(
+    dirSelect,
+    item,
+    currentDir,
+    isUserAction,
+    destInput,
+    callback
+) {
+    if (
+        !isUserAction &&
+        currentDir
+    ) {
+        for (
+            var k = 0;
+            k < dirSelect.options.length;
+            k++
+        ) {
+            if (
+                String(
+                    dirSelect.options[k].value
+                ) ===
+                String(currentDir)
+            ) {
+                dirSelect.selectedIndex =
+                    k;
+                break;
+            }
+        }
+    }
+    item.setAttribute(
+        'data-current-dir',
+        dirSelect.value
+    );
+    var index =
+        parseInt(
+            item.getAttribute(
+                'data-index'
+            ),
+            10
+        );
+    if (
+        !isNaN(index) &&
+        currentBuses[index]
+    ) {
+        currentBuses[index].dir =
+            dirSelect.value;
+        if (
+            currentBuses[index].company ===
+            'nlb'
+        ) {
+            currentBuses[index].nlb_route_id =
+                dirSelect.value;
+        }
+    }
+    if (
+        isUserAction &&
+        dirSelect.options[
+            dirSelect.selectedIndex
+        ]
+    ) {
+        destInput.value =
+            dirSelect.options[
+                dirSelect.selectedIndex
+            ].text;
+    }
+    if (callback) {
+        callback();
+    }
+}
+/* =========================================================
+   車站
+========================================================= */
+function loadStopOptions(
+    index,
+    resetStop
+) {
+    var items =
+        document.querySelectorAll(
+            '.config-item'
+        );
+    var item =
+        items[index];
+    if (!item) {
+        return;
+    }
+    var company =
+        item.querySelector(
+            '.bus-company'
+        ).value;
+    var route =
+        item.querySelector(
+            '.bus-route'
+        ).value
+        .trim()
+        .toUpperCase();
+    var dirSelect =
+        item.querySelector(
+            '.bus-dir'
+        );
+    var dir =
+        dirSelect.value;
+    var stopSelect =
+        item.querySelector(
+            '.bus-stop'
+        );
+    var currentStop =
+        resetStop
+        ?
+        ''
+        :
+        (
+            currentBuses[index]
+            ?
+            currentBuses[index].stop
+            :
+            item.getAttribute(
+                'data-current-stop'
+            )
+        );
+    if (
+        !route ||
+        !dir
+    ) {
+        stopSelect.innerHTML =
+            '<option value="">' +
+            '請先選擇方向...' +
+            '</option>';
+        return;
+    }
+    stopSelect.innerHTML =
+        '<option value="">' +
+        '車站載入中...' +
+        '</option>';
+    /* -----------------------------------------------------
+       KMB / LWB
+    ----------------------------------------------------- */
+    if (
+        company === 'kmb' ||
+        company === 'lwb'
+    ) {
+        var kmbDir =
+            dir === 'inbound'
+            ? 'inbound'
+            : 'outbound';
+        getKmbStopsMap(
+            function(stopsMap) {
+                fetch(
+                    'https://data.etabus.gov.hk/v1/transport/kmb/route-stop/' +
+                    route +
+                    '/' +
+                    kmbDir +
+                    '/1'
+                )
+                .then(function(res) {
+                    return res.json();
+                })
+                .then(function(data) {
+                    var list =
+                        data.data || [];
+                    var html =
+                        '<option value="">' +
+                        '請選擇車站...' +
+                        '</option>';
+                    for (
+                        var i = 0;
+                        i < list.length;
+                        i++
+                    ) {
+                        var code =
+                            list[i].stop;
+                        var name =
+                            stopsMap[code] ||
+                            (
+                                '車站 ' +
+                                code
+                            );
+                        var selected =
+                            code ===
+                            currentStop
+                            ?
+                            'selected'
+                            :
+                            '';
+                        html +=
+                            '<option value="' +
+                            escapeHtml(code) +
+                            '" ' +
+                            selected +
+                            '>' +
+                            (i + 1) +
+                            '. ' +
+                            escapeHtml(name) +
+                            '</option>';
                     }
-                    fetch('https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=list&routeId=' + nlbRouteId)
-                        .then(function(res) { return res.json(); })
-                        .then(function(data) {
-                            if (data && data.stops && data.stops.length > 0) {
-                                for(var i=0; i<data.stops.length; i++) {
-                                    var s = data.stops[i];
-                                    optionsHtml += '<option value="' + s.stopId + '">' + (i+1) + '. ' + s.stopName_c + '</option>';
-                                }
-                                stopSelect.innerHTML = optionsHtml;
-                                applyStopSelection(item, stopSelect, initialStop, isUserAction, originInput);
-                            } else {
-                                stopSelect.innerHTML = '<option value="">找不到車站</option>';
-                            }
-                        })
-                        .catch(function(e) {
-                            stopSelect.innerHTML = '<option value="">載入失敗</option>';
-                        });
-                }
-            });
-        }
-
-        function applyStopSelection(item, stopSelect, initialStop, isUserAction, originInput) {
-            if (!isUserAction && initialStop) {
-                stopSelect.value = initialStop;
-            } else if (isUserAction) {
-                if (originInput) originInput.value = '';
-                item.setAttribute('data-current-stop', '');
+                    stopSelect.innerHTML =
+                        html;
+                    if (
+                        currentStop &&
+                        currentBuses[index]
+                    ) {
+                        currentBuses[index].stop =
+                            currentStop;
+                    }
+                })
+                .catch(function() {
+                    if (currentStop) {
+                        stopSelect.innerHTML =
+                            '<option value="' +
+                            escapeHtml(
+                                currentStop
+                            ) +
+                            '" selected>' +
+                            '已選代碼: ' +
+                            escapeHtml(
+                                currentStop
+                            ) +
+                            '</option>';
+                    } else {
+                        stopSelect.innerHTML =
+                            '<option value="">' +
+                            '載入車站失敗' +
+                            '</option>';
+                    }
+                });
             }
-        }
-
-        function handleStopChange(index) {
-            var items = document.querySelectorAll('.config-item');
-            var item = items[index];
-            if (!item) return;
-
-            var stopSelect = item.querySelector('.bus-stop');
-            var originInput = item.querySelector('.bus-origin');
-            var selectedOption = stopSelect.options[stopSelect.selectedIndex];
-            
-            if (selectedOption && selectedOption.value) {
-                if (originInput) originInput.value = selectedOption.text.replace(/^\d+\.\s*/, '').replace(/\s*\([A-Z0-9]+\)$/, '');
+        );
+    /* -----------------------------------------------------
+       CTB
+    ----------------------------------------------------- */
+    } else if (
+        company === 'ctb'
+    ) {
+        fetch(
+            'https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/' +
+            route +
+            '/' +
+            dir
+        )
+        .then(function(res) {
+            return res.json();
+        })
+        .then(function(data) {
+            var list =
+                data.data || [];
+            if (
+                list.length === 0
+            ) {
+                stopSelect.innerHTML =
+                    '<option value="">' +
+                    '無車站資料' +
+                    '</option>';
+                return;
+            }
+            var completedStops = 0;
+            var stopNames =
+                new Array(
+                    list.length
+                );
+            list.forEach(
+                function(sObj, idx) {
+                    fetch(
+                        'https://rt.data.gov.hk/v2/transport/citybus/stop/' +
+                        sObj.stop
+                    )
+                    .then(function(res) {
+                        return res.json();
+                    })
+                    .then(function(sData) {
+                        stopNames[idx] =
+                            sData.data
+                            ? sData.data.name_tc
+                            : sObj.stop;
+                        completedStops++;
+                        if (
+                            completedStops ===
+                            list.length
+                        ) {
+                            renderCTBStops();
+                        }
+                    })
+                    .catch(function() {
+                        stopNames[idx] =
+                            sObj.stop;
+                        completedStops++;
+                        if (
+                            completedStops ===
+                            list.length
+                        ) {
+                            renderCTBStops();
+                        }
+                    });
+                    function renderCTBStops() {
+                        var html =
+                            '<option value="">' +
+                            '請選擇車站...' +
+                            '</option>';
+                        for (
+                            var k = 0;
+                            k < list.length;
+                            k++
+                        ) {
+                            var code =
+                                list[k].stop;
+                            var name =
+                                stopNames[k];
+                            var selected =
+                                code ===
+                                currentStop
+                                ?
+                                'selected'
+                                :
+                                '';
+                            html +=
+                                '<option value="' +
+                                escapeHtml(code) +
+                                '" ' +
+                                selected +
+                                '>' +
+                                (k + 1) +
+                                '. ' +
+                                escapeHtml(name) +
+                                '</option>';
+                        }
+                        stopSelect.innerHTML =
+                            html;
+                    }
+                }
+            );
+        })
+        .catch(function() {
+            if (currentStop) {
+                stopSelect.innerHTML =
+                    '<option value="' +
+                    escapeHtml(
+                        currentStop
+                    ) +
+                    '" selected>' +
+                    '已選代碼: ' +
+                    escapeHtml(
+                        currentStop
+                    ) +
+                    '</option>';
             } else {
-                if (originInput) originInput.value = '';
+                stopSelect.innerHTML =
+                    '<option value="">' +
+                    '載入車站失敗' +
+                    '</option>';
             }
-            item.setAttribute('data-current-stop', selectedOption ? selectedOption.value : '');
-        }
-
-        function syncCurrentDOMToBuses() {
-            var items = document.querySelectorAll('.config-item');
-            var tempConfigs = [];
-            for (var i = 0; i < items.length; i++) {
-                var item = items[i];
-                var company = item.querySelector('.bus-company').value;
-                if (company === 'mtr') continue;
-                var route = item.querySelector('.bus-route').value.trim();
-                var dir = item.querySelector('.bus-dir').value;
-                var stop = item.querySelector('.bus-stop').value;
-                var origin_name = item.querySelector('.bus-origin').value.trim();
-                var dest_name = item.querySelector('.bus-dest').value.trim();
-                var offset = parseFloat(item.querySelector('.bus-offset').value);
-                tempConfigs.push({ company: company, route: route, dir: dir, stop: stop || '', origin_name: origin_name, dest_name: dest_name, offset: offset });
-            }
-            return tempConfigs;
-        }
-
-        function addNewBusConfig() {
-            currentBuses = syncCurrentDOMToBuses();
-            currentBuses.push({ company: "kmb", route: "", dir: "outbound", stop: "", origin_name: "", dest_name: "", offset: 0 });
-            renderSettingsList();
-        }
-
-        function deleteBusConfig(index) {
-            currentBuses = syncCurrentDOMToBuses();
-            currentBuses.splice(index, 1);
-            renderSettingsList();
-        }
-
-        function saveBusConfig() {
-            var startTime = document.getElementById('night-start-time').value;
-            var endTime = document.getElementById('night-end-time').value;
-            if (startTime) localStorage.setItem('night_mode_start', startTime);
-            if (endTime) localStorage.setItem('night_mode_end', endTime);
-
-            var items = document.querySelectorAll('.config-item');
-            var newConfigs = [];
-
-            for (var i = 0; i < items.length; i++) {
-                var item = items[i];
-                var company = item.querySelector('.bus-company').value;
-                if (company === 'mtr') continue;
-                var route = item.querySelector('.bus-route').value.trim();
-                var dir = item.querySelector('.bus-dir').value;
-                var stop = item.querySelector('.bus-stop').value;
-                var origin_name = item.querySelector('.bus-origin').value.trim();
-                var dest_name = item.querySelector('.bus-dest').value.trim();
-                var offset = parseFloat(item.querySelector('.bus-offset').value);
-
-                if (route) {
-                    newConfigs.push({ company: company, route: route, dir: dir, stop: stop || '', origin_name: origin_name, dest_name: dest_name, offset: offset });
+        });
+    /* -----------------------------------------------------
+       NLB
+    ----------------------------------------------------- */
+    } else if (
+        company === 'nlb'
+    ) {
+        getNLBStops(
+            dir,
+            function(stops) {
+                var html =
+                    '<option value="">' +
+                    '請選擇車站...' +
+                    '</option>';
+                for (
+                    var i = 0;
+                    i < stops.length;
+                    i++
+                ) {
+                    var code =
+                        stops[i].stopId;
+                    var name =
+                        stops[i].stopName_c ||
+                        stops[i].stopName_tc ||
+                        stops[i].stopName_e ||
+                        code;
+                    var selected =
+                        String(code) ===
+                        String(currentStop)
+                        ?
+                        'selected'
+                        :
+                        '';
+                    html +=
+                        '<option value="' +
+                        escapeHtml(code) +
+                        '" ' +
+                        selected +
+                        '>' +
+                        (i + 1) +
+                        '. ' +
+                        escapeHtml(name) +
+                        '</option>';
                 }
+                stopSelect.innerHTML =
+                    html;
             }
-
-            currentBuses = newConfigs;
-            localStorage.setItem('user_bus_configs_v14', JSON.stringify(currentBuses));
-            closeSettings();
-            
-            checkNightMode(new Date());
-            fetchBusData();
+        );
+    }
+}
+/* =========================================================
+   車站改變
+========================================================= */
+function handleStopChange(index) {
+    var items =
+        document.querySelectorAll(
+            '.config-item'
+        );
+    var item =
+        items[index];
+    if (!item) {
+        return;
+    }
+    var stopSelect =
+        item.querySelector(
+            '.bus-stop'
+        );
+    var selectedOpt =
+        stopSelect.options[
+            stopSelect.selectedIndex
+        ];
+    var originInput =
+        item.querySelector(
+            '.bus-origin'
+        );
+    var stopValue =
+        stopSelect.value;
+    if (!currentBuses[index]) {
+        currentBuses[index] = {};
+    }
+    currentBuses[index].stop =
+        stopValue;
+    item.setAttribute(
+        'data-current-stop',
+        stopValue
+    );
+    if (
+        selectedOpt &&
+        selectedOpt.value
+    ) {
+        var cleanName =
+            selectedOpt.text.replace(
+                /^\d+\.\s*/,
+                ''
+            );
+        originInput.value =
+            cleanName;
+        currentBuses[index].origin_name =
+            cleanName;
+    }
+}
+/* =========================================================
+   新增路線
+========================================================= */
+function addNewBusConfig() {
+    currentBuses.push({
+        company:'kmb',
+        route:'',
+        dir:'outbound',
+        stop:'',
+        origin_name:'',
+        dest_name:'',
+        offset:0,
+        nlb_route_id:''
+    });
+    renderSettingsList();
+}
+/* =========================================================
+   刪除路線
+========================================================= */
+function deleteBusConfig(index) {
+    if (
+        index < 0 ||
+        index >= currentBuses.length
+    ) {
+        return;
+    }
+    currentBuses.splice(
+        index,
+        1
+    );
+    renderSettingsList();
+}
+/* =========================================================
+   保存設定
+========================================================= */
+function saveBusConfig() {
+    var items =
+        document.querySelectorAll(
+            '.config-item'
+        );
+    for (
+        var i = 0;
+        i < items.length;
+        i++
+    ) {
+        syncConfigItemToBus(i);
+    }
+    var newConfigs = [];
+    for (
+        var j = 0;
+        j < currentBuses.length;
+        j++
+    ) {
+        var bus =
+            currentBuses[j];
+        if (!bus) {
+            continue;
         }
-    </script>
+        var route =
+            String(
+                bus.route || ''
+            )
+            .trim()
+            .toUpperCase();
+        var stop =
+            String(
+                bus.stop || ''
+            )
+            .trim();
+        if (
+            !route ||
+            !stop
+        ) {
+            continue;
+        }
+        var busObj = {
+            company:
+                bus.company ||
+                'kmb',
+            route:
+                route,
+            dir:
+                bus.dir ||
+                'outbound',
+            stop:
+                stop,
+            origin_name:
+                bus.origin_name ||
+                '',
+            dest_name:
+                bus.dest_name ||
+                '',
+            offset:
+                parseFloat(
+                    bus.offset ||
+                    0
+                )
+        };
+        if (
+            bus.company ===
+            'nlb'
+        ) {
+            busObj.nlb_route_id =
+                bus.nlb_route_id ||
+                bus.dir;
+        }
+        newConfigs.push(
+            busObj
+        );
+    }
+    currentBuses =
+        newConfigs.slice();
+    /* -----------------------------------------------------
+       夜間設定
+    ----------------------------------------------------- */
+    var startEl =
+        document.getElementById(
+            'night-start-time'
+        );
+    var endEl =
+        document.getElementById(
+            'night-end-time'
+        );
+    var startTime =
+        startEl
+        ? startEl.value
+        : '20:00';
+    var endTime =
+        endEl
+        ? endEl.value
+        : '05:00';
+    localStorage.setItem(
+        'night_mode_start',
+        startTime
+    );
+    localStorage.setItem(
+        'night_mode_end',
+        endTime
+    );
+    /* -----------------------------------------------------
+       保存全部路線
+    ----------------------------------------------------- */
+    localStorage.setItem(
+        'user_bus_configs_v15',
+        JSON.stringify(
+            currentBuses
+        )
+    );
+    closeSettings();
+    fetchBusData();
+}
+/* =========================================================
+   啟動
+========================================================= */
+loadBusConfigs();
+fetchWeatherData();
+fetchGovPressRelease();
+fetchBusData();
+/* =========================================================
+   定時更新
+========================================================= */
+setInterval(
+    fetchWeatherData,
+    60000
+);
+setInterval(
+    fetchGovPressRelease,
+    60000
+);
+setInterval(
+    fetchBusData,
+    30000
+);
+</script>
 </body>
 </html>
