@@ -640,7 +640,7 @@
                 </label>
             </div>
         </div>
-        <div class="hint-text">💡 當某路線無有效班次時，將顯示「無班次」。港鐵巴士請輸入路線號碼（例：K12、K51、K65、506），系統會自動載入方向與車站。若站名顯示為代碼，可手動修改「起點站名」。</div>
+        <div class="hint-text">💡 當某路線無有效班次時，將顯示「無班次」。港鐵巴士請輸入路線號碼（例：K12、K51、K65、506），系統會自動載入方向與車站。<b>站名會優先顯示中文名稱</b>；若仍顯示代號，可手動修改「起點站名」。</div>
         <div class="config-list" id="config-list"></div>
         <div class="modal-footer">
             <button class="action-btn add-btn" onclick="addNewBusConfig()">+ 新增路線</button>
@@ -770,62 +770,78 @@ function getKmbStopsMap(callback) {
         }).catch(function() { callback({}); });
 }
 
+function fetchMtrCsvWithProxy(url, callback) {
+    // 先嘗試直接抓取
+    fetch(url)
+        .then(function(res) {
+            if (!res.ok) throw new Error('direct fail');
+            return res.text();
+        })
+        .then(function(text) { callback(null, text); })
+        .catch(function() {
+            // 直接失敗 → 改用 allorigins 代理
+            var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+            fetch(proxyUrl)
+                .then(function(res) {
+                    if (!res.ok) throw new Error('proxy fail');
+                    return res.text();
+                })
+                .then(function(text) { callback(null, text); })
+                .catch(function(err) { callback(err, null); });
+        });
+}
+
 function getMtrStopsData(callback) {
     if (mtrStopsCache) {
         callback(mtrStopsCache, mtrRouteNamesCache);
         return;
     }
-    fetch('https://opendata.mtr.com.hk/data/mtr_bus_stops.csv')
-        .then(function(res) {
-            if (!res.ok) throw new Error('CSV blocked');
-            return res.text();
-        })
-        .then(function(csvText) {
-            mtrStopsCache = {};
-            var lines = csvText.split(/\r?\n/);
-            for (var i = 1; i < lines.length; i++) {
-                var line = lines[i].trim();
-                if (!line) continue;
-                var parts = line.split(',');
-                if (parts.length < 8) continue;
-                var routeId = parts[0].replace(/^\uFEFF/, '').trim();
-                var direction = parts[1].trim();
-                var seq = parseInt(parts[2], 10) || 0;
-                var stationId = parts[3].trim();
-                var nameChi = parts[6].trim();
-                if (!mtrStopsCache[routeId]) mtrStopsCache[routeId] = [];
-                mtrStopsCache[routeId].push({
-                    id: stationId,
-                    name: nameChi,
-                    dir: direction,
-                    seq: seq
-                });
-            }
-            return fetch('https://opendata.mtr.com.hk/data/mtr_bus_routes.csv');
-        })
-        .then(function(res) { return res && res.ok ? res.text() : Promise.resolve(''); })
-        .then(function(csvText) {
-            mtrRouteNamesCache = {};
-            if (csvText) {
-                var lines = csvText.split(/\r?\n/);
-                for (var i = 1; i < lines.length; i++) {
-                    var line = lines[i].trim();
-                    if (!line) continue;
-                    var parts = line.split(',');
-                    if (parts.length < 3) continue;
-                    var routeId = parts[0].replace(/^\uFEFF/, '').trim();
-                    var nameChi = parts[1].trim();
-                    if (!mtrRouteNamesCache[routeId]) mtrRouteNamesCache[routeId] = nameChi;
-                }
-            }
-            callback(mtrStopsCache, mtrRouteNamesCache);
-        })
-        .catch(function() {
-            console.warn('MTR CSV CORS blocked, will use ETA API fallback for stop list');
+    fetchMtrCsvWithProxy('https://opendata.mtr.com.hk/data/mtr_bus_stops.csv', function(err, csvText) {
+        if (err || !csvText) {
+            console.warn('MTR stops CSV failed, will use ETA API fallback');
             mtrStopsCache = mtrStopsCache || {};
             mtrRouteNamesCache = mtrRouteNamesCache || {};
             callback(mtrStopsCache, mtrRouteNamesCache);
+            return;
+        }
+        mtrStopsCache = {};
+        var lines = csvText.split(/\r?\n/);
+        for (var i = 1; i < lines.length; i++) {
+            var line = lines[i].trim();
+            if (!line) continue;
+            var parts = line.split(',');
+            if (parts.length < 8) continue;
+            var routeId = parts[0].replace(/^\uFEFF/, '').trim();
+            var direction = parts[1].trim();
+            var seq = parseInt(parts[2], 10) || 0;
+            var stationId = parts[3].trim();
+            var nameChi = parts[6].trim();
+            if (!mtrStopsCache[routeId]) mtrStopsCache[routeId] = [];
+            mtrStopsCache[routeId].push({
+                id: stationId,
+                name: nameChi,
+                dir: direction,
+                seq: seq
+            });
+        }
+        // 再載入路線名稱
+        fetchMtrCsvWithProxy('https://opendata.mtr.com.hk/data/mtr_bus_routes.csv', function(err2, routesText) {
+            mtrRouteNamesCache = {};
+            if (!err2 && routesText) {
+                var lines2 = routesText.split(/\r?\n/);
+                for (var j = 1; j < lines2.length; j++) {
+                    var line2 = lines2[j].trim();
+                    if (!line2) continue;
+                    var parts2 = line2.split(',');
+                    if (parts2.length < 3) continue;
+                    var routeId2 = parts2[0].replace(/^\uFEFF/, '').trim();
+                    var nameChi2 = parts2[1].trim();
+                    if (!mtrRouteNamesCache[routeId2]) mtrRouteNamesCache[routeId2] = nameChi2;
+                }
+            }
+            callback(mtrStopsCache, mtrRouteNamesCache);
         });
+    });
 }
 
 function getMtrStopsFromEta(route, callback) {
@@ -846,7 +862,7 @@ function getMtrStopsFromEta(route, callback) {
                 var dir = (id.indexOf('-U') !== -1) ? 'O' : (id.indexOf('-D') !== -1) ? 'I' : 'O';
                 stops.push({
                     id: id,
-                    name: id,
+                    name: id, // 後備時仍用代號，使用者可手動改起點站名
                     dir: dir,
                     seq: idx + 1
                 });
@@ -1100,7 +1116,6 @@ function getMTRBusETA(routeName, stopId, callback) {
                     var depSec = parseInt(b.departureTimeInSecond, 10);
                     var text = (b.arrivalTimeText || '').trim();
 
-                    // 108000 是官方佔位值，代表「沒有到站時間」，改用開出時間
                     if (isNaN(sec) || sec < 0 || sec >= 100000) {
                         if (!isNaN(depSec) && depSec >= 0) {
                             sec = depSec;
@@ -1351,7 +1366,7 @@ function renderSettingsList() {
                 '<div class="config-row">' +
                     '<select class="config-select bus-stop" onchange="handleStopChange(' + i + ')">' +
                         '<option value="' + escapeHtml(bus.stop || '') + '" selected>' +
-                            (bus.stop ? '已選代碼: ' + escapeHtml(bus.stop) : '請選擇車站...') +
+                            (bus.stop ? '已選車站: ' + escapeHtml(bus.origin_name || bus.stop) : '請選擇車站...') +
                         '</option>' +
                     '</select>' +
                     '<input type="text" class="config-input bus-origin" placeholder="起點站名" value="' + escapeHtml(bus.origin_name || '') + '">' +
@@ -1494,7 +1509,6 @@ function updateDirectionOptions(index, isUserAction, callback) {
         getMtrStopsData(function(stopsMap, routeNames) {
             var stops = stopsMap[route] || [];
             if (stops.length === 0) {
-                // CSV 失敗，用簡單方向選項，之後靠 ETA API 載入車站
                 dirSelect.innerHTML =
                     '<option value="O">往 ' + escapeHtml(route) + ' (去程)</option>' +
                     '<option value="I">往 ' + escapeHtml(route) + ' (回程)</option>';
@@ -1546,6 +1560,7 @@ function loadStopOptions(index, resetStop) {
     var route = item.querySelector('.bus-route').value.trim().toUpperCase();
     var dir = item.querySelector('.bus-dir').value;
     var stopSelect = item.querySelector('.bus-stop');
+    var originInput = item.querySelector('.bus-origin');
     var currentStop = resetStop ? '' : item.getAttribute('data-current-stop');
 
     if (!route || !dir) {
@@ -1570,6 +1585,11 @@ function loadStopOptions(index, resetStop) {
                         html += '<option value="' + escapeHtml(code) + '" ' + selected + '>' + (i + 1) + '. ' + escapeHtml(name) + '</option>';
                     }
                     stopSelect.innerHTML = html;
+                    // 若已有選中車站且 origin 空白，自動填入站名
+                    if (currentStop && originInput && !originInput.value.trim()) {
+                        var opt = stopSelect.querySelector('option[value="' + currentStop + '"]');
+                        if (opt) originInput.value = opt.text.replace(/^\d+\.\s*/, '');
+                    }
                 })
                 .catch(function() {
                     stopSelect.innerHTML = '<option value="">載入車站失敗</option>';
@@ -1601,6 +1621,10 @@ function loadStopOptions(index, resetStop) {
                                     html += '<option value="' + escapeHtml(code) + '" ' + selected + '>' + (k + 1) + '. ' + escapeHtml(name) + '</option>';
                                 }
                                 stopSelect.innerHTML = html;
+                                if (currentStop && originInput && !originInput.value.trim()) {
+                                    var opt = stopSelect.querySelector('option[value="' + currentStop + '"]');
+                                    if (opt) originInput.value = opt.text.replace(/^\d+\.\s*/, '');
+                                }
                             }
                         })
                         .catch(function() {
@@ -1624,6 +1648,10 @@ function loadStopOptions(index, resetStop) {
                 html += '<option value="' + escapeHtml(code) + '" ' + selected + '>' + (i + 1) + '. ' + escapeHtml(name) + '</option>';
             }
             stopSelect.innerHTML = html;
+            if (currentStop && originInput && !originInput.value.trim()) {
+                var opt = stopSelect.querySelector('option[value="' + currentStop + '"]');
+                if (opt) originInput.value = opt.text.replace(/^\d+\.\s*/, '');
+            }
         });
     } else if (company === 'mtr') {
         getMtrStopsData(function(stopsMap) {
@@ -1640,8 +1668,12 @@ function loadStopOptions(index, resetStop) {
                 }
                 if (filtered.length === 0) html = '<option value="">此方向無車站資料</option>';
                 stopSelect.innerHTML = html;
+                if (currentStop && originInput && !originInput.value.trim()) {
+                    var opt = stopSelect.querySelector('option[value="' + currentStop + '"]');
+                    if (opt) originInput.value = opt.text.replace(/^\d+\.\s*/, '');
+                }
             } else {
-                // CSV 失敗 → 用到站 API 後備
+                // CSV 失敗 → 用到站 API 後備（此時名稱仍為代號）
                 getMtrStopsFromEta(route, function(stops) {
                     var filtered = stops.filter(function(s) { return s.dir === dir; });
                     var html = '<option value="">請選擇車站...</option>';
@@ -1676,6 +1708,7 @@ function handleStopChange(index) {
     var originInput = item.querySelector('.bus-origin');
     item.setAttribute('data-current-stop', stopSelect.value);
     if (selectedOpt && selectedOpt.value) {
+        // 自動把站名（去掉前面的序號）填入「起點站名」
         originInput.value = selectedOpt.text.replace(/^\d+\.\s*/, '');
     }
 }
