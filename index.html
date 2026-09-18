@@ -649,7 +649,6 @@
     </div>
 </div>
 
-<script>
 var kmbStopsCacheMap = null;
 var nightWakeTimer = null;
 var isManuallyWoken = false;
@@ -658,64 +657,120 @@ var cachedRawEtas = {};
 var nlbRouteCache = null;
 var mtrStopsCache = null;
 var mtrRouteNamesCache = null;
+var mtrStopIdToName = {};   // 新增：STATION_ID → 中文站名對照表
 
-function applyDisplaySettings(clockScale, busScale, cardPadding) {
-    document.documentElement.style.setProperty('--clock-scale', clockScale || 1.0);
-    document.documentElement.style.setProperty('--bus-scale', busScale || 1.0);
-    document.documentElement.style.setProperty('--card-padding', (cardPadding || 10) + 'px');
+function getMtrStopsData(callback) {
+    if (mtrStopsCache) {
+        callback(mtrStopsCache, mtrRouteNamesCache);
+        return;
+    }
+
+    function parseStopsCsv(csvText) {
+        mtrStopsCache = {};
+        mtrStopIdToName = {};
+        var lines = csvText.split(/\r?\n/);
+        for (var i = 1; i < lines.length; i++) {
+            var line = lines[i].trim();
+            if (!line) continue;
+            var parts = line.split(',');
+            if (parts.length < 8) continue;
+            var routeId = parts[0].replace(/^\uFEFF/, '').trim();
+            var direction = parts[1].trim();
+            var seq = parseInt(parts[2], 10) || 0;
+            var stationId = parts[3].trim();
+            var nameChi = parts[6].trim();
+            if (!nameChi) continue;
+
+            // 建立全域 ID → 站名對照
+            mtrStopIdToName[stationId] = nameChi;
+
+            if (!mtrStopsCache[routeId]) mtrStopsCache[routeId] = [];
+            mtrStopsCache[routeId].push({
+                id: stationId,
+                name: nameChi,
+                dir: direction,
+                seq: seq
+            });
+        }
+    }
+
+    function parseRoutesCsv(csvText) {
+        mtrRouteNamesCache = {};
+        if (!csvText) return;
+        var lines = csvText.split(/\r?\n/);
+        for (var i = 1; i < lines.length; i++) {
+            var line = lines[i].trim();
+            if (!line) continue;
+            var parts = line.split(',');
+            if (parts.length < 3) continue;
+            var routeId = parts[0].replace(/^\uFEFF/, '').trim();
+            var nameChi = parts[1].trim();
+            if (!mtrRouteNamesCache[routeId]) mtrRouteNamesCache[routeId] = nameChi;
+        }
+    }
+
+    function tryFetch(url, isProxy) {
+        return fetch(url).then(function(res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.text();
+        });
+    }
+
+    // 先直接抓，失敗再走代理
+    tryFetch('https://opendata.mtr.com.hk/data/mtr_bus_stops.csv')
+        .catch(function() {
+            console.warn('MTR stops CSV direct failed, trying proxy…');
+            return tryFetch('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://opendata.mtr.com.hk/data/mtr_bus_stops.csv'));
+        })
+        .then(function(csvText) {
+            parseStopsCsv(csvText);
+            return tryFetch('https://opendata.mtr.com.hk/data/mtr_bus_routes.csv')
+                .catch(function() {
+                    return tryFetch('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://opendata.mtr.com.hk/data/mtr_bus_routes.csv'));
+                });
+        })
+        .then(function(csvText) {
+            parseRoutesCsv(csvText || '');
+            callback(mtrStopsCache, mtrRouteNamesCache);
+        })
+        .catch(function(err) {
+            console.warn('MTR CSV completely failed, will use ETA fallback', err);
+            mtrStopsCache = mtrStopsCache || {};
+            mtrRouteNamesCache = mtrRouteNamesCache || {};
+            callback(mtrStopsCache, mtrRouteNamesCache);
+        });
 }
 
-function loadDisplaySettings() {
-    var clockScale = localStorage.getItem('user_clock_scale') || localStorage.getItem('user_font_scale') || '1.0';
-    var busScale = localStorage.getItem('user_bus_scale') || localStorage.getItem('user_font_scale') || '1.0';
-    var cardPadding = localStorage.getItem('user_card_padding') || '10';
-    applyDisplaySettings(clockScale, busScale, cardPadding);
+function getMtrStopsFromEta(route, callback) {
+    fetch('https://rt.data.gov.hk/v1/transport/mtr/bus/getSchedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: 'zh', routeName: String(route).toUpperCase() })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        var stops = [];
+        if (data && data.busStop && Array.isArray(data.busStop)) {
+            var seen = {};
+            data.busStop.forEach(function(s, idx) {
+                var id = String(s.busStopId || '');
+                if (!id || seen[id]) return;
+                seen[id] = true;
+                var dir = (id.indexOf('-U') !== -1) ? 'O' : (id.indexOf('-D') !== -1) ? 'I' : 'O';
+                // 優先使用對照表的中文站名，否則才顯示代號
+                var name = mtrStopIdToName[id] || id;
+                stops.push({
+                    id: id,
+                    name: name,
+                    dir: dir,
+                    seq: idx + 1
+                });
+            });
+        }
+        callback(stops);
+    })
+    .catch(function() { callback([]); });
 }
-
-function updateClockScaleDisplay(val) {
-    document.getElementById('clock-scale-val').innerText = parseFloat(val).toFixed(2) + 'x';
-    applyDisplaySettings(val, document.getElementById('bus-scale-range').value, document.getElementById('card-height-range').value);
-}
-
-function updateBusScaleDisplay(val) {
-    document.getElementById('bus-scale-val').innerText = parseFloat(val).toFixed(2) + 'x';
-    applyDisplaySettings(document.getElementById('clock-scale-range').value, val, document.getElementById('card-height-range').value);
-}
-
-function updateCardHeightDisplay(val) {
-    document.getElementById('card-height-val').innerText = val + 'px';
-    applyDisplaySettings(document.getElementById('clock-scale-range').value, document.getElementById('bus-scale-range').value, val);
-}
-
-loadDisplaySettings();
-
-function fetchWeatherData() {
-    fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=tc')
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            if (!data) return;
-            if (data.temperature && data.temperature.data && data.temperature.data.length > 0) {
-                var tempText = data.temperature.data[0].value + '°C';
-                document.getElementById('weather-temp').innerText = tempText;
-                document.getElementById('night-weather-temp').innerText = tempText;
-            }
-            if (data.humidity && data.humidity.data && data.humidity.data.length > 0) {
-                var humText = '濕度 ' + data.humidity.data[0].value + '%';
-                document.getElementById('weather-humidity').innerText = humText;
-                document.getElementById('night-weather-humidity').innerText = humText;
-            }
-            if (data.icon && data.icon.length > 0) {
-                var iconUrl = 'https://www.hko.gov.hk/images/wxicon/pic' + String(data.icon[0]) + '.png';
-                var dayIcon = document.getElementById('weather-icon');
-                dayIcon.src = iconUrl;
-                dayIcon.style.display = 'block';
-                dayIcon.onerror = function() { this.style.display = 'none'; };
-                var nightIcon = document.getElementById('night-weather-icon');
-                nightIcon.src = iconUrl;
-                nightIcon.style.display = 'block';
-                nightIcon.onerror = function() { this.style.display = 'none'; };
-            }
-        }).catch(function() {});
 
     fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=tc')
         .then(function(res) { return res.json(); })
