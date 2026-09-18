@@ -1,132 +1,354 @@
-/* =========================================================
-   港鐵巴士 – 更穩健版本（解決 CORS / 找不到路線）
-   ========================================================= */
-var mtrStopsCache = null;      // { routeId: [ {id, name, dir, seq} ] }
-var mtrRouteNamesCache = null;
-var mtrScheduleCache = {};     // route -> last schedule response
-
-function fetchWithCorsFallback(url, options) {
-    options = options || {};
-    return fetch(url, options).then(function(res) {
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        return res;
-    }).catch(function() {
-        // CORS 失敗時用 allorigins 代理
-        var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
-        if (options.method === 'POST' && options.body) {
-            // POST 無法簡單走 raw proxy，改用 get 包裝（部分環境可用）
-            // 實際改用 corsproxy 或直接再試一次
-            return fetch('https://corsproxy.io/?' + encodeURIComponent(url), options);
-        }
-        return fetch(proxyUrl).then(function(res) {
-            if (!res.ok) throw new Error('proxy fail');
-            return res;
-        });
-    });
-}
-
-function getMtrStopsData(callback) {
-    if (mtrStopsCache) {
-        callback(mtrStopsCache, mtrRouteNamesCache || {});
-        return;
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>交通看板</title>
+<style>
+    :root {
+        --clock-scale: 1;
+        --bus-scale: 1;
+        --card-padding: 10px;
     }
-    var csvUrl = 'https://opendata.mtr.com.hk/data/mtr_bus_stops.csv';
-    fetchWithCorsFallback(csvUrl)
-        .then(function(res) { return res.text(); })
-        .then(function(csvText) {
-            mtrStopsCache = {};
-            var lines = csvText.split(/\r?\n/);
-            for (var i = 1; i < lines.length; i++) {
-                var line = lines[i].trim();
-                if (!line) continue;
-                var parts = line.split(',');
-                if (parts.length < 8) continue;
-                var routeId = parts[0].replace(/^\uFEFF/, '').trim();
-                var direction = parts[1].trim();
-                var seq = parseInt(parts[2], 10) || 0;
-                var stationId = parts[3].trim();
-                var nameChi = parts[6].trim();
-                if (!mtrStopsCache[routeId]) mtrStopsCache[routeId] = [];
-                mtrStopsCache[routeId].push({ id: stationId, name: nameChi, dir: direction, seq: seq });
-            }
-            callback(mtrStopsCache, mtrRouteNamesCache || {});
-        })
-        .catch(function() {
-            mtrStopsCache = mtrStopsCache || {};
-            callback(mtrStopsCache, {});
-        });
-}
-
-function getMTRBusSchedule(routeName, callback) {
-    var route = String(routeName || '').toUpperCase().trim();
-    if (!route) { callback(null); return; }
-    if (mtrScheduleCache[route] && (Date.now() - mtrScheduleCache[route]._ts < 20000)) {
-        callback(mtrScheduleCache[route]);
-        return;
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
     }
-    var body = JSON.stringify({ language: 'zh', routeName: route });
-    fetch('https://rt.data.gov.hk/v1/transport/mtr/bus/getSchedule', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: body
-    })
-    .then(function(res) {
-        if (!res.ok) throw new Error('status ' + res.status);
-        return res.json();
-    })
-    .then(function(data) {
-        data._ts = Date.now();
-        mtrScheduleCache[route] = data;
-        callback(data);
-    })
-    .catch(function() {
-        // CORS / 網路失敗 → 用代理
-        var proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://rt.data.gov.hk/v1/transport/mtr/bus/getSchedule');
-        fetch(proxyUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: body
-        })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            data._ts = Date.now();
-            mtrScheduleCache[route] = data;
-            callback(data);
-        })
-        .catch(function() { callback(null); });
-    });
-}
-
-function getMTRBusETA(routeName, stopId, callback) {
-    if (!routeName || !stopId) { callback([]); return; }
-    getMTRBusSchedule(routeName, function(data) {
-        var list = [];
-        if (data && data.busStop && Array.isArray(data.busStop)) {
-            for (var i = 0; i < data.busStop.length; i++) {
-                var stopObj = data.busStop[i];
-                if (String(stopObj.busStopId) !== String(stopId)) continue;
-                if (stopObj.isSuspended === '1') continue;
-                var buses = stopObj.bus || [];
-                for (var j = 0; j < buses.length; j++) {
-                    var b = buses[j];
-                    var sec = parseInt(b.arrivalTimeInSecond, 10);
-                    if (isNaN(sec) || sec < 0) {
-                        if (sec === 0 || (b.arrivalTimeText && /即將|Arriving|Departed|將到/.test(b.arrivalTimeText))) {
-                            list.push({ eta: new Date().toISOString(), arrivalText: '將到站', mins: 0 });
-                        }
-                        continue;
-                    }
-                    var etaDate = new Date(Date.now() + sec * 1000);
-                    list.push({
-                        eta: etaDate.toISOString(),
-                        arrivalText: b.arrivalTimeText || '',
-                        mins: Math.round(sec / 60)
-                    });
-                }
-                break;
-            }
-        }
-        list.sort(function(a, b) { return new Date(a.eta) - new Date(b.eta); });
-        callback(list);
-    });
-}
+    body {
+        background-color: #0f172a;
+        color: #f8fafc;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        padding: 12px;
+        overflow: hidden;
+    }
+    header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #334155;
+        margin-bottom: 10px;
+        flex-shrink: 0;
+        gap: 12px;
+    }
+    .weather-container {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 5px;
+    }
+    .weather-current {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .weather-icon {
+        width: 44px;
+        height: 44px;
+        object-fit: contain;
+    }
+    .weather-temp {
+        font-size: calc(1.53rem * var(--clock-scale));
+        font-weight: 700;
+        color: #ffffff;
+        line-height: 1;
+    }
+    .weather-humidity {
+        font-size: calc(0.855rem * var(--clock-scale));
+        color: #94a3b8;
+        font-weight: 500;
+    }
+    .weather-warnings {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        align-items: center;
+    }
+    .warning-badge {
+        background: #ef4444;
+        color: #ffffff;
+        font-size: calc(0.72rem * var(--clock-scale));
+        font-weight: bold;
+        padding: 3px 7px;
+        border-radius: 5px;
+        white-space: nowrap;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .warning-badge.none {
+        background: #334155;
+        color: #94a3b8;
+        font-weight: normal;
+    }
+    .header-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 2px;
+    }
+    .clock-container {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+    }
+    #clock, .night-clock {
+        font-size: calc(37.8px * var(--clock-scale));
+        font-weight: 700;
+        letter-spacing: 2px;
+        color: #ffffff;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+    }
+    .clock-sub-box {
+        display: inline-flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        justify-content: center !important;
+        margin-left: 6px;
+        line-height: 1.1;
+    }
+    .clock-ampm, .clock-seconds {
+        font-size: calc(16.2px * var(--clock-scale));
+        font-weight: 600;
+        line-height: 1.1;
+        display: block;
+        writing-mode: horizontal-tb !important;
+        white-space: nowrap !important;
+    }
+    .clock-seconds { opacity: 0.85; }
+    .time-sub-info {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 3px;
+    }
+    #date, .night-date {
+        font-size: calc(0.945rem * var(--clock-scale));
+        color: #94a3b8;
+        text-align: right;
+        white-space: nowrap;
+    }
+    .school-notice {
+        display: none;
+        background: #dc2626;
+        color: #ffffff;
+        padding: 12px 16px;
+        border-radius: 12px;
+        font-size: calc(1.26rem * var(--clock-scale));
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 12px;
+        border: 2px solid #f87171;
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+        flex-shrink: 0;
+    }
+    main {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 12px;
+        overflow: hidden;
+    }
+    .bus-panel {
+        flex: 1;
+        background: #1e293b;
+        border-radius: 14px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .panel-title {
+        font-size: calc(0.855rem * var(--bus-scale));
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #f59e0b;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+    }
+    .settings-btn {
+        background: #334155;
+        color: #f8fafc;
+        border: 1px solid #475569;
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-size: calc(0.72rem * var(--bus-scale));
+        cursor: pointer;
+    }
+    .bus-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        overflow-y: auto;
+        flex: 1;
+        padding-right: 4px;
+        -webkit-overflow-scrolling: touch;
+    }
+    .bus-item {
+        border-radius: 12px;
+        padding: var(--card-padding) 12px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.3);
+    }
+    .card-kmb { background-color: #d8121a; }
+    .card-lwb { background-color: #f37021; }
+    .card-ctb {
+        background-color: #ffcc00;
+        color: #000000;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    .card-nlb { background-color: #00843d; color: #ffffff; }
+    .card-mtr { background-color: #0d47a1; color: #ffffff; }
+    .card-ctb .bus-name { color: #000000; text-shadow: none; }
+    .card-ctb .bus-dest { color: #1e293b; text-shadow: none; }
+    .card-ctb .bus-origin-text { color: #000000; }
+    .card-nlb .bus-name, .card-mtr .bus-name { color: #ffffff; }
+    .card-nlb .bus-dest { color: #f1f5f9; }
+    .card-mtr .bus-dest { color: #e3f2fd; }
+    .card-nlb .bus-origin-text, .card-mtr .bus-origin-text { color: #ffffff; }
+    .bus-header-grid {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        column-gap: 7px;
+        row-gap: 2px;
+        align-items: center;
+        flex: 1;
+        overflow: hidden;
+    }
+    .bus-company-tag {
+        grid-row: 1;
+        grid-column: 1;
+        writing-mode: vertical-rl;
+        text-orientation: upright;
+        font-size: calc(0.8rem * var(--bus-scale));
+        padding: 3px 2px;
+        border-radius: 4px;
+        font-weight: bold;
+        background: rgba(15, 23, 42, 0.85);
+        border: 1.5px solid #ffffff;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        letter-spacing: 1px;
+        line-height: 1;
+        flex-shrink: 0;
+    }
+    .card-kmb .bus-company-tag { color: #ffffff; background: #d8121a; border-color: #ffffff; }
+    .card-lwb .bus-company-tag { color: #ffffff; background: #f37021; border-color: #ffffff; }
+    .card-ctb .bus-company-tag { color: #000000; background: #ffcc00; border-color: #000000; }
+    .card-nlb .bus-company-tag { color: #ffffff; background: #00843d; border-color: #ffffff; }
+    .card-mtr .bus-company-tag { color: #ffffff; background: #0d47a1; border-color: #ffffff; }
+    .bus-name {
+        grid-row: 1;
+        grid-column: 2;
+        font-size: calc(3.06rem * var(--bus-scale));
+        font-weight: 700;
+        letter-spacing: 1px;
+        line-height: 0.95;
+        color: #ffffff;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    }
+    .bus-dest {
+        grid-row: 2;
+        grid-column: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1px;
+        color: #f1f5f9;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        width: 100%;
+    }
+    .bus-origin-text {
+        font-size: calc(1.035rem * var(--bus-scale));
+        font-weight: 800;
+        color: #ffffff;
+        line-height: 1.2;
+        text-align: left;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+    }
+    .bus-dest-text {
+        font-size: calc(0.81rem * var(--bus-scale));
+        font-weight: 600;
+        opacity: 0.95;
+        line-height: 1.2;
+        text-align: left;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+    }
+    .eta-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        align-items: stretch;
+        width: 34%;
+        margin-left: auto;
+        flex-shrink: 0;
+    }
+    .eta-next-group {
+        display: flex;
+        flex-direction: row;
+        gap: 5px;
+        width: 100%;
+        transform: translateY(4%);
+    }
+    .eta-badge {
+        flex: 1;
+        background: rgba(15, 23, 42, 0.85);
+        backdrop-filter: blur(4px);
+        border-radius: 7px;
+        padding: calc(var(--card-padding) * 0.5) 1px;
+        text-align: center;
+        font-size: calc(0.945rem * var(--bus-scale));
+        font-weight: bold;
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+        transform: scale(0.97, 1.02);
+        transform-origin: center center;
+    }
+    .eta-next-group .eta-badge { color: #ffffff !important; }
+    .eta-badge.first {
+        width: 100%;
+        font-size: calc(1.89rem * var(--bus-scale));
+        font-weight: 900;
+        padding: calc(var(--card-padding) * 0.7) 2px;
+        transform: translateY(-4%) scale(0.97, 1.02);
+    }
+    .eta-badge.eta-green { color: #34d399; border-color: rgba(52, 211, 153, 0.4); }
+    .eta-badge.eta-red { color: #d8121a; border-color: rgba(216, 18, 26, 0.6); }
+    @keyframes flashRedYellow {
+        0%, 49% { color: #d8121a; border-color: rgba(216, 18, 26, 0.8); }
+        50%, 100% { color: #ffcc00; border-color: rgba(255, 204, 0, 0.8); }
+    }
+    @keyframes flashRedGreen {
+        0%, 49% { color: #d8121a; border-color: rgba(216, 18, 26, 0.8); }
+        50%, 100% { color: #34d399; border-color: rgba(52, 211, 153, 0.8); }
+    }
+    @keyframes flashRedYellow
