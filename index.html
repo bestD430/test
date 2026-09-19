@@ -34,6 +34,11 @@
       background: #faf6ef;
       z-index: 20;
     }
+    .top-right-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
     .btn-circle {
       width: 42px; height: 42px;
       border-radius: 50%;
@@ -44,6 +49,7 @@
       display: flex; align-items: center; justify-content: center;
       cursor: pointer;
     }
+    .btn-circle:active { transform: scale(0.95); }
     .title { font-size: 17px; font-weight: 700; }
 
     .hero {
@@ -202,21 +208,34 @@
       background: #f8fafc; border-radius: 12px; padding: 12px 4px;
     }
 
+    .toast {
+      position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+      background: rgba(30, 41, 59, 0.9); color: #fff; padding: 8px 16px;
+      border-radius: 20px; font-size: 13px; font-weight: 600;
+      z-index: 100; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+
     .note { text-align: center; font-size: 12px; color: #94a3b8; margin-top: 20px; }
   </style>
 </head>
 <body>
   <div class="app">
+    <div id="toast" class="toast">已靜音</div>
+
     <div id="home" class="screen active">
       <div class="top">
         <div style="width:42px"></div>
         <div class="title">99乘法大挑戰</div>
-        <button class="btn-circle" id="btnHelpHome">?</button>
+        <div class="top-right-group">
+          <button class="btn-circle btn-global-mute" title="靜音開關">🔊</button>
+          <button class="btn-circle" id="btnHelpHome">?</button>
+        </div>
       </div>
 
       <div class="hero">
         <div style="position:absolute;right:14px;top:14px;font-size:40px">☀️</div>
-        <div style="font-size:12px;color:#854d0e;margin-bottom:2px">已解鎖全關卡 + 粵語朗讀</div>
+        <div style="font-size:12px;color:#854d0e;margin-bottom:2px">已解鎖全關卡 + 粵語自動讀題</div>
         <h1>乘法冒險</h1>
         <p>從積木看懂乘法，走到九九挑戰。<br>跟著關卡走，每次學會一小步。</p>
         <div class="steps">
@@ -249,14 +268,17 @@
           <p>看看最近的學習進度</p>
         </div>
       </div>
-      <p class="note">全關卡已解鎖 · 支援粵語朗讀 · 無廣告 · 可離線使用</p>
+      <p class="note">全關卡已解鎖 · 一鍵全 App 靜音 · 無廣告</p>
     </div>
 
     <div id="learn" class="screen">
       <div class="top">
         <button class="btn-circle" id="btnBackLearn">←</button>
         <div class="title">看懂積木</div>
-        <button class="btn-circle" id="btnHelpLearn">?</button>
+        <div class="top-right-group">
+          <button class="btn-circle btn-global-mute" title="靜音開關">🔊</button>
+          <button class="btn-circle" id="btnHelpLearn">?</button>
+        </div>
       </div>
 
       <div class="prog">
@@ -267,7 +289,7 @@
 
       <div id="questionArea">
         <div class="qcard">
-          <button class="btn-speak" id="btnSpeak" title="朗讀題目">🔊</button>
+          <button class="btn-speak" id="btnSpeak" title="重新朗讀題目">🔊</button>
           <div class="hint">想一想，積木一共有幾塊？</div>
           <div class="eq" id="equation">2 × 2 = ?</div>
           <div class="tags">
@@ -292,7 +314,7 @@
       <div class="top">
         <button class="btn-circle" id="btnBackPractice">←</button>
         <div class="title">我想練乘法</div>
-        <div style="width:42px"></div>
+        <button class="btn-circle btn-global-mute" title="靜音開關">🔊</button>
       </div>
       <h2 style="font-size:20px;margin:10px 0 4px">今天想練哪個數字？</h2>
       <p style="font-size:13px;color:#64748b;margin-bottom:8px">選一個，玩 5 題</p>
@@ -310,7 +332,7 @@
       <div class="top">
         <button class="btn-circle" id="btnBackParent">←</button>
         <div class="title">家長專區</div>
-        <div style="width:42px"></div>
+        <button class="btn-circle btn-global-mute" title="靜音開關">🔊</button>
       </div>
       <h2 style="font-size:18px;margin:8px 0 4px">學習摘要</h2>
       <p style="font-size:13px;color:#64748b;margin-bottom:14px">看看最近的學習與下一步</p>
@@ -334,6 +356,7 @@
       var qIndex = 0;
       var correctCount = 0;
       var answered = false;
+      var isMuted = false;
 
       function $(id) { return document.getElementById(id); }
       function storageGet(key, def) {
@@ -346,13 +369,38 @@
         try { localStorage.setItem('mult_' + key, JSON.stringify(val)); } catch (e) {}
       }
 
-      // 粵語朗讀功能
+      function showToast(msg) {
+        var t = $('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(function () { t.classList.remove('show'); }, 1500);
+      }
+
+      function updateMuteUI() {
+        var btns = document.querySelectorAll('.btn-global-mute');
+        for (var i = 0; i < btns.length; i++) {
+          btns[i].textContent = isMuted ? '🔇' : '🔊';
+        }
+      }
+
+      function toggleMute() {
+        isMuted = !isMuted;
+        storageSet('isMuted', isMuted);
+        updateMuteUI();
+        if (isMuted && 'speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
+        showToast(isMuted ? '全 App 已靜音' : '已開啟聲音');
+      }
+
+      // 粵語語音朗讀
       function speakCantonese(text) {
+        if (isMuted) return; // 靜音狀態不播放聲音
         if ('speechSynthesis' in window) {
-          window.speechSynthesis.cancel(); // 停止先前的朗讀
+          window.speechSynthesis.cancel(); // 停止先前語音
           var utterance = new SpeechSynthesisUtterance(text);
-          utterance.lang = 'zh-HK'; // 設定為粵語
-          utterance.rate = 0.9;     // 稍微放慢語速適合小朋友
+          utterance.lang = 'zh-HK';
+          utterance.rate = 0.9;
           window.speechSynthesis.speak(utterance);
         }
       }
@@ -476,7 +524,7 @@
           })(opts[k]);
         }
 
-        // 自動用語音讀出題目
+        // 自動讀出題目
         speakCurrentQuestion();
       }
 
@@ -598,6 +646,16 @@
       }
 
       function bind() {
+        // 載入靜音設定
+        isMuted = storageGet('isMuted', false);
+        updateMuteUI();
+
+        // 綁定靜音按鈕
+        var muteBtns = document.querySelectorAll('.btn-global-mute');
+        for (var i = 0; i < muteBtns.length; i++) {
+          muteBtns[i].addEventListener('click', toggleMute);
+        }
+
         $('btnStart').addEventListener('click', startAdventure);
         $('btnPractice').addEventListener('click', function () { showScreen('practice'); });
         $('btnQuick').addEventListener('click', startQuick);
