@@ -357,6 +357,7 @@
       var correctCount = 0;
       var answered = false;
       var isMuted = false;
+      var speechUnlocked = false;
 
       function $(id) { return document.getElementById(id); }
       function storageGet(key, def) {
@@ -393,15 +394,28 @@
         showToast(isMuted ? '全 App 已靜音' : '已開啟聲音');
       }
 
+      // 啟用 iOS/Safari 的語音播報鎖
+      function unlockSpeech() {
+        if (!speechUnlocked && 'speechSynthesis' in window) {
+          var dummy = new SpeechSynthesisUtterance('');
+          window.speechSynthesis.speak(dummy);
+          speechUnlocked = true;
+        }
+      }
+
       // 粵語語音朗讀
       function speakCantonese(text) {
-        if (isMuted) return; // 靜音狀態不播放聲音
+        if (isMuted) return;
         if ('speechSynthesis' in window) {
           window.speechSynthesis.cancel(); // 停止先前語音
           var utterance = new SpeechSynthesisUtterance(text);
           utterance.lang = 'zh-HK';
           utterance.rate = 0.9;
-          window.speechSynthesis.speak(utterance);
+          
+          // 解決 Android/iOS 語音引擎被中斷問題
+          setTimeout(function() {
+            window.speechSynthesis.speak(utterance);
+          }, 50);
         }
       }
 
@@ -449,6 +463,7 @@
       }
 
       function startAdventure() {
+        unlockSpeech();
         questions = generateQuestions(2, 5);
         qIndex = 0;
         correctCount = 0;
@@ -457,6 +472,7 @@
       }
 
       function startPractice(n) {
+        unlockSpeech();
         questions = generateQuestions(n, 5);
         qIndex = 0;
         correctCount = 0;
@@ -465,6 +481,7 @@
       }
 
       function startQuick() {
+        unlockSpeech();
         questions = generateQuestions(2, 3);
         qIndex = 0;
         correctCount = 0;
@@ -473,6 +490,7 @@
       }
 
       function startMixed() {
+        unlockSpeech();
         questions = generateMixed(10);
         qIndex = 0;
         correctCount = 0;
@@ -650,6 +668,9 @@
         isMuted = storageGet('isMuted', false);
         updateMuteUI();
 
+        // 全局點擊解鎖聲音
+        document.body.addEventListener('click', unlockSpeech, { once: true });
+
         // 綁定靜音按鈕
         var muteBtns = document.querySelectorAll('.btn-global-mute');
         for (var i = 0; i < muteBtns.length; i++) {
@@ -657,7 +678,7 @@
         }
 
         $('btnStart').addEventListener('click', startAdventure);
-        $('btnPractice').addEventListener('click', function () { showScreen('practice'); });
+        $('btnPractice').addEventListener('click', function () { unlockSpeech(); showScreen('practice'); });
         $('btnQuick').addEventListener('click', startQuick);
         $('btnParent').addEventListener('click', function () { showScreen('parent'); });
         $('btnHelpHome').addEventListener('click', function () {
