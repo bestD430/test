@@ -1,762 +1,745 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-HK">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>乘法冒險</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", sans-serif;
-      background: #faf6ef;
-      color: #1e293b;
-      min-height: 100dvh;
-      padding: 0;
-      overflow-x: hidden;
-    }
-   .app {
-      max-width: 430px;
-      margin: 0 auto;
-      min-height: 100dvh;
-      background: #faf6ef;
-      position: relative;
-    }
-   .screen { display: none; padding: 12px 16px 32px; }
-   .screen.active { display: block; }
-   .top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 4px 8px;
-      position: sticky;
-      top: 0;
-      background: #faf6ef;
-      z-index: 20;
-    }
-   .top-right-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-   .btn-circle {
-      width: 42px; height: 42px;
-      border-radius: 50%;
-      border: none;
-      background: #fff;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      font-size: 18px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer;
-    }
-   .btn-circle:active { transform: scale(0.95); }
-   .title { font-size: 17px; font-weight: 700; }
-   .hero {
-      background: linear-gradient(145deg, #fef9c3, #fde68a);
-      border-radius: 22px;
-      padding: 22px 18px;
-      margin: 8px 0 20px;
-      position: relative;
-    }
-   .hero h1 { font-size: 26px; font-weight: 800; margin: 4px 0 8px; }
-   .hero p { font-size: 14px; color: #475569; line-height: 1.55; margin-bottom: 16px; }
-   .steps {
-      display: flex; gap: 8px; margin-bottom: 18px;
-    }
-   .step {
-      flex: 1; background: rgba(255,255,255,0.75);
-      border-radius: 14px; padding: 12px 4px;
-      text-align: center; font-size: 12px; font-weight: 600;
-    }
-   .step.ico { font-size: 22px; display: block; margin-bottom: 4px; }
-   .btn-main {
-      width: 100%; background: #1e293b; color: #fff;
-      border: none; border-radius: 16px; padding: 16px;
-      font-size: 17px; font-weight: 700; cursor: pointer;
-    }
-   .btn-main:active { opacity: 0.9; transform: scale(0.98); }
-   .sec-title { font-size: 15px; font-weight: 700; margin: 18px 0 10px; }
-   .menu {
-      background: #fff; border-radius: 16px;
-      padding: 16px; margin-bottom: 10px;
-      display: flex; align-items: center; gap: 14px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-      cursor: pointer;
-    }
-   .menu:active { transform: scale(0.98); }
-   .menu-ico {
-      width: 46px; height: 46px; border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px; flex-shrink: 0;
-    }
-   .menu h3 { font-size: 15px; font-weight: 700; }
-   .menu p { font-size: 12px; color: #64748b; margin-top: 2px; }
-   .prog {
-      background: #fff; border-radius: 14px;
-      padding: 12px 14px; margin-bottom: 14px;
-      display: flex; align-items: center; gap: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-      font-size: 13px; font-weight: 600; color: #64748b;
-    }
-   .prog-bar {
-      flex: 1; height: 7px; background: #e2e8f0;
-      border-radius: 4px; overflow: hidden;
-    }
-   .prog-fill {
-      height: 100%; background: #3b82f6;
-      border-radius: 4px; transition: width 0.35s;
-    }
-   .qcard {
-      background: #1e3a5f; border-radius: 22px;
-      padding: 22px 16px; color: #fff; text-align: center;
-      margin-bottom: 18px; position: relative;
-    }
-   .qcard.hint { font-size: 14px; opacity: 0.9; margin-bottom: 12px; }
-   .eq { font-size: 40px; font-weight: 800; letter-spacing: 1px; margin-bottom: 14px; }
-   .btn-speak {
-      position: absolute; right: 14px; top: 14px;
-      background: rgba(255,255,255,0.2); border: none;
-      border-radius: 50%; width: 36px; height: 36px;
-      font-size: 18px; color: #fff; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-    }
-   .btn-speak:active { background: rgba(255,255,255,0.4); }
-   .tags { display: flex; justify-content: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-   .tag {
-      background: rgba(255,255,255,0.18);
-      border-radius: 20px; padding: 6px 14px; font-size: 13px;
-    }
-   .blocks {
-      display: flex; flex-wrap: wrap; justify-content: center;
-      gap: 10px; margin-top: 8px;
-    }
-   .group {
-      display: flex; flex-wrap: wrap; gap: 5px;
-      background: rgba(255,255,255,0.12);
-      border-radius: 12px; padding: 8px;
-      max-width: 100%;
-    }
-   .block {
-      width: 24px; height: 24px;
-      background: #60a5fa; border-radius: 5px;
-      border: 2px solid #3b82f6;
-      box-shadow: 0 2px 0 #2563eb;
-    }
-   .opts {
-      display: grid; grid-template-columns: 1fr 1fr 1fr;
-      gap: 12px; margin-bottom: 14px;
-    }
-   .opt {
-      background: #fff; border: 2px solid #e2e8f0;
-      border-radius: 16px; padding: 18px 0;
-      font-size: 26px; font-weight: 800;
-      cursor: pointer; color: #1e293b;
-    }
-   .opt:active { transform: scale(0.96); }
-   .opt.correct { background: #dcfce7; border-color: #22c55e; color: #166534; }
-   .opt.wrong { background: #fee2e2; border-color: #ef4444; color: #991b1b; }
-   .opt:disabled { pointer-events: none; }
-   .btn-hint {
-      width: 100%; background: #fff; border: 1.5px solid #e2e8f0;
-      border-radius: 14px; padding: 15px; font-size: 15px;
-      font-weight: 600; color: #64748b; cursor: pointer;
-    }
-   .fb { text-align: center; padding: 28px 16px; display: none; }
-   .fb.show { display: block; }
-   .fb.emoji { font-size: 60px; margin-bottom: 10px; }
-   .fb h2 { font-size: 24px; margin-bottom: 6px; }
-   .fb p { color: #64748b; margin-bottom: 20px; font-size: 18px; }
-   .btn-next {
-      background: #3b82f6; color: #fff; border: none;
-      border-radius: 16px; padding: 16px 36px;
-      font-size: 17px; font-weight: 700; cursor: pointer;
-    }
-   .num-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr);
-      gap: 12px; margin: 16px 0 22px;
-    }
-   .num {
-      aspect-ratio: 1; background: #fff; border: 2px solid #e2e8f0;
-      border-radius: 16px; font-size: 26px; font-weight: 800;
-      display: flex; flex-direction: column; align-items: center;
-      justify-content: center; cursor: pointer; color: #1e293b;
-    }
-   .num small { font-size: 11px; font-weight: 600; color: #64748b; }
-   .num:active { background: #dbeafe; border-color: #3b82f6; }
-   .card {
-      background: #fff; border-radius: 18px; padding: 18px;
-      margin-bottom: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-    }
-   .row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
-   .row:last-child { margin-bottom: 0; }
-   .muted { color: #64748b; }
-   .bold { font-weight: 700; }
-   .gstatus {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
-      text-align: center; font-size: 13px;
-    }
-   .gstatus div {
-      background: #f8fafc; border-radius: 12px; padding: 12px 4px;
-    }
-   .toast {
-      position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
-      background: rgba(30, 41, 59, 0.9); color: #fff; padding: 8px 16px;
-      border-radius: 20px; font-size: 13px; font-weight: 600;
-      z-index: 100; opacity: 0; transition: opacity 0.3s; pointer-events: none;
-    }
-   .toast.show { opacity: 1; }
-   .note { text-align: center; font-size: 12px; color: #94a3b8; margin-top: 20px; }
-  </style>
-</head>
-<body>
-  <div class="app">
-    <div id="toast" class="toast">已靜音</div>
-    <div id="home" class="screen active">
-      <div class="top">
-        <div style="width:42px"></div>
-        <div class="title">99乘法大挑戰</div>
-        <div class="top-right-group">
-          <button class="btn-circle btn-global-mute" title="靜音開關">🔊</button>
-          <button class="btn-circle" id="btnHelpHome">?</button>
-        </div>
-      </div>
-      <div class="hero">
-        <div style="position:absolute;right:14px;top:14px;font-size:40px">☀️</div>
-        <div style="font-size:12px;color:#854d0e;margin-bottom:2px">已解鎖全關卡 + 粵語自動讀題</div>
-        <h1>乘法冒險</h1>
-        <p>從積木看懂乘法，走到九九挑戰。<br>跟著關卡走，每次學會一小步。</p>
-        <div class="steps">
-          <div class="step"><span class="ico">🧱</span>1 積木看懂</div>
-          <div class="step"><span class="ico">✏️</span>2 自己算算</div>
-          <div class="step"><span class="ico">🚩</span>3 闖關挑戰</div>
-        </div>
-        <button class="btn-main" id="btnStart">從第一關開始 →</button>
-      </div>
-      <div class="sec-title">加強練習</div>
-      <div class="menu" id="btnPractice">
-        <div class="menu-ico" style="background:#fee2e2">👆</div>
-        <div>
-          <h3>自選乘法練習</h3>
-          <p>自己選 2～9，練練想加強的乘法</p>
-        </div>
-      </div>
-      <div class="menu" id="btnQuick">
-        <div class="menu-ico" style="background:#dbeafe">🔄</div>
-        <div>
-          <h3>今天再想 3 個算式</h3>
-          <p>用短短一回合，把剛學到的再想一次</p>
-        </div>
-      </div>
-      <div class="menu" id="btnParent">
-        <div class="menu-ico" style="background:#f0fdf4">👨‍👧</div>
-        <div>
-          <h3>家長專區</h3>
-          <p>看看最近的學習進度</p>
-        </div>
-      </div>
-      <p class="note">全關卡已解鎖 · 一鍵全 App 靜音 · 無廣告</p>
-    </div>
-    <div id="learn" class="screen">
-      <div class="top">
-        <button class="btn-circle" id="btnBackLearn">←</button>
-        <div class="title">看懂積木</div>
-        <div class="top-right-group">
-          <button class="btn-circle btn-global-mute" title="靜音開關">🔊</button>
-          <button class="btn-circle" id="btnHelpLearn">?</button>
-        </div>
-      </div>
-      <div class="prog">
-        <span id="progText">已完成 0 / 5</span>
-        <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
-        <span id="groupLabel">每組 2 塊</span>
-      </div>
-      <div id="questionArea">
-        <div class="qcard">
-          <button class="btn-speak" id="btnSpeak" title="重新朗讀題目">🔊</button>
-          <div class="hint">想一想，積木一共有幾塊？</div>
-          <div class="eq" id="equation">2 × 2 =?</div>
-          <div class="tags">
-            <span class="tag" id="tagA">每組 2 塊</span>
-            <span class="tag" id="tagB">共有 2 組</span>
-          </div>
-          <div class="blocks" id="blocksArea"></div>
-        </div>
-        <div class="opts" id="options"></div>
-        <button class="btn-hint" id="btnHint">💡 提示</button>
-      </div>
-      <div class="fb" id="feedback">
-        <div class="emoji" id="fbEmoji">🎉</div>
-        <h2 id="fbTitle">太棒了！</h2>
-        <p id="fbMsg">2 × 2 = 4</p>
-        <button class="btn-next" id="btnNext">下一題 →</button>
-      </div>
-    </div>
-    <div id="practice" class="screen">
-      <div class="top">
-        <button class="btn-circle" id="btnBackPractice">←</button>
-        <div class="title">我想練乘法</div>
-        <button class="btn-circle btn-global-mute" title="靜音開關">🔊</button>
-      </div>
-      <h2 style="font-size:20px;margin:10px 0 4px">今天想練哪個數字？</h2>
-      <p style="font-size:13px;color:#64748b;margin-bottom:8px">選一個，玩 5 題</p>
-      <div class="num-grid" id="numGrid"></div>
-      <div class="menu" id="btnMixed">
-        <div class="menu-ico" style="background:#e0e7ff">🔀</div>
-        <div>
-          <h3>全部混合</h3>
-          <p>2～9 的乘法，玩 10 題</p>
-        </div>
-      </div>
-    </div>
-    <div id="parent" class="screen">
-      <div class="top">
-        <button class="btn-circle" id="btnBackParent">←</button>
-        <div class="title">家長專區</div>
-        <button class="btn-circle btn-global-mute" title="靜音開關">🔊</button>
-      </div>
-      <h2 style="font-size:18px;margin:8px 0 4px">學習摘要</h2>
-      <p style="font-size:13px;color:#64748b;margin-bottom:14px">看看最近的學習與下一步</p>
-      <div class="card">
-        <div class="row"><span class="muted">今天完成題數</span><span class="bold" id="todayCount">0</span></div>
-        <div class="row"><span class="muted">累積答對</span><span class="bold" id="totalCorrect">0</span></div>
-        <div class="row"><span class="muted">目前進度</span><span class="bold">全部已解鎖</span></div>
-      </div>
-      <div class="card">
-        <p style="font-size:14px;font-weight:600;margin-bottom:12px">各組狀態</p>
-        <div class="gstatus" id="groupStatus"></div>
-      </div>
-      <p class="note">資料僅存在此裝置，不會上傳</p>
-    </div>
-  </div>
-  <script>
-    (function () {
-      var questions = [];
-      var qIndex = 0;
-      var correctCount = 0;
-      var answered = false;
-      var isMuted = false;
-      var speechUnlocked = false;
-      var cantoneseVoice = null;
-      var voicesLoaded = false;
-      function $(id) { return document.getElementById(id); }
-      function storageGet(key, def) {
-        try {
-          var v = localStorage.getItem('mult_' + key);
-          return v!== null? JSON.parse(v) : def;
-        } catch (e) { return def; }
-      }
-      function storageSet(key, val) {
-        try { localStorage.setItem('mult_' + key, JSON.stringify(val)); } catch (e) {}
-      }
-      function showToast(msg) {
-        var t = $('toast');
-        t.textContent = msg;
-        t.classList.add('show');
-        setTimeout(function () { t.classList.remove('show'); }, 1800);
-      }
-      function updateMuteUI() {
-        var btns = document.querySelectorAll('.btn-global-mute');
-        for (var i = 0; i < btns.length; i++) {
-          btns[i].textContent = isMuted? '🔇' : '🔊';
-        }
-      }
-      function toggleMute() {
-        isMuted =!isMuted;
-        storageSet('isMuted', isMuted);
-        updateMuteUI();
-        if (isMuted && 'speechSynthesis' in window) {
-          window.speechSynthesis.cancel();
-        }
-        showToast(isMuted? '全 App 已靜音' : '已開啟聲音');
-        if (!isMuted) {
-          setTimeout(speakCurrentQuestion, 200);
-        }
-      }
-      var cnNums = ['零','一','二','三','四','五','六','七','八','九'];
-      function numToCn(n) {
-        n = parseInt(n,10);
-        if (isNaN(n)) return '';
-        if (n <= 9) return cnNums[n];
-        if (n < 20) {
-          if (n === 10) return '十';
-          return '十' + cnNums[n % 10];
-        }
-        if (n < 100) {
-          var t = Math.floor(n/10);
-          var o = n%10;
-          return cnNums[t] + '十' + (o? cnNums[o] : '');
-        }
-        return String(n);
-      }
-      function findCantoneseVoice() {
-        if (!('speechSynthesis' in window)) return null;
-        var voices = window.speechSynthesis.getVoices();
-        if (!voices.length) return null;
-        var candidates = [];
-        for (var i=0;i<voices.length;i++){
-          var v = voices[i];
-          var lang = (v.lang || '').toLowerCase();
-          var name = (v.name || '').toLowerCase();
-          var isHK = lang === 'zh-hk' || lang === 'zh-hk-x' || lang.includes('yue') || lang.includes('zh-yue') || lang.includes('zh_hk') || lang.includes('yue-hk') || lang.includes('yue-cn');
-          var isName = name.includes('cantonese') || name.includes('yue') || name.includes('sin-ji') || name.includes('hong kong') || name.includes('hk') && name.includes('chinese') || name.includes('粵') || name.includes('廣東') || name.includes('homa') || name.includes('cangjie');
-          if (isHK || isName) candidates.push(v);
-        }
-        if (candidates.length) {
-          candidates.sort(function(a,b){
-            var al = (a.lang||'').toLowerCase();
-            var bl = (b.lang||'').toLowerCase();
-            if (al === 'zh-hk' && bl!== 'zh-hk') return -1;
-            if (bl === 'zh-hk' && al!== 'zh-hk') return 1;
-            if (al.includes('yue') &&!bl.includes('yue')) return -1;
-            return 0;
-          });
-          return candidates[0];
-        }
-        for (var k=0;k<voices.length;k++) if ((voices[k].lang||'').toLowerCase().includes('zh-tw')) return voices[k];
-        for (var k2=0;k2<voices.length;k2++) if ((voices[k2].lang||'').toLowerCase().includes('zh-cn')) return voices[k2];
-        for (var k3=0;k3<voices.length;k3++) if ((voices[k3].lang||'').toLowerCase().startsWith('zh')) return voices[k3];
-        return voices[0] || null;
-      }
-      function loadVoices() {
-        if (!('speechSynthesis' in window)) return;
-        var vs = window.speechSynthesis.getVoices();
-        if (vs && vs.length) {
-          cantoneseVoice = findCantoneseVoice();
-          voicesLoaded = true;
-        }
-      }
-      function unlockSpeech() {
-        if (!('speechSynthesis' in window)) return;
-        if (speechUnlocked) {
-          if (window.speechSynthesis.paused) window.speechSynthesis.resume();
-          return;
-        }
-        try {
-          loadVoices();
-          if (window.speechSynthesis.paused) window.speechSynthesis.resume();
-          var dummy = new SpeechSynthesisUtterance(' ');
-          dummy.volume = 0;
-          dummy.rate = 1;
-          if (cantoneseVoice) {
-            dummy.voice = cantoneseVoice;
-            dummy.lang = cantoneseVoice.lang;
-          } else {
-            dummy.lang = 'zh-HK';
-          }
-          window.speechSynthesis.speak(dummy);
-          speechUnlocked = true;
-        } catch (e) {}
-      }
-      function speakCantonese(text) {
-        if (isMuted) return;
-        if (!('speechSynthesis' in window)) return;
-        if (!text) return;
-        if (!voicesLoaded) {
-          loadVoices();
-          if (!voicesLoaded) {
-            setTimeout(function(){ speakCantonese(text); }, 250);
-            return;
-          }
-        }
-        try {
-          window.speechSynthesis.cancel();
-        } catch(e){}
-        setTimeout(function(){
-          var utterance = new SpeechSynthesisUtterance(text);
-          if (cantoneseVoice) {
-            utterance.voice = cantoneseVoice;
-            utterance.lang = cantoneseVoice.lang || 'zh-HK';
-          } else {
-            utterance.lang = 'zh-HK';
-          }
-          utterance.rate = 0.85;
-          utterance.pitch = 1.05;
-          utterance.volume = 1;
-          if (window.speechSynthesis.paused) {
-            window.speechSynthesis.resume();
-          }
-          var keepAliveTimer = setInterval(function(){
-            if (!window.speechSynthesis.speaking) {
-              clearInterval(keepAliveTimer);
-            } else {
-              window.speechSynthesis.resume();
-            }
-          }, 200);
-          utterance.onend = function(){ clearInterval(keepAliveTimer); };
-          utterance.onerror = function(){ clearInterval(keepAliveTimer); };
-          window.speechSynthesis.speak(utterance);
-        }, 120);
-      }
-      function speakCurrentQuestion() {
-        var q = questions[qIndex];
-        if (!q) return;
-        var aText = numToCn(q.a);
-        var bText = numToCn(q.b);
-        var text = aText + '乘' + bText + '等於幾多呀？';
-        speakCantonese(text);
-      }
-      function showScreen(id) {
-        var screens = document.querySelectorAll('.screen');
-        for (var i = 0; i < screens.length; i++) {
-          screens[i].classList.remove('active');
-        }
-        var el = $(id);
-        if (el) el.classList.add('active');
-        if (id === 'practice') renderNumGrid();
-        if (id === 'parent') updateParent();
-      }
-      function generateQuestions(table, count) {
-        var nums = [1,2,3,4,5,6,7,8,9];
-        for (var i = nums.length - 1; i > 0; i--) {
-          var j = Math.floor(Math.random() * (i + 1));
-          var t = nums[i]; nums[i] = nums[j]; nums[j] = t;
-        }
-        var list = [];
-        for (var k = 0; k < count; k++) {
-          var b = nums[k % 9];
-          list.push({ a: table, b: b, answer: table * b });
-        }
-        return list;
-      }
-      function generateMixed(count) {
-        var list = [];
-        for (var i = 0; i < count; i++) {
-          var a = Math.floor(Math.random() * 8) + 2;
-          var b = Math.floor(Math.random() * 9) + 1;
-          list.push({ a: a, b: b, answer: a * b });
-        }
-        return list;
-      }
-      function startAdventure() {
-        unlockSpeech();
-        questions = generateQuestions(2, 5);
-        qIndex = 0;
-        correctCount = 0;
-        showScreen('learn');
-        renderQuestion();
-      }
-      function startPractice(n) {
-        unlockSpeech();
-        questions = generateQuestions(n, 5);
-        qIndex = 0;
-        correctCount = 0;
-        showScreen('learn');
-        renderQuestion();
-      }
-      function startQuick() {
-        unlockSpeech();
-        questions = generateQuestions(2, 3);
-        qIndex = 0;
-        correctCount = 0;
-        showScreen('learn');
-        renderQuestion();
-      }
-      function startMixed() {
-        unlockSpeech();
-        questions = generateMixed(10);
-        qIndex = 0;
-        correctCount = 0;
-        showScreen('learn');
-        renderQuestion();
-      }
-      function renderQuestion() {
-        answered = false;
-        $('questionArea').style.display = 'block';
-        $('feedback').classList.remove('show');
-        var q = questions[qIndex];
-        if (!q) return;
-        $('progText').textContent = '已完成 ' + qIndex + ' / ' + questions.length;
-        $('progFill').style.width = (qIndex / questions.length * 100) + '%';
-        $('groupLabel').textContent = '每組 ' + q.b + ' 塊';
-        $('equation').textContent = q.a + ' × ' + q.b + ' =?';
-        $('tagA').textContent = '每組 ' + q.b + ' 塊';
-        $('tagB').textContent = '共有 ' + q.a + ' 組';
-        var area = $('blocksArea');
-        area.innerHTML = '';
-        for (var i = 0; i < q.a; i++) {
-          var g = document.createElement('div');
-          g.className = 'group';
-          for (var j = 0; j < q.b; j++) {
-            var b = document.createElement('div');
-            b.className = 'block';
-            g.appendChild(b);
-          }
-          area.appendChild(g);
-        }
-        var opts = makeOptions(q.answer);
-        var box = $('options');
-        box.innerHTML = '';
-        for (var k = 0; k < opts.length; k++) {
-          (function (num) {
-            var btn = document.createElement('button');
-            btn.className = 'opt';
-            btn.textContent = num;
-            btn.addEventListener('click', function () {
-              checkAnswer(num, q.answer, btn);
-            });
-            box.appendChild(btn);
-          })(opts[k]);
-        }
-        setTimeout(speakCurrentQuestion, 180);
-      }
-      function makeOptions(correct) {
-        var set = {};
-        set[correct] = true;
-        var arr = [correct];
-        while (arr.length < 3) {
-          var d = correct + (Math.floor(Math.random() * 5) - 2);
-          if (d <= 0) d = correct + Math.floor(Math.random() * 4) + 1;
-          if (!set[d]) {
-            set[d] = true;
-            arr.push(d);
-          }
-        }
-        for (var i = arr.length - 1; i > 0; i--) {
-          var j = Math.floor(Math.random() * (i + 1));
-          var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
-        }
-        return arr;
-      }
-      function checkAnswer(chosen, correct, btn) {
-        if (answered) return;
-        answered = true;
-        var all = document.querySelectorAll('.opt');
-        for (var i = 0; i < all.length; i++) {
-          all[i].disabled = true;
-        }
-        if (chosen === correct) {
-          btn.classList.add('correct');
-          correctCount++;
-          storageSet('today', storageGet('today', 0) + 1);
-          storageSet('totalCorrect', storageGet('totalCorrect', 0) + 1);
-          speakCantonese('答對咗喇！好叻呀！');
-          showFeedback(true, correct);
-        } else {
-          btn.classList.add('wrong');
-          for (var i = 0; i < all.length; i++) {
-            if (parseInt(all[i].textContent, 10) === correct) {
-              all[i].classList.add('correct');
-            }
-          }
-          var correctCn = numToCn(correct);
-          speakCantonese('再諗諗，正確答案係' + correctCn + '呀！');
-          showFeedback(false, correct);
-        }
-      }
-      function showFeedback(isCorrect, answer) {
-        $('questionArea').style.display = 'none';
-        var fb = $('feedback');
-        fb.classList.add('show');
-        var q = questions[qIndex];
-        if (isCorrect) {
-          var emojis = ['🎉', '🌟', '👏', '💪', '🏆'];
-          var titles = ['太棒了！', '答對了！', '真厲害！', '滿分！'];
-          $('fbEmoji').textContent = emojis[Math.floor(Math.random() * emojis.length)];
-          $('fbTitle').textContent = titles[Math.floor(Math.random() * titles.length)];
-        } else {
-          $('fbEmoji').textContent = '💪';
-          $('fbTitle').textContent = '再想一次！';
-        }
-        $('fbMsg').textContent = q.a + ' × ' + q.b + ' = ' + answer;
-      }
-      function nextQuestion() {
-        qIndex++;
-        if (qIndex >= questions.length) {
-          var msgCn = '本回合完成，答對咗' + numToCn(correctCount) + '題，好叻呀！';
-          speakCantonese(msgCn);
-          alert('本回合完成！\n答對 ' + correctCount + ' / ' + questions.length + ' 題');
-          showScreen('home');
-          return;
-        }
-        renderQuestion();
-      }
-      function showHint() {
-        var q = questions[qIndex];
-        if (!q) return;
-        var parts = [];
-        for (var i = 0; i < q.a; i++) parts.push(q.b);
-        var aCn = numToCn(q.a);
-        var bCn = numToCn(q.b);
-        speakCantonese('一共有' + aCn + '組，每組有' + bCn + '塊積木');
-        alert('提示：\n一共有 ' + q.a + ' 組，每組有 ' + q.b + ' 塊積木。\n可以一個一個數，或用加法想：\n' + parts.join(' + ') + ' =?');
-      }
-      function renderNumGrid() {
-        var grid = $('numGrid');
-        grid.innerHTML = '';
-        for (var n = 2; n <= 9; n++) {
-          (function (num) {
-            var btn = document.createElement('button');
-            btn.className = 'num';
-            btn.innerHTML = num + '<small>乘法</small>';
-            btn.addEventListener('click', function () {
-              startPractice(num);
-            });
-            grid.appendChild(btn);
-          })(n);
-        }
-      }
-      function updateParent() {
-        $('todayCount').textContent = storageGet('today', 0);
-        $('totalCorrect').textContent = storageGet('totalCorrect', 0);
-        var status = $('groupStatus');
-        status.innerHTML = '';
-        for (var n = 2; n <= 9; n++) {
-          var div = document.createElement('div');
-          var state = '已解鎖';
-          var color = '#3b82f6';
-          div.innerHTML = '<div style="font-weight:800;color:' + color + '">×' + n + '</div><div style="font-size:11px;color:#64748b;margin-top:3px">' + state + '</div>';
-          status.appendChild(div);
-        }
-      }
-      function bind() {
-        isMuted = storageGet('isMuted', false);
-        updateMuteUI();
-        if ('speechSynthesis' in window) {
-          loadVoices();
-          if (window.speechSynthesis.onvoiceschanged!== undefined) {
-            window.speechSynthesis.onvoiceschanged = loadVoices;
-          }
-          setTimeout(loadVoices, 500);
-          setTimeout(loadVoices, 1200);
-        }
-        var unlockOnce = function() {
-          unlockSpeech();
-          document.removeEventListener('click', unlockOnce);
-          document.removeEventListener('touchend', unlockOnce);
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="香港電台">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#f5c6d0" id="themeColorMeta">
+    <meta name="application-name" content="香港電台">
+    
+    <title>香港電台</title>
+
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23d32f2f'/%3E%3Ctext x='90' y='108' font-family='Arial,Helvetica,sans-serif' font-size='42' font-weight='bold' fill='white' text-anchor='middle'%3ERTHK%3C/text%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23d32f2f'/%3E%3Ctext x='90' y='108' font-family='Arial,Helvetica,sans-serif' font-size='42' font-weight='bold' fill='white' text-anchor='middle'%3ERTHK%3C/text%3E%3C/svg%3E">
+
+    <script>
+        const manifest = {
+            name: "香港電台",
+            short_name: "RTHK",
+            description: "",
+            start_url: "./",
+            display: "standalone",
+            background_color: "#f5c6d0",
+            theme_color: "#f5c6d0",
+            icons: [{
+                src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23d32f2f'/%3E%3Ctext x='90' y='108' font-family='Arial,Helvetica,sans-serif' font-size='42' font-weight='bold' fill='white' text-anchor='middle'%3ERTHK%3C/text%3E%3C/svg%3E",
+                sizes: "180x180",
+                type: "image/svg+xml",
+                purpose: "any maskable"
+            }]
         };
-        document.addEventListener('click', unlockOnce, { once: true });
-        document.addEventListener('touchend', unlockOnce, { once: true });
-        var muteBtns = document.querySelectorAll('.btn-global-mute');
-        for (var i = 0; i < muteBtns.length; i++) {
-          muteBtns[i].addEventListener('click', toggleMute);
+        const blob = new Blob([JSON.stringify(manifest)], { type: "application/json" });
+        document.write('<link rel="manifest" href="' + URL.createObjectURL(blob) + '">');
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15"></script>
+
+    <style>
+        :root {
+            --bg-color: #f5c6d0;
+            --bg-radio: #e8a8b6;
+            --card-bg: #ffffff;
+            --text-main: #1a1a1a;
+            --text-sub: #555555;
+            --accent-red: #d32f2f;
+            --accent-green: #2e7d32;
+            --shadow: 0 3px 8px rgba(0,0,0,0.08);
         }
-        $('btnStart').addEventListener('click', startAdventure);
-        $('btnPractice').addEventListener('click', function () { unlockSpeech(); showScreen('practice'); });
-        $('btnQuick').addEventListener('click', startQuick);
-        $('btnParent').addEventListener('click', function () { showScreen('parent'); });
-        $('btnHelpHome').addEventListener('click', function () {
-          alert('這是一個幫助小朋友用積木理解乘法的小遊戲！\n從積木看懂 → 自己算算 → 關卡挑戰');
+        body.theme-blue {
+            --bg-color: #9fc8e8;
+            --bg-radio: #7eb0d6;
+        }
+        body.theme-pink {
+            --bg-color: #f5c6d0;
+            --bg-radio: #e8a8b6;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            margin: 0;
+            padding: calc(env(safe-area-inset-top) + 8px) 10px calc(env(safe-area-inset-bottom) + 8px) 10px;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang HK", "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            transition: background-color 0.25s ease;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        .theme-bar {
+            width: 100%;
+            max-width: 414px;
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .theme-btn {
+            border: 2px solid #ddd;
+            background: #fff;
+            border-radius: 16px;
+            padding: 4px 11px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #444;
+        }
+        .theme-btn.active-pink {
+            border-color: #f48fb1;
+            background: #fce4ec;
+            color: #c2185b;
+        }
+        .theme-btn.active-blue {
+            border-color: #64b5f6;
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .video-container {
+            width: 100%;
+            max-width: 414px;
+            display: none;
+            margin-bottom: 8px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+            box-shadow: var(--shadow);
+        }
+        .video-container.show {
+            display: block;
+        }
+        #mediaPlayer {
+            width: 100%;
+            height: auto;
+            max-height: 200px;
+            display: block;
+            background: #000;
+        }
+
+        .status-card {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 414px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 8px;
+            text-align: center;
+            border: 2.5px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .status-card.playing {
+            border-color: var(--accent-green);
+            background: #f1f8e9;
+        }
+        .status-title {
+            font-size: 15px;
+            font-weight: bold;
+            margin-bottom: 1px;
+        }
+        .status-state {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--text-sub);
+        }
+        .status-card.playing .status-state {
+            color: var(--accent-green);
+        }
+
+        .stop-btn {
+            width: 100%;
+            max-width: 414px;
+            padding: 11px;
+            font-size: 15px;
+            font-weight: bold;
+            color: white;
+            background: #555;
+            border: none;
+            border-radius: 11px;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        .stop-btn:active {
+            opacity: 0.85;
+            transform: scale(0.98);
+        }
+
+        .radio-section {
+            width: 100%;
+            max-width: 414px;
+            background: var(--bg-radio);
+            border-radius: 14px;
+            padding: 10px 8px 4px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+
+        .section-title {
+            width: 100%;
+            max-width: 414px;
+            font-size: 15px;
+            font-weight: 800;
+            color: #555;
+            margin: 2px 0 6px 2px;
+        }
+        .radio-section .section-title {
+            margin-top: 0;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+            width: 100%;
+            max-width: 414px;
+            margin-bottom: 8px;
+        }
+        .radio-section .grid-container {
+            margin-bottom: 4px;
+        }
+
+        .channel-btn {
+            background: var(--card-bg);
+            border: 2px solid #e0e0e0;
+            border-radius: 11px;
+            padding: 6px 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            text-align: left;
+            min-height: 66px;
+            transition: transform 0.1s, border-color 0.2s, background 0.2s;
+        }
+        .channel-btn:active {
+            transform: scale(0.97);
+        }
+        .channel-btn.active {
+            border-color: var(--accent-red);
+            background: #fff8f8;
+        }
+        .channel-btn.link-btn {
+            border-style: dashed;
+        }
+
+        .channel-info {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            width: 100%;
+            gap: 4px;
+        }
+        .channel-info .icon {
+            font-size: 15.6px;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+        .channel-text {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            min-width: 0;
+            flex: 1;
+        }
+        .channel-name {
+            font-size: 15px;
+            font-weight: 800;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
+        .channel-desc {
+            font-size: 10.8px;
+            color: var(--text-sub);
+            font-weight: 500;
+            margin-top: 1px;
+            line-height: 1.2;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
+
+        .play-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-red);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: bold;
+            margin-top: 4px;
+            flex-shrink: 0;
+        }
+        .channel-btn.active .play-icon {
+            background: var(--accent-green);
+        }
+        .channel-btn.link-btn .play-icon {
+            background: #666;
+            font-size: 9px;
+        }
+
+        .instructions {
+            margin-top: auto;
+            padding-top: 10px;
+            text-align: center;
+            font-size: 11px;
+            color: #777;
+            max-width: 414px;
+            line-height: 1.5;
+        }
+        .instructions .line {
+            display: block;
+        }
+        .note {
+            font-size: 10px;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        @media screen and (max-width: 420px) {
+            body {
+                padding: calc(env(safe-area-inset-top) + 6px) 8px calc(env(safe-area-inset-bottom) + 6px) 8px;
+            }
+            .theme-bar {
+                margin-bottom: 6px;
+            }
+            .theme-btn {
+                padding: 4px 10px;
+                font-size: 11px;
+            }
+            .grid-container {
+                gap: 5px;
+            }
+            .channel-btn {
+                min-height: 62px;
+                padding: 5px 4px;
+            }
+            .channel-info .icon {
+                font-size: 15px;
+            }
+            .channel-name {
+                font-size: 14.4px;
+            }
+            .channel-desc {
+                font-size: 10.2px;
+            }
+            .play-icon {
+                width: 18px;
+                height: 18px;
+                font-size: 8px;
+            }
+            .section-title {
+                font-size: 14.5px;
+                margin: 2px 0 5px 1px;
+            }
+            .stop-btn {
+                padding: 10px;
+                font-size: 14.5px;
+                margin-bottom: 8px;
+            }
+            #mediaPlayer {
+                max-height: 180px;
+            }
+            .status-card {
+                padding: 9px 11px;
+                margin-bottom: 7px;
+            }
+            .status-title {
+                font-size: 14.5px;
+            }
+            .status-state {
+                font-size: 11.5px;
+            }
+            .radio-section {
+                padding: 8px 7px 3px;
+                margin-bottom: 8px;
+            }
+        }
+    </style>
+</head>
+<body class="theme-pink">
+
+    <div class="theme-bar">
+        <button class="theme-btn active-pink" id="btnPink" onclick="setTheme('pink')">🌸 粉紅</button>
+        <button class="theme-btn" id="btnBlue" onclick="setTheme('blue')">💙 淺藍</button>
+    </div>
+
+    <div class="video-container" id="videoContainer">
+        <video id="mediaPlayer" playsinline webkit-playsinline controls></video>
+    </div>
+
+    <div class="status-card" id="statusCard">
+        <div class="status-title" id="currentChannel">請選擇電台</div>
+        <div class="status-state" id="currentState">按下下方按鈕即可播放</div>
+    </div>
+
+    <button class="stop-btn" onclick="stopAudio()">⏹ 停止播放</button>
+
+    <!-- 電台區域 -->
+    <div class="radio-section">
+        <div class="section-title">香港電台</div>
+        <div class="grid-container">
+            <button class="channel-btn" onclick="playChannel(event, 1, '第一台', 'https://rthkradio1-live.akamaized.net/hls/live/2035313/radio1/master.m3u8', false)">
+                <div class="channel-info">
+                    <span class="icon">📻</span>
+                    <div class="channel-text">
+                        <span class="channel-name">第一台</span>
+                        <span class="channel-desc">新聞與時事</span>
+                    </div>
+                </div>
+                <div class="play-icon" id="icon-1">▶</div>
+            </button>
+            <button class="channel-btn" onclick="playChannel(event, 2, '第二台', 'https://rthkradio2-live.akamaized.net/hls/live/2040078/radio2/master.m3u8', false)">
+                <div class="channel-info">
+                    <span class="icon">📻</span>
+                    <div class="channel-text">
+                        <span class="channel-name">第二台</span>
+                        <span class="channel-desc">流行音樂</span>
+                    </div>
+                </div>
+                <div class="play-icon" id="icon-2">▶</div>
+            </button>
+            <button class="channel-btn" onclick="playChannel(event, 3, '第三台', 'https://rthkradio3-live.akamaized.net/hls/live/2040079/radio3/master.m3u8', false)">
+                <div class="channel-info">
+                    <span class="icon">📻</span>
+                    <div class="channel-text">
+                        <span class="channel-name">第三台</span>
+                        <span class="channel-desc">英文台</span>
+                    </div>
+                </div>
+                <div class="play-icon" id="icon-3">▶</div>
+            </button>
+            <button class="channel-btn" onclick="playChannel(event, 4, '第四台', 'https://rthkradio4-live.akamaized.net/hls/live/2040080/radio4/master.m3u8', false)">
+                <div class="channel-info">
+                    <span class="icon">📻</span>
+                    <div class="channel-text">
+                        <span class="channel-name">第四台</span>
+                        <span class="channel-desc">古典音樂</span>
+                    </div>
+                </div>
+                <div class="play-icon" id="icon-4">▶</div>
+            </button>
+            <button class="channel-btn" onclick="playChannel(event, 5, '第五台', 'https://rthkradio5-live.akamaized.net/hls/live/2040081/radio5/master.m3u8', false)">
+                <div class="channel-info">
+                    <span class="icon">📻</span>
+                    <div class="channel-text">
+                        <span class="channel-name">第五台</span>
+                        <span class="channel-desc">長者與戲曲</span>
+                    </div>
+                </div>
+                <div class="play-icon" id="icon-5">▶</div>
+            </button>
+            <div></div>
+        </div>
+
+        <div class="section-title">新城電台</div>
+        <div class="grid-container">
+            <button class="channel-btn" onclick="playChannel(event, 6, '知訊台 997', 'https://1603884249.rsc.cdn77.org/1603884249/index.m3u8', false)">
+                <div class="channel-info">
+                    <span class="icon">📻</span>
+                    <div class="channel-text">
+                        <span class="channel-name">知訊台 997</span>
+                        <span class="channel-desc">資訊・音樂</span>
+                    </div>
+                </div>
+                <div class="play-icon" id="icon-6">▶</div>
+            </button>
+            <button class="channel-btn" onclick="playChannel(event, 7, '財經台 104', 'https://1716664847.rsc.cdn77.org/1716664847/index.m3u8', false)">
+                <div class="channel-info">
+                    <span class="icon">📻</span>
+                    <div class="channel-text">
+                        <span class="channel-name">財經台 104</span>
+                        <span class="channel-desc">財經・股市</span>
+                    </div>
+                </div>
+                <div class="play-icon" id="icon-7">▶</div>
+            </button>
+            <div></div>
+        </div>
+
+        <div class="section-title">商業電台</div>
+        <div class="grid-container">
+            <button class="channel-btn link-btn" onclick="openOfficial('https://www.881903.com/live/881')">
+                <div class="channel-info">
+                    <span class="icon">📻</span>
+                    <div class="channel-text">
+                        <span class="channel-name">雷霆881</span>
+                        <span class="channel-desc">官方直播頁</span>
+                    </div>
+                </div>
+                <div class="play-icon">↗</div>
+            </button>
+            <button class="channel-btn link-btn" onclick="openOfficial('https://www.881903.com/live/903')">
+                <div class="channel-info">
+                    <span class="icon">📻</span>
+                    <div class="channel-text">
+                        <span class="channel-name">叱咤903</span>
+                        <span class="channel-desc">官方直播頁</span>
+                    </div>
+                </div>
+                <div class="play-icon">↗</div>
+            </button>
+            <div></div>
+        </div>
+    </div>
+
+    <!-- 電視頻道 -->
+    <div class="section-title">電視頻道</div>
+    <div class="grid-container">
+        <button class="channel-btn" onclick="playChannel(event, 9, 'RTHK 31', 'https://rthktv31-live.akamaized.net/hls/live/2036818/RTHKTV31/master.m3u8', true)">
+            <div class="channel-info">
+                <span class="icon">📺</span>
+                <div class="channel-text">
+                    <span class="channel-name">RTHK 31</span>
+                    <span class="channel-desc">港台電視31</span>
+                </div>
+            </div>
+            <div class="play-icon" id="icon-9">▶</div>
+        </button>
+        <button class="channel-btn" onclick="playChannel(event, 10, 'RTHK 32', 'https://rthktv32-live.akamaized.net/hls/live/2036819/RTHKTV32/master.m3u8', true)">
+            <div class="channel-info">
+                <span class="icon">📺</span>
+                <div class="channel-text">
+                    <span class="channel-name">RTHK 32</span>
+                    <span class="channel-desc">港台電視32</span>
+                </div>
+            </div>
+            <div class="play-icon" id="icon-10">▶</div>
+        </button>
+        <div></div>
+
+        <button class="channel-btn" onclick="playChannel(event, 11, '翡翠台', 'http://php.jdshipin.com:8880/TVOD/iptv.php?id=fct4', true)">
+            <div class="channel-info">
+                <span class="icon">📺</span>
+                <div class="channel-text">
+                    <span class="channel-name">翡翠台</span>
+                    <span class="channel-desc">TVB Jade・81台</span>
+                </div>
+            </div>
+            <div class="play-icon" id="icon-11">▶</div>
+        </button>
+        <button class="channel-btn" onclick="playChannel(event, 12, '娛樂新聞台', 'http://php.jdshipin.com/TVOD/iptv.php?id=tvbylxw', true)">
+            <div class="channel-info">
+                <span class="icon">📺</span>
+                <div class="channel-text">
+                    <span class="channel-name">娛樂新聞台</span>
+                    <span class="channel-desc">TVB・91台</span>
+                </div>
+            </div>
+            <div class="play-icon" id="icon-12">▶</div>
+        </button>
+        <div></div>
+
+        <button class="channel-btn link-btn" onclick="openOfficial('https://hoy.tv/live?channel_no=78')">
+            <div class="channel-info">
+                <span class="icon">📺</span>
+                <div class="channel-text">
+                    <span class="channel-name">HOY 新聞台</span>
+                    <span class="channel-desc">官方直播頁・78台</span>
+                </div>
+            </div>
+            <div class="play-icon">↗</div>
+        </button>
+        <button class="channel-btn link-btn" onclick="openOfficial('https://news.tvb.com/tc/live/C')">
+            <div class="channel-info">
+                <span class="icon">📺</span>
+                <div class="channel-text">
+                    <span class="channel-name">無線新聞台</span>
+                    <span class="channel-desc">官方直播頁</span>
+                </div>
+            </div>
+            <div class="play-icon">↗</div>
+        </button>
+        <button class="channel-btn link-btn" onclick="openOfficial('https://viu.tv/ch/99')">
+            <div class="channel-info">
+                <span class="icon">📺</span>
+                <div class="channel-text">
+                    <span class="channel-name">ViuTV</span>
+                    <span class="channel-desc">官方直播頁・99台</span>
+                </div>
+            </div>
+            <div class="play-icon">↗</div>
+        </button>
+    </div>
+
+    <div class="instructions">
+        <span class="line">iPhone：Safari 分享 →「加入主畫面」</span>
+        <span class="line">Android：Chrome 選單 →「加入主畫面」</span>
+        <span class="line note">HK Radio V2.2 · 自訂排列</span>
+        <span class="line">😌 by DL🎵</span>
+    </div>
+
+    <script>
+        const media = document.getElementById('mediaPlayer');
+        const videoContainer = document.getElementById('videoContainer');
+        const statusCard = document.getElementById('statusCard');
+        const currentChannelEl = document.getElementById('currentChannel');
+        const currentStateEl = document.getElementById('currentState');
+        const themeColorMeta = document.getElementById('themeColorMeta');
+        let activeId = null;
+        let hls = null;
+
+        function setTheme(theme) {
+            document.body.classList.remove('theme-pink', 'theme-blue');
+            document.body.classList.add(theme === 'blue' ? 'theme-blue' : 'theme-pink');
+            document.getElementById('btnPink').classList.toggle('active-pink', theme === 'pink');
+            document.getElementById('btnBlue').classList.toggle('active-blue', theme === 'blue');
+
+            const bgColor = theme === 'blue' ? '#9fc8e8' : '#f5c6d0';
+            if (themeColorMeta) {
+                themeColorMeta.setAttribute('content', bgColor);
+            }
+
+            try { localStorage.setItem('radioTheme', theme); } catch (e) {}
+        }
+
+        (function () {
+            let saved = 'pink';
+            try { saved = localStorage.getItem('radioTheme') || 'pink'; } catch (e) {}
+            setTheme(saved);
+        })();
+
+        function destroyHls() {
+            if (hls) {
+                hls.destroy();
+                hls = null;
+            }
+        }
+
+        function playChannel(e, id, name, url, isVideo = false) {
+            document.querySelectorAll('.channel-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.play-icon').forEach(icon => {
+                if (icon.textContent !== '↗') icon.textContent = '▶';
+            });
+
+            e.currentTarget.classList.add('active');
+            const icon = document.getElementById(`icon-${id}`);
+            if (icon) icon.textContent = '🔊';
+
+            currentChannelEl.textContent = name;
+            currentStateEl.textContent = "連線中，請稍候...";
+            statusCard.classList.remove('playing');
+
+            activeId = id;
+
+            if (isVideo) {
+                videoContainer.classList.add('show');
+            } else {
+                videoContainer.classList.remove('show');
+            }
+
+            destroyHls();
+            media.pause();
+            media.removeAttribute('src');
+            media.load();
+
+            if (Hls.isSupported()) {
+                hls = new Hls({
+                    enableWorker: true,
+                    lowLatencyMode: true,
+                    backBufferLength: 90
+                });
+                hls.loadSource(url);
+                hls.attachMedia(media);
+
+                hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                    const playPromise = media.play();
+                    if (playPromise !== undefined) {
+                        playPromise.then(() => {
+                            currentStateEl.textContent = "正在播放中 🟢";
+                            statusCard.classList.add('playing');
+                        }).catch(() => {
+                            currentStateEl.textContent = "播放失敗，請再試一次";
+                            statusCard.classList.remove('playing');
+                        });
+                    }
+                });
+
+                hls.on(Hls.Events.ERROR, function (event, data) {
+                    if (data.fatal) {
+                        currentStateEl.textContent = "連線失敗，請再試一次";
+                        statusCard.classList.remove('playing');
+                        destroyHls();
+                    }
+                });
+
+            } else if (media.canPlayType('application/vnd.apple.mpegurl')) {
+                media.src = url;
+                const playPromise = media.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        currentStateEl.textContent = "正在播放中 🟢";
+                        statusCard.classList.add('playing');
+                    }).catch(() => {
+                        currentStateEl.textContent = "播放失敗，請再試一次";
+                        statusCard.classList.remove('playing');
+                    });
+                }
+            } else {
+                currentStateEl.textContent = "此瀏覽器不支援此串流";
+                statusCard.classList.remove('playing');
+            }
+        }
+
+        function openOfficial(url) {
+            stopAudio();
+            currentChannelEl.textContent = "已開啟官方網頁";
+            currentStateEl.textContent = "本頁播放已停止";
+            window.open(url, '_blank');
+        }
+
+        function stopAudio() {
+            destroyHls();
+            media.pause();
+            media.removeAttribute('src');
+            media.load();
+            activeId = null;
+
+            videoContainer.classList.remove('show');
+
+            document.querySelectorAll('.channel-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.play-icon').forEach(icon => {
+                if (icon.textContent !== '↗') icon.textContent = '▶';
+            });
+            currentChannelEl.textContent = "已停止播放";
+            currentStateEl.textContent = "請選擇上方電台播放";
+            statusCard.classList.remove('playing');
+        }
+
+        media.addEventListener('pause', () => {
+            if (activeId && !media.ended) {
+                currentStateEl.textContent = "已暫停";
+                statusCard.classList.remove('playing');
+            }
         });
-        $('btnBackLearn').addEventListener('click', function () {
-          if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-          showScreen('home');
+        media.addEventListener('playing', () => {
+            currentStateEl.textContent = "正在播放中 🟢";
+            statusCard.classList.add('playing');
         });
-        $('btnHelpLearn').addEventListener('click', showHint);
-        $('btnHint').addEventListener('click', showHint);
-        $('btnNext').addEventListener('click', nextQuestion);
-        $('btnSpeak').addEventListener('click', function(){
-          unlockSpeech();
-          speakCurrentQuestion();
+        media.addEventListener('error', () => {
+            currentStateEl.textContent = "連線失敗，請再試一次";
+            statusCard.classList.remove('playing');
         });
-        $('btnBackPractice').addEventListener('click', function () { showScreen('home'); });
-        $('btnMixed').addEventListener('click', startMixed);
-        $('btnBackParent').addEventListener('click', function () { showScreen('home'); });
-      }
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', bind);
-      } else {
-        bind();
-      }
-    })();
-  </script>
+    </script>
 </body>
 </html>
