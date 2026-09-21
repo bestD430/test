@@ -440,7 +440,6 @@
       mtrbus: '港鐵巴士'
     };
 
-    // 龍運路線判斷
     function isLWB(route) {
       const r = String(route).toUpperCase();
       if (/^A[3-5]\d/.test(r)) return true;
@@ -451,7 +450,6 @@
       return false;
     }
 
-    // letter keys: 4 rows x 4
     const letterBox = document.getElementById('letterKeys');
     for (let i = 0; i < LETTERS.length; i += 4) {
       const row = document.createElement('div');
@@ -476,15 +474,13 @@
       auto: false, timer: null
     };
 
-    // Cache
     let cache = { 
       kmbRoutes: null, kmbAt: 0, 
       nlbRoutes: null, nlbAt: 0,
-      stopNames: {}, mtrStopNames: null
+      stopNames: {}
     };
     const TTL = 30 * 60 * 1000;
 
-    // Keypad
     document.getElementById('keypad').addEventListener('click', e => {
       const btn = e.target.closest('[data-k]');
       if (!btn) return;
@@ -523,7 +519,7 @@
         ]);
         let all = [];
         results.forEach(r => { if (r.status === 'fulfilled') all = all.concat(r.value || []); });
-        if (inputVal.toUpperCase() !== route) return; // stale
+        if (inputVal.toUpperCase() !== route) return;
         if (all.length === 0) {
           document.getElementById('results').innerHTML = '<div class="error-state">找不到路線「' + route + '」</div>';
           return;
@@ -559,7 +555,6 @@
       return { ctb: '城巴', nlb: '嶼巴', gmb: '小巴', mtrbus: '港鐵巴士', kmb: '' }[co] || '';
     }
 
-    // ---- Search APIs ----
     async function searchKMB(route) {
       try {
         const now = Date.now();
@@ -664,7 +659,6 @@
       } catch { return []; }
     }
 
-    // ---- Select route → stops ----
     async function selectRoute(m, route) {
       state.co = m.co;
       state.route = route;
@@ -693,7 +687,6 @@
       }
     }
 
-    // 取得單個車站名稱 (帶 Cache 避免大量併發請求)
     async function getKMBStopName(stopId) {
       if (cache.stopNames[stopId]) return cache.stopNames[stopId];
       try {
@@ -755,36 +748,23 @@
       return list.map(s => ({ seq: s.stop_seq, stopId: s.stop_id, name: s.name_tc || s.name_en || s.stop_id }));
     }
 
+    // 修正港鐵巴士站名讀取邏輯
     async function loadStopsMTRBus() {
-      let nameMap = cache.mtrStopNames;
-      if (!nameMap) {
-        try {
-          const csv = await (await fetch('https://opendata.mtr.com.hk/data/mtr_bus_stops.csv')).text();
-          nameMap = {};
-          csv.split(/\r?\n/).slice(1).forEach(line => {
-            const parts = line.split(',');
-            if (parts.length >= 8) {
-              const sid = parts[3].trim();
-              const name = parts[6].trim();
-              if (sid && name) nameMap[sid] = name;
-            }
-          });
-          cache.mtrStopNames = nameMap;
-        } catch (e) {
-          nameMap = {};
-        }
-      }
       const res = await fetch('https://rt.data.gov.hk/v1/transport/mtr/bus/getSchedule', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ language: 'zh', routeName: state.route })
       });
-      if (!res.ok) throw new Error('無法取得車站');
+      if (!res.ok) throw new Error('無法取得車站資料');
       const json = await res.json();
-      if (json.routeStatus === '3' || !(json.busStop || []).length)
+      if (json.routeStatus === '3' || !(json.busStop || []).length) {
         throw new Error(json.routeStatusRemarkTitle || '此路線暫停服務');
+      }
+      
       return (json.busStop || []).map((s, i) => {
-        const id = s.busStopId || String(i);
-        const name = nameMap[id] || s.busStopName || id;
+        const id = s.busStopId || String(i + 1);
+        // 直接從 API 回傳物件中取得站名，若無則依序取備用名稱或 ID
+        const name = s.busStopName || s.busStopName_tc || s.nameName || ('車站 ' + (i + 1));
         return { seq: i + 1, stopId: id, name: name, raw: s };
       });
     }
@@ -816,7 +796,6 @@
       startAutoRefresh();
     }
 
-    // ---- ETA ----
     async function fetchETA() {
       const rows = document.getElementById('etaRows');
       rows.innerHTML = '<div class="eta-empty">載入中...</div>';
