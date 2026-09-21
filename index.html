@@ -464,112 +464,65 @@ let state = {
     dirPath: ''
 };
 
-let cache = {
-    kmbRoutes: null,
-    kmbAt: 0,
-
-    nlbRoutes: null,
-    nlbAt: 0,
-
-    stopNames: {},
-
-    /* 港鐵巴士車站快取 */
-    mtrStops: null,
-    mtrAt: 0
-};
-
-
 /* =========================================================
    初始化
 ========================================================= */
 
 document.addEventListener('DOMContentLoaded', () => {
-
     buildKeypad();
-
     document.getElementById('routeInput').value = '';
-
 });
-
 
 /* =========================================================
    數字 / 字母鍵盤
 ========================================================= */
 
 function buildKeypad() {
-
     const keypad = document.getElementById('keypad');
-
     keypad.innerHTML = '';
 
     LETTERS.forEach(letter => {
-
         const btn = document.createElement('button');
-
         btn.className = 'key';
         btn.textContent = letter;
-
         btn.onclick = () => {
-
             const input = document.getElementById('routeInput');
-
             input.value += letter;
-
             input.focus();
-
         };
-
         keypad.appendChild(btn);
-
     });
-
 }
-
 
 /* =========================================================
    公司
 ========================================================= */
 
 function selectCompany(co) {
-
     state.co = co;
-
     document.querySelectorAll('.company-btn').forEach(btn => {
-
-        btn.classList.toggle(
-            'active',
-            btn.dataset.company === co
-        );
-
+        btn.classList.toggle('active', btn.dataset.company === co);
     });
-
     clearResults();
-
 }
-
 
 /* =========================================================
    清除
 ========================================================= */
 
 function clearResults() {
-
     document.getElementById('routeResults').innerHTML =
         '<div class="result-empty">請輸入路線並搜尋</div>';
-
     document.getElementById('directionCard').classList.add('hidden');
     document.getElementById('stopCard').classList.add('hidden');
     document.getElementById('etaCard').classList.add('hidden');
-
 }
-
 
 /* =========================================================
    搜尋路線
 ========================================================= */
 
 async function searchRoute() {
-
     const route = document
         .getElementById('routeInput')
         .value
@@ -577,277 +530,144 @@ async function searchRoute() {
         .toUpperCase();
 
     if (!route) {
-
         document.getElementById('routeResults').innerHTML =
             '<div class="result-empty">請輸入路線</div>';
-
         return;
-
     }
 
     state.route = route;
 
     const container = document.getElementById('routeResults');
-
-    container.innerHTML =
-        '<div class="loading">搜尋中…</div>';
+    container.innerHTML = '<div class="loading">搜尋中…</div>';
 
     try {
-
         let results = [];
 
         if (state.co === 'kmb') {
-
             results = await searchKMB(route);
-
         } else if (state.co === 'ctb') {
-
             results = await searchCTB(route);
-
         } else if (state.co === 'nlb') {
-
             results = await searchNLB(route);
-
         } else if (state.co === 'gmb') {
-
             results = await searchGMB(route);
-
         } else if (state.co === 'mtrbus') {
-
             results = await searchMTRBus(route);
-
         }
 
         renderRouteResults(results);
-
     } catch (err) {
-
         console.error(err);
-
         container.innerHTML =
             `<div class="error">${escapeHTML(err.message || '搜尋失敗')}</div>`;
-
     }
-
 }
-
 
 /* =========================================================
    九巴 / 龍運
 ========================================================= */
 
 async function searchKMB(route) {
-
-    const url =
-        'https://data.etagmb.gov.hk/route/route_list';
-
-    /*
-      先使用 KMB 公開 API。
-      若 API 格式改變，仍不影響其他公司。
-    */
-
     try {
-
-        const res = await fetch(
-            'https://data.etagmb.gov.hk/route/route_list'
-        );
-
-        if (!res.ok) {
-            throw new Error('KMB API 錯誤');
-        }
+        const res = await fetch('https://data.etagmb.gov.hk/route/route_list');
+        if (!res.ok) throw new Error('KMB API 錯誤');
 
         const json = await res.json();
-
-        const data = Array.isArray(json)
-            ? json
-            : (
-                json.data ||
-                json.routes ||
-                []
-            );
+        const data = Array.isArray(json) ? json : (json.data || json.routes || []);
 
         return data
-            .filter(r => {
-
-                const name =
-                    r.route ||
-                    r.routeName ||
-                    r.route_code ||
-                    '';
-
-                return String(name).toUpperCase() === route;
-
-            })
-            .map(r => {
-
-                return {
-                    co: 'kmb',
-                    bound: r.bound || r.direction || '',
-                    serviceType: r.service_type || '1',
-                    label: route,
-                    sub: r.bound || '',
-                    dest:
-                        r.dest_tc ||
-                        r.destination_tc ||
-                        r.dest ||
-                        ''
-                };
-
-            });
-
+            .filter(r => String(r.route || r.routeName || r.route_code || '').toUpperCase() === route)
+            .map(r => ({
+                co: 'kmb',
+                route: route,
+                bound: r.bound || r.direction || '',
+                serviceType: r.service_type || '1',
+                label: route,
+                sub: r.bound || '',
+                dest: r.dest_tc || r.destination_tc || r.dest || ''
+            }));
     } catch (e) {
-
         return [{
             co: 'kmb',
+            route: route,
             bound: '',
             serviceType: '1',
             label: route,
             sub: '',
             dest: ''
         }];
-
     }
-
 }
-
 
 /* =========================================================
    城巴
 ========================================================= */
 
 async function searchCTB(route) {
-
-    const url =
-        'https://rt.data.gov.hk/v2/transport/citybus/route/ctb';
-
-    const res = await fetch(url);
-
-    if (!res.ok) {
-        throw new Error('無法取得城巴路線資料');
-    }
+    const res = await fetch('https://rt.data.gov.hk/v2/transport/citybus/route/ctb');
+    if (!res.ok) throw new Error('無法取得城巴路線資料');
 
     const json = await res.json();
-
-    const data =
-        json.data ||
-        [];
+    const data = json.data || [];
 
     return data
-        .filter(r =>
-            String(r.route || '').toUpperCase() === route
-        )
+        .filter(r => String(r.route || '').toUpperCase() === route)
         .map(r => ({
             co: 'ctb',
+            route: route,
             bound: r.bound || '',
             serviceType: r.service_type || '',
             label: route,
             sub: r.bound || '',
             dest: r.dest_tc || ''
         }));
-
 }
-
 
 /* =========================================================
    嶼巴
 ========================================================= */
 
 async function searchNLB(route) {
-
-    /*
-      保留原有 NLB 搜尋邏輯。
-    */
-
     try {
-
-        const res = await fetch(
-            'https://rt.data.gov.hk/v2/transport/nlb/route.php?action=list'
-        );
-
-        if (!res.ok) {
-            throw new Error('無法取得嶼巴路線資料');
-        }
+        const res = await fetch('https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=list');
+        if (!res.ok) throw new Error('無法取得嶼巴路線資料');
 
         const json = await res.json();
-
-        const data =
-            json.routes ||
-            json.data ||
-            [];
+        const data = json.routes || json.data || [];
 
         return data
-            .filter(r => {
-
-                const name =
-                    r.routeNo ||
-                    r.route ||
-                    r.route_no ||
-                    '';
-
-                return String(name).toUpperCase() === route;
-
-            })
+            .filter(r => String(r.routeNo || r.route || r.route_no || '').toUpperCase() === route)
             .map(r => ({
-
                 co: 'nlb',
-
-                bound:
-                    r.bound ||
-                    r.direction ||
-                    '',
-
-                serviceType:
-                    r.serviceType ||
-                    '1',
-
+                route: route,
+                bound: r.bound || r.direction || '',
+                serviceType: r.serviceType || '1',
                 label: route,
-
-                sub:
-                    r.bound ||
-                    r.direction ||
-                    '',
-
-                dest:
-                    r.destination ||
-                    r.dest ||
-                    r.dest_tc ||
-                    '',
-
-                nlbRouteId:
-                    r.routeId ||
-                    r.route_id ||
-                    ''
-
+                sub: r.bound || r.direction || '',
+                dest: r.destination || r.dest || r.dest_tc || '',
+                nlbRouteId: r.routeId || r.route_id || ''
             }));
-
     } catch (e) {
-
         return [{
             co: 'nlb',
+            route: route,
             bound: '',
             serviceType: '1',
             label: route,
             sub: '',
             dest: ''
         }];
-
     }
-
 }
-
 
 /* =========================================================
    專線小巴
 ========================================================= */
 
 async function searchGMB(route) {
-
-    /*
-      保留原有 GMB 搜尋方式。
-    */
-
     return [{
         co: 'gmb',
+        route: route,
         bound: '',
         serviceType: '1',
         label: route,
@@ -856,184 +676,108 @@ async function searchGMB(route) {
         gmbRouteId: '',
         gmbRouteSeq: ''
     }];
-
 }
-
 
 /* =========================================================
    港鐵巴士
 ========================================================= */
 
 async function searchMTRBus(route) {
-
-    /*
-      港鐵巴士路線一般為 K 字頭，
-      例如 K1、K2、K3、K4、K5、K51 等。
-    */
-
     if (!/^K\d/i.test(route)) {
         return [];
     }
 
     return [{
         co: 'mtrbus',
+        route: route,
         bound: 'O',
         serviceType: '1',
-        label: '港鐵巴士 ' + route,
-        sub: '',
-        dest: route
+        label: route,
+        sub: '港鐵巴士',
+        dest: '雙向 / 環線'
     }];
-
 }
-
 
 /* =========================================================
    顯示路線
 ========================================================= */
 
 function renderRouteResults(results) {
-
-    const container =
-        document.getElementById('routeResults');
-
+    const container = document.getElementById('routeResults');
     container.innerHTML = '';
 
     if (!results || !results.length) {
-
-        container.innerHTML =
-            '<div class="result-empty">找不到此路線</div>';
-
+        container.innerHTML = '<div class="result-empty">找不到此路線</div>';
         return;
-
     }
 
-    results.forEach((r, index) => {
-
-        const btn =
-            document.createElement('button');
-
-        btn.className =
-            'route-result';
-
+    results.forEach((r) => {
+        const btn = document.createElement('button');
+        btn.className = 'route-result';
         btn.innerHTML = `
             <div class="route-result-main">
-                <span class="route-label">
-                    ${escapeHTML(r.label || state.route)}
-                </span>
-
-                <span class="route-company">
-                    ${escapeHTML(CO_NAMES[r.co] || '')}
-                </span>
+                <span class="route-label">${escapeHTML(r.label)}</span>
+                <span class="route-company">${escapeHTML(CO_NAMES[r.co] || '')}</span>
             </div>
-
-            <div class="route-dest">
-                ${escapeHTML(
-                    r.dest ||
-                    r.sub ||
-                    ''
-                )}
-            </div>
+            <div class="route-dest">${escapeHTML(r.dest || r.sub || '')}</div>
         `;
 
-        btn.onclick = () => {
-
-            selectRoute(r);
-
-        };
-
+        btn.onclick = () => selectRoute(r);
         container.appendChild(btn);
-
     });
-
 }
-
 
 /* =========================================================
    選擇路線
 ========================================================= */
 
 async function selectRoute(r) {
-
     state.co = r.co;
-    state.route = r.label || state.route;
+    state.route = r.route || r.label;
     state.bound = r.bound || '';
     state.serviceType = r.serviceType || '1';
     state.directionLabel = r.sub || '';
     state.nlbRouteId = r.nlbRouteId || '';
     state.gmbRouteId = r.gmbRouteId || '';
     state.gmbRouteSeq = r.gmbRouteSeq || '';
-    state.dirPath = '';
 
-    document.getElementById('directionCard')
-        .classList.add('hidden');
-
-    document.getElementById('stopCard')
-        .classList.add('hidden');
-
-    document.getElementById('etaCard')
-        .classList.add('hidden');
+    document.getElementById('directionCard').classList.add('hidden');
+    document.getElementById('stopCard').classList.add('hidden');
+    document.getElementById('etaCard').classList.add('hidden');
 
     try {
-
         let stops = [];
-
         if (state.co === 'mtrbus') {
-
             stops = await loadStopsMTRBus();
-
         } else if (state.co === 'kmb') {
-
             stops = await loadStopsKMB();
-
         } else if (state.co === 'ctb') {
-
             stops = await loadStopsCTB();
-
         } else if (state.co === 'nlb') {
-
             stops = await loadStopsNLB();
-
         } else if (state.co === 'gmb') {
-
             stops = await loadStopsGMB();
-
         }
 
         renderStops(stops);
-
     } catch (err) {
-
         console.error(err);
-
-        document.getElementById('stopCard')
-            .classList.remove('hidden');
-
+        document.getElementById('stopCard').classList.remove('hidden');
         document.getElementById('stopList').innerHTML =
-            `<div class="error">${escapeHTML(
-                err.message || '無法取得車站資料'
-            )}</div>`;
-
+            `<div class="error">${escapeHTML(err.message || '無法取得車站資料')}</div>`;
     }
-
 }
 
-
 /* =========================================================
-   港鐵巴士：取得車站
-   ★ 修正站名問題的主要部分
+   港鐵巴士：取得車站 (精準解析 busStopNameTC)
 ========================================================= */
 
 async function loadStopsMTRBus() {
-
     const res = await fetch(
         'https://rt.data.gov.hk/v1/transport/mtr/bus/getSchedule',
         {
             method: 'POST',
-
-            headers: {
-                'Content-Type': 'application/json'
-            },
-
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 language: 'zh',
                 routeName: state.route
@@ -1046,51 +790,15 @@ async function loadStopsMTRBus() {
     }
 
     const json = await res.json();
+    const busStops = json.busStop || [];
 
-    const busStops =
-        json.busStop ||
-        [];
-
-    if (
-        json.routeStatus === '3' ||
-        !busStops.length
-    ) {
-
-        throw new Error(
-            json.routeStatusRemarkTitle ||
-            '此路線暫停服務'
-        );
-
+    if (json.routeStatus === '3' || !busStops.length) {
+        throw new Error(json.routeStatusRemarkTitle || '此路線暫停服務或查無車站資料');
     }
 
-
-    /*
-     * 第一優先：
-     * 直接從 API 找中文站名。
-     *
-     * 不同版本 API 可能使用不同欄位名稱，
-     * 所以一次兼容多個名稱欄位。
-     */
-
-    let stops = busStops.map((s, i) => {
-
-        const id =
-            s.busStopId ||
-            s.stopId ||
-            s.bus_stop_id ||
-            String(i + 1);
-
-        const name =
-            s.busStopName_tc ||
-            s.busStopNameTc ||
-            s.busStopName ||
-            s.stopName_tc ||
-            s.stopNameTc ||
-            s.stopName ||
-            s.name_tc ||
-            s.nameTc ||
-            s.name ||
-            '';
+    return busStops.map((s, i) => {
+        const id = s.busStopId || s.stopId || String(i + 1);
+        const name = s.busStopNameTC || s.busStopName_tc || s.busStopName || `車站 ${id}`;
 
         return {
             seq: i + 1,
@@ -1098,531 +806,156 @@ async function loadStopsMTRBus() {
             name: String(name).trim(),
             raw: s
         };
-
     });
-
-
-    /*
-     * 如果 API 沒有直接提供站名，
-     * 嘗試讀取 MTR 公開站點資料。
-     */
-
-    if (
-        stops.some(s => !s.name)
-    ) {
-
-        try {
-
-            const csvUrls = [
-
-                'https://opendata.mtr.com.hk/data/mtr_bus_stops.csv',
-
-                'https://opendata.mtr.com.hk/data/mtr_bus_stop.csv'
-
-            ];
-
-            let csvText = '';
-
-            for (const url of csvUrls) {
-
-                try {
-
-                    const r = await fetch(url);
-
-                    if (r.ok) {
-
-                        csvText =
-                            await r.text();
-
-                        if (csvText.trim()) {
-                            break;
-                        }
-
-                    }
-
-                } catch (e) {
-
-                    console.warn(
-                        'MTR CSV 讀取失敗:',
-                        url,
-                        e
-                    );
-
-                }
-
-            }
-
-
-            if (csvText) {
-
-                const rows =
-                    parseCSV(csvText);
-
-                if (rows.length) {
-
-                    const headers =
-                        Object.keys(rows[0]);
-
-                    const idKey =
-                        findColumn(
-                            headers,
-                            [
-                                'busStopId',
-                                'bus_stop_id',
-                                'stopId',
-                                'stop_id',
-                                'stopcode',
-                                'stop_code',
-                                'id'
-                            ]
-                        );
-
-                    const zhKey =
-                        findColumn(
-                            headers,
-                            [
-                                'busStopName_tc',
-                                'busStopNameTc',
-                                'busStopName',
-                                'stopName_tc',
-                                'stopNameTc',
-                                'stopName',
-                                'name_tc',
-                                'nameTc',
-                                'name_zh',
-                                'chinese_name',
-                                'chi_name',
-                                'name'
-                            ]
-                        );
-
-
-                    if (idKey && zhKey) {
-
-                        const nameMap = {};
-
-                        rows.forEach(row => {
-
-                            const id =
-                                String(
-                                    row[idKey] || ''
-                                ).trim();
-
-                            const name =
-                                String(
-                                    row[zhKey] || ''
-                                ).trim();
-
-                            if (id && name) {
-                                nameMap[id] = name;
-                            }
-
-                        });
-
-
-                        stops = stops.map(s => {
-
-                            if (!s.name) {
-
-                                const mapped =
-                                    nameMap[
-                                        String(s.stopId)
-                                    ];
-
-                                if (mapped) {
-                                    s.name = mapped;
-                                }
-
-                            }
-
-                            return s;
-
-                        });
-
-                    }
-
-                }
-
-            }
-
-        } catch (e) {
-
-            console.warn(
-                'MTR 車站名稱資料讀取失敗:',
-                e
-            );
-
-        }
-
-    }
-
-
-    /*
-     * 最後保底：
-     * 如果仍然沒有名稱，就使用 stop ID。
-     * 避免顯示 undefined。
-     */
-
-    stops = stops.map((s, i) => {
-
-        if (!s.name) {
-
-            s.name =
-                s.stopId
-                    ? '車站 ' + s.stopId
-                    : '車站 ' + (i + 1);
-
-        }
-
-        return s;
-
-    });
-
-
-    /*
-     * 快取
-     */
-
-    cache.mtrStops = stops;
-    cache.mtrAt = Date.now();
-
-    return stops;
-
 }
-
 
 /* =========================================================
    其他公司車站
 ========================================================= */
 
 async function loadStopsKMB() {
-
-    /*
-      使用 KMB ETA API 取得車站資料。
-    */
-
     try {
-
-        const res = await fetch(
-            `https://data.etagmb.gov.hk/route-stop/${encodeURIComponent(state.route)}`
-        );
-
-        if (!res.ok) {
-            throw new Error('無法取得九巴車站資料');
-        }
+        const res = await fetch(`https://data.etagmb.gov.hk/route-stop/${encodeURIComponent(state.route)}`);
+        if (!res.ok) throw new Error('無法取得九巴車站資料');
 
         const json = await res.json();
-
-        const data =
-            json.data ||
-            json.route_stops ||
-            [];
+        const data = json.data || json.route_stops || [];
 
         return data.map((s, i) => ({
-
             seq: i + 1,
-
-            stopId:
-                s.stop ||
-                s.stop_id ||
-                s.stopId ||
-                String(i + 1),
-
-            name:
-                s.stop_name_tc ||
-                s.name_tc ||
-                s.stopName ||
-                s.name ||
-                '車站 ' + (i + 1),
-
+            stopId: s.stop || s.stop_id || String(i + 1),
+            name: s.stop_name_tc || s.name_tc || s.stopName || '車站 ' + (i + 1),
             raw: s
-
         }));
-
     } catch (e) {
-
-        throw new Error(
-            '無法取得九巴車站資料'
-        );
-
+        throw new Error('無法取得九巴車站資料');
     }
-
 }
-
 
 async function loadStopsCTB() {
-
-    const url =
-        'https://rt.data.gov.hk/v2/transport/citybus/route-stop/ctb/' +
-        encodeURIComponent(state.route) +
-        '/outbound';
+    const url = 'https://rt.data.gov.hk/v2/transport/citybus/route-stop/ctb/' +
+        encodeURIComponent(state.route) + '/outbound';
 
     const res = await fetch(url);
-
-    if (!res.ok) {
-        throw new Error('無法取得城巴車站資料');
-    }
+    if (!res.ok) throw new Error('無法取得城巴車站資料');
 
     const json = await res.json();
-
-    const data =
-        json.data ||
-        [];
+    const data = json.data || [];
 
     return data.map((s, i) => ({
-
         seq: i + 1,
-
-        stopId:
-            s.stop ||
-            s.stop_id ||
-            String(i + 1),
-
-        name:
-            s.stop_name_tc ||
-            s.name_tc ||
-            s.stopName ||
-            s.name ||
-            '車站 ' + (i + 1),
-
+        stopId: s.stop || s.stop_id || String(i + 1),
+        name: s.stop_name_tc || s.name_tc || s.stopName || '車站 ' + (i + 1),
         raw: s
-
     }));
-
 }
-
 
 async function loadStopsNLB() {
-
     try {
-
-        const res = await fetch(
-            `https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=list`
-        );
-
-        if (!res.ok) {
-            throw new Error('無法取得嶼巴車站資料');
-        }
+        const res = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=list`);
+        if (!res.ok) throw new Error('無法取得嶼巴車站資料');
 
         const json = await res.json();
-
-        const data =
-            json.stops ||
-            json.data ||
-            [];
+        const data = json.stops || json.data || [];
 
         return data.map((s, i) => ({
-
             seq: i + 1,
-
-            stopId:
-                s.stopId ||
-                s.stop_id ||
-                s.id ||
-                String(i + 1),
-
-            name:
-                s.stopName_c ||
-                s.stopName_tc ||
-                s.name_tc ||
-                s.name ||
-                '車站 ' + (i + 1),
-
+            stopId: s.stopId || s.stop_id || String(i + 1),
+            name: s.stopName_c || s.stopName_tc || s.name_tc || '車站 ' + (i + 1),
             raw: s
-
         }));
-
     } catch (e) {
-
-        throw new Error(
-            '無法取得嶼巴車站資料'
-        );
-
+        throw new Error('無法取得嶼巴車站資料');
     }
-
 }
-
 
 async function loadStopsGMB() {
-
-    /*
-      GMB 保留基本結構。
-    */
-
     return [];
-
 }
-
 
 /* =========================================================
    顯示車站
 ========================================================= */
 
 function renderStops(stops) {
-
-    const card =
-        document.getElementById('stopCard');
-
-    const list =
-        document.getElementById('stopList');
+    const card = document.getElementById('stopCard');
+    const list = document.getElementById('stopList');
 
     card.classList.remove('hidden');
-
     list.innerHTML = '';
 
     if (!stops || !stops.length) {
-
-        list.innerHTML =
-            '<div class="result-empty">沒有車站資料</div>';
-
+        list.innerHTML = '<div class="result-empty">沒有車站資料</div>';
         return;
-
     }
 
-
     stops.forEach((s, index) => {
-
-        const btn =
-            document.createElement('button');
-
-        btn.className =
-            'stop-btn';
-
+        const btn = document.createElement('button');
+        btn.className = 'stop-btn';
         btn.innerHTML = `
-            <span class="stop-seq">
-                ${escapeHTML(
-                    String(s.seq || index + 1)
-                )}
-            </span>
-
-            <span class="stop-name">
-                ${escapeHTML(
-                    s.name ||
-                    '車站 ' + (index + 1)
-                )}
-            </span>
+            <span class="stop-seq">${escapeHTML(String(s.seq || index + 1))}</span>
+            <span class="stop-name">${escapeHTML(s.name)}</span>
         `;
-
-        btn.onclick = () => {
-
-            selectStop(s);
-
-        };
-
+        btn.onclick = () => selectStop(s);
         list.appendChild(btn);
-
     });
-
 }
-
 
 /* =========================================================
    選擇車站
 ========================================================= */
 
 async function selectStop(s) {
+    state.stopId = String(s.stopId || '');
+    state.stopName = s.name || '車站';
+    state.mtrRawStop = s.raw || null;
 
-    state.stopId =
-        String(
-            s.stopId ||
-            ''
-        );
-
-    state.stopName =
-        s.name ||
-        '車站';
-
-    /*
-     * 港鐵巴士保留原始 busStop 資料，
-     * ETA 時可直接使用。
-     */
-
-    state.mtrRawStop =
-        s.raw ||
-        null;
-
-    document.getElementById('etaStopName')
-        .textContent =
-            state.stopName;
-
-    document.getElementById('etaCard')
-        .classList.remove('hidden');
+    document.getElementById('etaStopName').textContent = state.stopName;
+    document.getElementById('etaCard').classList.remove('hidden');
 
     await loadETA();
-
 }
-
 
 /* =========================================================
    ETA
 ========================================================= */
 
 async function loadETA() {
-
-    const list =
-        document.getElementById('etaList');
-
-    list.innerHTML =
-        '<div class="loading">載入到站時間…</div>';
+    const list = document.getElementById('etaList');
+    list.innerHTML = '<div class="loading">載入到站時間…</div>';
 
     try {
-
         let etas = [];
 
         if (state.co === 'mtrbus') {
-
             etas = await etaMTRBus();
-
         } else if (state.co === 'kmb') {
-
             etas = await etaKMB();
-
         } else if (state.co === 'ctb') {
-
             etas = await etaCTB();
-
         } else if (state.co === 'nlb') {
-
             etas = await etaNLB();
-
         } else if (state.co === 'gmb') {
-
             etas = await etaGMB();
-
         }
 
         renderETA(etas);
-
     } catch (err) {
-
         console.error(err);
-
-        list.innerHTML =
-            `<div class="error">${escapeHTML(
-                err.message ||
-                '無法取得到站時間'
-            )}</div>`;
-
+        list.innerHTML = `<div class="error">${escapeHTML(err.message || '無法取得到站時間')}</div>`;
     }
-
 }
-
 
 /* =========================================================
    港鐵巴士 ETA
 ========================================================= */
 
 async function etaMTRBus() {
-
     const res = await fetch(
         'https://rt.data.gov.hk/v1/transport/mtr/bus/getSchedule',
         {
             method: 'POST',
-
-            headers: {
-                'Content-Type': 'application/json'
-            },
-
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 language: 'zh',
                 routeName: state.route
@@ -1630,400 +963,80 @@ async function etaMTRBus() {
         }
     );
 
-    if (!res.ok) {
-        throw new Error(
-            '無法取得港鐵巴士到站時間'
-        );
-    }
+    if (!res.ok) throw new Error('無法取得港鐵巴士到站時間');
 
-    const json =
-        await res.json();
+    const json = await res.json();
 
-    /*
-     * 優先用目前選擇的 stopId 找車站。
-     */
+    let stop = (json.busStop || []).find(
+        s => String(s.busStopId || s.stopId || '') === String(state.stopId)
+    );
 
-    let stop =
-        (json.busStop || []).find(
-            s =>
-                String(
-                    s.busStopId ||
-                    s.stopId ||
-                    ''
-                ) === String(state.stopId)
-        );
-
-
-    /*
-     * 如果 API 回傳的 stop ID 格式不同，
-     * 再使用選擇車站時保存的 raw stop。
-     */
-
-    if (!stop) {
-
-        stop =
-            state.mtrRawStop;
-
-    }
-
-
-    if (!stop) {
-
-        return [];
-
-    }
-
+    if (!stop) stop = state.mtrRawStop;
+    if (!stop) return [];
 
     return (stop.bus || []).map(b => {
-
-        const sec =
-            parseInt(
-                b.arrivalTimeInSecond,
-                10
-            );
-
+        const sec = parseInt(b.arrivalTimeInSecond, 10);
         return {
-
-            eta:
-                new Date(
-                    Date.now() +
-                    (
-                        isNaN(sec)
-                            ? 0
-                            : sec * 1000
-                    )
-                ).toISOString(),
-
-            rmk:
-                b.arrivalTimeText ||
-                ''
-
+            eta: new Date(Date.now() + (isNaN(sec) ? 0 : sec * 1000)).toISOString(),
+            rmk: b.arrivalTimeText || ''
         };
-
     });
-
 }
 
-
-/* =========================================================
-   其他 ETA
-========================================================= */
-
-async function etaKMB() {
-
-    return [];
-
-}
-
-
-async function etaCTB() {
-
-    return [];
-
-}
-
-
-async function etaNLB() {
-
-    return [];
-
-}
-
-
-async function etaGMB() {
-
-    return [];
-
-}
-
+async function etaKMB() { return []; }
+async function etaCTB() { return []; }
+async function etaNLB() { return []; }
+async function etaGMB() { return []; }
 
 /* =========================================================
    顯示 ETA
 ========================================================= */
 
 function renderETA(etas) {
-
-    const list =
-        document.getElementById('etaList');
-
+    const list = document.getElementById('etaList');
     list.innerHTML = '';
 
     if (!etas || !etas.length) {
-
-        list.innerHTML =
-            '<div class="result-empty">暫時沒有到站資料</div>';
-
+        list.innerHTML = '<div class="result-empty">暫時沒有到站資料</div>';
         return;
-
     }
 
-
     etas.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'eta-item';
 
-        const row =
-            document.createElement('div');
-
-        row.className =
-            'eta-item';
-
-        const diff =
-            Math.max(
-                0,
-                Math.round(
-                    (
-                        new Date(item.eta).getTime() -
-                        Date.now()
-                    ) / 60000
-                )
-            );
+        const diff = Math.max(0, Math.round((new Date(item.eta).getTime() - Date.now()) / 60000));
 
         row.innerHTML = `
             <div>
-                <div class="eta-min">
-                    ${diff === 0 ? '即將到站' : diff + ' 分鐘'}
-                </div>
-
-                ${
-                    item.rmk
-                        ? `<div class="eta-remark">
-                            ${escapeHTML(item.rmk)}
-                           </div>`
-                        : ''
-                }
+                <div class="eta-min">${diff === 0 ? '即將到站' : diff + ' 分鐘'}</div>
+                ${item.rmk ? `<div class="eta-remark">${escapeHTML(item.rmk)}</div>` : ''}
             </div>
-
-            <div class="eta-text">
-                ${formatTime(item.eta)}
-            </div>
+            <div class="eta-text">${formatTime(item.eta)}</div>
         `;
 
         list.appendChild(row);
-
     });
-
 }
 
-
 /* =========================================================
-   CSV 解析
-========================================================= */
-
-function parseCSV(text) {
-
-    const rows = [];
-
-    let row = [];
-
-    let cell = '';
-
-    let insideQuotes = false;
-
-
-    for (let i = 0; i < text.length; i++) {
-
-        const ch = text[i];
-
-        const next =
-            text[i + 1];
-
-
-        if (ch === '"') {
-
-            if (
-                insideQuotes &&
-                next === '"'
-            ) {
-
-                cell += '"';
-
-                i++;
-
-            } else {
-
-                insideQuotes =
-                    !insideQuotes;
-
-            }
-
-            continue;
-
-        }
-
-
-        if (ch === ',' && !insideQuotes) {
-
-            row.push(cell);
-
-            cell = '';
-
-            continue;
-
-        }
-
-
-        if (
-            (ch === '\n' || ch === '\r') &&
-            !insideQuotes
-        ) {
-
-            if (
-                ch === '\r' &&
-                next === '\n'
-            ) {
-                i++;
-            }
-
-            row.push(cell);
-
-            cell = '';
-
-            if (row.some(v => v !== '')) {
-
-                rows.push(row);
-
-            }
-
-            row = [];
-
-            continue;
-
-        }
-
-
-        cell += ch;
-
-    }
-
-
-    if (cell !== '' || row.length) {
-
-        row.push(cell);
-
-        if (row.some(v => v !== '')) {
-
-            rows.push(row);
-
-        }
-
-    }
-
-
-    if (!rows.length) {
-        return [];
-    }
-
-
-    const headers =
-        rows[0].map(
-            h =>
-                String(h)
-                    .replace(/^\uFEFF/, '')
-                    .trim()
-        );
-
-
-    return rows
-        .slice(1)
-        .map(values => {
-
-            const obj = {};
-
-            headers.forEach((header, index) => {
-
-                obj[header] =
-                    values[index] !== undefined
-                        ? values[index].trim()
-                        : '';
-
-            });
-
-            return obj;
-
-        });
-
-}
-
-
-/* =========================================================
-   找 CSV 欄位
-========================================================= */
-
-function findColumn(headers, candidates) {
-
-    const normalized = {};
-
-    headers.forEach(h => {
-
-        normalized[
-            h.toLowerCase()
-                .replace(/[\s_-]/g, '')
-        ] = h;
-
-    });
-
-
-    for (const candidate of candidates) {
-
-        const key =
-            candidate
-                .toLowerCase()
-                .replace(/[\s_-]/g, '');
-
-        if (normalized[key]) {
-
-            return normalized[key];
-
-        }
-
-    }
-
-
-    return null;
-
-}
-
-
-/* =========================================================
-   HTML 安全處理
+   通用工具
 ========================================================= */
 
 function escapeHTML(value) {
-
     return String(value ?? '')
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
-
 }
 
-
-/* =========================================================
-   時間格式
-========================================================= */
-
 function formatTime(iso) {
-
-    if (!iso) {
-        return '';
-    }
-
-    const d =
-        new Date(iso);
-
-    if (isNaN(d.getTime())) {
-        return '';
-    }
-
-    return d.toLocaleTimeString(
-        'zh-HK',
-        {
-            hour: '2-digit',
-            minute: '2-digit'
-        }
-    );
-
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit' });
 }
 </script>
 
