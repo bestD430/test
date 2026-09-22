@@ -159,14 +159,13 @@
       transform: scale(0.96);
     }
    .key-letter {
-      width: 44px;
+      flex: 1;
       height: 44px;
-      border-radius: 50%;
-      font-size: 1.2rem;
+      border-radius: 6px;
+      font-size: 1.1rem;
       font-weight: 700;
       background: #FFFFFF;
       color: #000000;
-      flex: 0 0 44px;
       box-shadow: 0 1px 1px rgba(0,0,0,0.2);
     }
    .key-letter:active { background: #D1D1D6; }
@@ -189,15 +188,10 @@
       gap: 6px;
     }
    .letter-pad {
-      flex: 1;
+      flex: 1.2;
       display: flex;
       flex-direction: column;
       gap: 6px;
-      overflow-y: auto;
-      max-height: 210px;
-    }
-   .letter-pad.key-row {
-      justify-content: center;
     }
    .page { display: none; flex-direction: column; height: 100%; }
    .page.active { display: flex; }
@@ -405,6 +399,7 @@
   </div>
 
   <script>
+    // 設定為 16 個常用巴士英文字母，剛好排列為 4 行 × 4 列
     const LETTERS = ['A','B','C','D','E','F','H','K','M','N','P','R','S','T','W','X'];
     const CO_NAMES = {
       kmb: '九巴',
@@ -425,11 +420,12 @@
       return false;
     }
 
+    // 動態生成 4 行 × 4 列的英文字鍵盤
     const letterBox = document.getElementById('letterKeys');
-    for (let i = 0; i < LETTERS.length; i += 2) {
+    for (let i = 0; i < LETTERS.length; i += 4) {
       const row = document.createElement('div');
       row.className = 'key-row';
-      LETTERS.slice(i, i + 2).forEach(L => {
+      LETTERS.slice(i, i + 4).forEach(L => {
         const b = document.createElement('button');
         b.className = 'key key-letter';
         b.dataset.k = L;
