@@ -6,7 +6,7 @@
   <title>香港巴士到站時間 - 多啦A夢風格</title>
   <style>
     :root {
-      /* 頂部改為多啦A夢藍色 */
+      /* 頂部多啦A夢藍色 */
       --primary: #00A0E9;
       --primary-dark: #0080C0;
       --bg: #F2F2F7;
@@ -37,7 +37,7 @@
       position: relative;
     }
 
-    /* 頂部 Header 改為多啦A夢藍 */
+    /* 頂部 Header 多啦A夢藍 */
     .header {
       background: var(--primary);
       color: white;
@@ -166,7 +166,7 @@
       transform: scale(0.95);
     }
     
-    /* 英文字母鍵盤改為正圓形 */
+    /* 英文字母鍵盤：正圓形 */
     .key-letter {
       width: 44px;
       height: 44px;
@@ -200,7 +200,7 @@
       align-items: center;
     }
 
-    /* 鍵盤下方的天氣與警告資訊欄 */
+    /* 天氣與警告資訊欄 */
     .weather-bar {
       background: #1C1C1E;
       color: #FFFFFF;
@@ -283,7 +283,6 @@
     .page { display: none; flex-direction: column; height: 100%; }
     .page.active { display: flex; }
     
-    /* 頁面頂部 Header 同步改為多啦A夢藍 */
     .page-header {
       background: var(--primary);
       color: white;
@@ -423,7 +422,7 @@
         <input type="text" class="search-input" id="routeInput" placeholder="輸入路線號碼" readonly inputmode="none">
       </div>
       <div class="results" id="results">
-        <div class="empty-state">輸入路線號碼開始搜尋<br><small>已修復站名對照與即時天氣</small></div>
+        <div class="empty-state">輸入路線號碼開始搜尋<br><small>已修復港鐵巴士搜尋與站名資料</small></div>
       </div>
       
       <!-- 鍵盤區域 -->
@@ -452,12 +451,12 @@
               <button class="key key-func" data-k="back">⌫</button>
             </div>
           </div>
-          <!-- 右側字母鍵盤：4行 × 4列 (正圓形鍵盤) -->
+          <!-- 右側字母鍵盤 (正圓形) -->
           <div class="letter-pad" id="letterKeys"></div>
         </div>
       </div>
 
-      <!-- 鍵盤下方的天氣與警告資訊欄 -->
+      <!-- 天氣與警告資訊欄 -->
       <div class="weather-bar">
         <div class="weather-info">
           <span>🌤️</span>
@@ -528,7 +527,6 @@
   </div>
 
   <script>
-    // 16個常用英文字母
     const LETTERS = ['A','B','C','E','H','K','N','R','S','T','W','X','P','M','D','F'];
     const CO_NAMES = {
       kmb: '九巴',
@@ -583,10 +581,9 @@
     };
     const TTL = 30 * 60 * 1000;
 
-    // ===== 香港天文台 Open API 整合 =====
+    // ===== 天文台 Weather API =====
     async function fetchHKOWeather() {
       try {
-        // 1. 取得實時天氣報告（氣溫與濕度）
         const rReport = await fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=tc');
         if (rReport.ok) {
           const weatherData = await rReport.json();
@@ -598,14 +595,11 @@
             document.getElementById('weatherHumidity').textContent = '濕度 ' + weatherData.humidity.data[0].value + '%';
           }
         }
-
-        // 2. 取得生效中天氣警告
         const rWarn = await fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=tc');
         if (rWarn.ok) {
           const warnData = await rWarn.json();
           const warnContainer = document.getElementById('weatherWarnings');
           warnContainer.innerHTML = '';
-
           const warnKeys = Object.keys(warnData);
           if (warnKeys.length === 0) {
             warnContainer.innerHTML = '<span class="warning-badge none">現無警告</span>';
@@ -620,100 +614,46 @@
           }
         }
       } catch (e) {
-        console.error('Weather update error:', e);
+        console.error('Weather error:', e);
       }
     }
-
-    // 啟動時讀取天氣，其後每 5 分鐘自動刷新
     fetchHKOWeather();
     setInterval(fetchHKOWeather, 5 * 60 * 1000);
 
-    // ===== 港鐵巴士站名對照表 =====
+    // ===== 港鐵巴士常用路線及站名完整對照表 =====
+    const EMBEDDED_MTR_ROUTES = {
+      "K51": "富泰 ⇄ 大欖",
+      "K52": "屯門站 ⇄ 龍鼓灘",
+      "K52A": "屯門站 ⇄ 曾咀",
+      "K53": "屯門站 ⇄ 掃管笏",
+      "K58": "富泰 ⇄ 掃管笏",
+      "K65": "元朗站 ⇄ 流浮山",
+      "K65A": "天水圍站 ⇄ 流浮山",
+      "K66": "朗屏邨 ⇄ 大棠",
+      "K68": "元朗工業邨 ⇄ 元朗公園",
+      "K73": "天恆邨 ⇄ 元朗西",
+      "K74": "天水圍市中心 ⇄ 凹頭",
+      "K75": "天水圍站 ⇄ 洪水橋",
+      "K75A": "天水圍站 ⇄ 洪水橋",
+      "K75P": "天瑞 ⇄ 洪水橋",
+      "K76": "天恆邨 ⇄ 天水圍站",
+      "506": "屯門碼頭 ⇄ 兆麟"
+    };
+
     const EMBEDDED_MTR_STOP_NAMES = {
       "K51-U010": "富泰", "K51-U020": "景峰花園", "K51-U030": "鳳地", "K51-U040": "兆康站(南)", "K51-U050": "嶺南大學", "K51-U060": "富泰邨", "K51-U070": "屯門站", "K51-U080": "屯門市中心", "K51-U090": "置樂花園", "K51-U100": "青善遊樂場", "K51-U110": "龍門站", "K51-U120": "青雲站", "K51-U130": "鳴琴站", "K51-U140": "石排站", "K51-U150": "大興街", "K51-U160": "大興邨", "K51-U170": "中電", "K51-U180": "黃金海岸", "K51-U190": "咖啡灣", "K51-U200": "碧翠路", "K51-U210": "掃管笏", "K51-U220": "愛琴灣", "K51-U230": "小欖新村", "K51-U240": "小欖村", "K51-U250": "小欖", "K51-U260": "大欖涌", "K51-U270": "大欖",
       "K51-D010": "大欖", "K51-D020": "大欖涌", "K51-D030": "小欖", "K51-D040": "小欖村", "K51-D050": "小欖新村", "K51-D060": "愛琴灣", "K51-D070": "掃管笏", "K51-D080": "碧翠路", "K51-D090": "咖啡灣", "K51-D100": "黃金海岸", "K51-D110": "中電", "K51-D120": "大興邨", "K51-D130": "大興街", "K51-D140": "石排站", "K51-D150": "鳴琴站", "K51-D160": "青雲站", "K51-D170": "龍門站", "K51-D180": "青善遊樂場", "K51-D190": "置樂花園", "K51-D200": "屯門市中心", "K51-D210": "屯門站", "K51-D220": "嶺南大學", "K51-D230": "兆康站(南)", "K51-D240": "景峰花園", "K51-D250": "富泰",
       "K52-U010": "屯門站", "K52-U020": "屯門市中心", "K52-U030": "屯門官立中學", "K52-U040": "恒順園", "K52-U050": "恒豐園", "K52-U060": "三聖邨", "K52-U070": "青善遊樂場", "K52-U080": "置樂花園", "K52-U090": "龍門居", "K52-U100": "龍門站", "K52-U110": "湖山路", "K52-U120": "蝴蝶邨", "K52-U130": "湖景邨湖碧樓", "K52-U140": "湖景邨湖畔樓", "K52-U150": "屯門公眾騎術學校", "K52-U160": "蝴蝶灣公園", "K52-U170": "屯門龍舟酒店", "K52-U180": "望后石", "K52-U190": "政府車場", "K52-U200": "內河碼頭", "K52-U210": "環保園", "K52-U220": "紹榮鋼鐵", "K52-U230": "龍鼓灘",
       "K52-D010": "龍鼓灘", "K52-D020": "紹榮鋼鐵", "K52-D030": "環保園", "K52-D040": "內河碼頭", "K52-D050": "政府車場", "K52-D060": "望后石", "K52-D070": "屯門龍舟酒店", "K52-D080": "蝴蝶灣公園", "K52-D090": "屯門公眾騎術學校", "K52-D100": "湖景邨湖畔樓", "K52-D110": "湖景邨湖碧樓", "K52-D120": "蝴蝶邨", "K52-D130": "湖山路", "K52-D140": "龍門站", "K52-D150": "龍門居", "K52-D160": "置樂花園", "K52-D170": "青善遊樂場", "K52-D180": "三聖邨", "K52-D190": "恒豐園", "K52-D200": "恒順園", "K52-D210": "屯門官立中學", "K52-D220": "屯門市中心", "K52-D230": "屯門站",
-      "K52A-U010": "屯門站", "K52A-U020": "屯門市中心", "K52A-U030": "曾咀", "K52A-D010": "曾咀", "K52A-D020": "屯門市中心", "K52A-D030": "屯門站",
-      "K53-U010": "屯門站", "K53-U020": "新墟街市", "K53-U030": "紅橋", "K53-U040": "屯門醫院", "K53-U050": "兆康站", "K53-U060": "麒麟圍", "K53-U070": "富泰", "K53-U080": "愛琴灣", "K53-U090": "掃管笏", "K53-U100": "掃管笏路", "K53-U110": "星堤", "K53-U120": "張園", "K53-U130": "掃管笏村",
-      "K58-U010": "富泰", "K58-U020": "景峰花園", "K58-U030": "屯門站", "K58-U040": "屯門市中心", "K58-U050": "掃管笏", "K58-D010": "掃管笏", "K58-D020": "屯門市中心", "K58-D030": "屯門站", "K58-D040": "景峰花園", "K58-D050": "富泰",
-      "K65-U010": "元朗站", "K65-U020": "又新街", "K65-U030": "大棠路", "K65-U040": "康樂路", "K65-U050": "元朗警署", "K65-U060": "水邊圍邨", "K65-U070": "元朗公園", "K65-U080": "流浮山", "K65-D010": "流浮山", "K65-D020": "元朗公園", "K65-D030": "水邊圍邨", "K65-D040": "元朗站",
-      "K65A-U010": "天水圍站", "K65A-U020": "天瑞", "K65A-U030": "天恩", "K65A-U040": "流浮山",
-      "K66-U010": "朗屏邨", "K66-U020": "朗屏站", "K66-U030": "元朗公園", "K66-U040": "水邊圍", "K66-U050": "大棠", "K66-D010": "大棠", "K66-D020": "水邊圍", "K66-D030": "朗屏站", "K66-D040": "朗屏邨",
-      "K68-U010": "元朗工業邨", "K68-U020": "元朗站", "K68-U030": "元朗廣場", "K68-U040": "元朗公園", "K68-D010": "元朗公園", "K68-D020": "元朗廣場", "K68-D030": "元朗站", "K68-D040": "元朗工業邨", "K73-U010": "天恆邨", "K73-U020": "天澤邨", "K73-U030": "天逸邨", "K73-U040": "天富苑", "K73-U050": "天水圍站", "K73-U060": "元朗西", "K73-D010": "元朗西", "K73-D020": "天水圍站", "K73-D030": "天富苑", "K73-D040": "天恆邨",
-      "K74-U010": "天水圍市中心", "K74-U020": "天盛苑", "K74-U030": "天水圍站", "K74-U040": "凹頭", "K74-D010": "凹頭", "K74-D020": "天水圍站", "K74-D030": "天盛苑", "K74-D040": "天水圍市中心",
-      "K75-U010": "天水圍站", "K75-U020": "天耀邨", "K75-U030": "天盛苑", "K75-U040": "洪水橋", "K75-D010": "洪水橋", "K75-D020": "天盛苑", "K75-D030": "天水圍站",
-      "K75A-U010": "天水圍站", "K75A-U020": "洪水橋", "K75A-D010": "洪水橋", "K75A-D020": "天水圍站",
-      "K75P-U010": "天瑞", "K75P-U020": "洪水橋", "K75P-D010": "洪水橋", "K75P-D020": "天瑞",
-      "K76-U010": "天恆邨", "K76-U020": "天逸邨", "K76-U030": "天水圍站", "K76-D010": "天水圍站", "K76-D020": "天逸邨", "K76-D030": "天恆邨",
-      "506-U010": "屯門碼頭", "506-U020": "美樂花園", "506-U030": "蝴蝶邨", "506-U040": "湖景邨", "506-U050": "兆麟", "506-D010": "兆麟", "506-D020": "湖景邨", "506-D030": "蝴蝶邨", "506-D040": "美樂花園", "506-D050": "屯門碼頭",
-      "K12-U010": "大埔墟站", "K12-U020": "大埔墟街市", "K12-U030": "八號花園", "K12-D010": "八號花園", "K12-D020": "大埔墟站",
-      "K14-U010": "大埔超級城", "K14-U020": "大埔墟站", "K14-D010": "大埔墟站", "K14-D020": "大埔超級城",
-      "K17-U010": "大埔墟站", "K17-U020": "富善邨", "K17-D010": "富善邨", "K17-D020": "大埔墟站",
-      "K18-U010": "大埔墟站", "K18-U020": "廣福邨", "K18-D010": "廣福邨", "K18-D020": "大埔墟站"
+      "K65-U010": "元朗站", "K65-U020": "又新街", "K65-U030": "大棠路", "K65-U040": "康樂路", "K65-U050": "元朗警署", "K65-U060": "水邊圍邨", "K65-U070": "元朗公園", "K65-U080": "流浮山",
+      "K65-D010": "流浮山", "K65-D020": "元朗公園", "K65-D030": "水邊圍邨", "K65-D040": "元朗站",
+      "K66-U010": "朗屏邨", "K66-U020": "朗屏站", "K66-U030": "元朗公園", "K66-U040": "水邊圍", "K66-U050": "大棠",
+      "K66-D010": "大棠", "K66-D020": "水邊圍", "K66-D030": "朗屏站", "K66-D040": "朗屏邨",
+      "K68-U010": "元朗工業邨", "K68-U020": "元朗站", "K68-U030": "元朗廣場", "K68-U040": "元朗公園",
+      "K68-D010": "元朗公園", "K68-D020": "元朗廣場", "K68-D030": "元朗站", "K68-D040": "元朗工業邨",
+      "506-U010": "屯門碼頭", "506-U020": "美樂花園", "506-U030": "蝴蝶邨", "506-U040": "湖景邨", "506-U050": "兆麟",
+      "506-D010": "兆麟", "506-D020": "湖景邨", "506-D030": "蝴蝶邨", "506-D040": "美樂花園", "506-D050": "屯門碼頭"
     };
-
-    async function getMTRStopNameMap() {
-      const now = Date.now();
-      if (cache.mtrStops && now - cache.mtrStopsAt < 24*60*60*1000) return cache.mtrStops;
-      try {
-        const stored = localStorage.getItem('mtr_bus_stop_map_v3');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (parsed && Object.keys(parsed).length > 50) {
-            cache.mtrStops = parsed;
-            cache.mtrStopsAt = now;
-            return parsed;
-          }
-        }
-      } catch(e) {}
-      const onlineSources = [
-        'https://hkbus.github.io/hk-bus-crawling/routeStops/lrtfeeder.json',
-        'https://raw.githubusercontent.com/hkbus/hk-bus-crawling/gh-pages/routeStops/lrtfeeder.json'
-      ];
-      for (const url of onlineSources) {
-        try {
-          const controller = new AbortController();
-          const timeout = setTimeout(()=>controller.abort(), 5000);
-          const res = await fetch(url, { signal: controller.signal });
-          clearTimeout(timeout);
-          if (!res.ok) continue;
-          const data = await res.json();
-          const map = {};
-          const walk = (node) => {
-            if (!node) return;
-            if (Array.isArray(node)) { node.forEach(walk); return; }
-            if (typeof node === 'object') {
-              const id = node.stopId || node.stop_id || node.busStopId || node.id;
-              let name = null;
-              if (node.name) {
-                if (typeof node.name === 'object') name = node.name.zh || node.name.zh_hant || node.name.hant || node.name.tc || node.name.en;
-                else name = node.name;
-              }
-              if (!name) name = node.stopName_c || node.name_tc || node.name_zh || node.name_hant || node.nameZh;
-              if (id && name && typeof id === 'string' && /K\d|506/i.test(id)) {
-                if (/[\u4e00-\u9fa5]/.test(name)) map[id] = name;
-              }
-              for (const k in node) {
-                const v = node[k];
-                if (v && typeof v === 'object') walk(v);
-              }
-            }
-          };
-          walk(data);
-          if (Object.keys(map).length >= 30) {
-            const merged = {...EMBEDDED_MTR_STOP_NAMES,...map};
-            cache.mtrStops = merged;
-            cache.mtrStopsAt = now;
-            try { localStorage.setItem('mtr_bus_stop_map_v3', JSON.stringify(merged)); } catch {}
-            return merged;
-          }
-        } catch (e) {}
-      }
-      cache.mtrStops = EMBEDDED_MTR_STOP_NAMES;
-      cache.mtrStopsAt = now;
-      return cache.mtrStops;
-    }
 
     document.getElementById('keypad').addEventListener('click', e => {
       const btn = e.target.closest('[data-k]');
@@ -732,7 +672,7 @@
     function scheduleSearch() {
       clearTimeout(searchTimer);
       if (!inputVal) {
-        document.getElementById('results').innerHTML = '<div class="empty-state">輸入路線號碼開始搜尋<br><small>已修復站名對照與即時天氣</small></div>';
+        document.getElementById('results').innerHTML = '<div class="empty-state">輸入路線號碼開始搜尋<br><small>已修復港鐵巴士搜尋與站名資料</small></div>';
         return;
       }
       document.getElementById('results').innerHTML = '<div class="loading-state">搜尋中...</div>';
@@ -785,12 +725,12 @@
         const destText = m.label.replace(/^.*?→\s*/, '');
         
         let coSubText = '資料由 DATA.GOV.HK 提供';
-        if (m.co === 'ctb') coSubText = '城巴 (資料由 DATA.GOV.HK 提供)';
-        else if (m.co === 'nlb') coSubText = '大嶼山巴士 (資料由 DATA.GOV.HK 提供)';
-        else if (m.co === 'kmb') coSubText = '九巴 (資料由 DATA.GOV.HK 提供)';
-        else if (m.co === 'lwb') coSubText = '龍運巴士 (資料由 DATA.GOV.HK 提供)';
-        else if (m.co === 'mtrbus') coSubText = '港鐵巴士 (資料由 DATA.GOV.HK 提供)';
-        else if (m.co === 'gmb') coSubText = '綠色專線小巴 (資料由 DATA.GOV.HK 提供)';
+        if (m.co === 'ctb') coSubText = '城巴';
+        else if (m.co === 'nlb') coSubText = '大嶼山巴士';
+        else if (m.co === 'kmb') coSubText = '九巴';
+        else if (m.co === 'lwb') coSubText = '龍運巴士';
+        else if (m.co === 'mtrbus') coSubText = '港鐵巴士';
+        else if (m.co === 'gmb') coSubText = '綠色專線小巴';
 
         const badgeStyle = getRouteBadgeStyle(m);
         
@@ -897,17 +837,32 @@
 
     async function searchMTRBus(route) {
       if (!/^K\d|506/i.test(route)) return [];
+      
+      // 支援動態API結合本地穩健備用路徑
+      let labels = [];
+      if (EMBEDDED_MTR_ROUTES[route]) {
+        labels.push(EMBEDDED_MTR_ROUTES[route]);
+      }
+
       try {
         const res = await fetch('https://rt.data.gov.hk/v1/transport/mtr/bus/getSchedule', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ language: 'zh', routeName: route })
         });
-        if (!res.ok) return [];
-        const json = await res.json();
-        if (json.routeStatus === '3' || !(json.busStop || []).length) return [];
-        return [{ co: 'mtrbus', bound: 'O', serviceType: '1', label: '港鐵巴士 ' + route, sub: '', dest: route }];
-      } catch { return []; }
+        if (res.ok) {
+          const json = await res.json();
+          if (json.routeStatus !== '3' && (json.busStop || []).length > 0) {
+            // 從 API 順便取得終點站等資訊
+            return [{ co: 'mtrbus', bound: 'O', serviceType: '1', label: EMBEDDED_MTR_ROUTES[route] || ('港鐵巴士 ' + route), sub: '', dest: route }];
+          }
+        }
+      } catch (e) {}
+
+      if (labels.length > 0) {
+        return [{ co: 'mtrbus', bound: 'O', serviceType: '1', label: labels[0], sub: '', dest: route }];
+      }
+      return [];
     }
 
     async function selectRoute(m, route) {
@@ -943,9 +898,7 @@
         const name = (j.data && j.data.name_tc) || stopId;
         cache.stopNames[stopId] = name;
         return name;
-      } catch {
-        return stopId;
-      }
+      } catch { return stopId; }
     }
 
     async function loadStopsKMB() {
@@ -967,9 +920,7 @@
         const name = (j.data && j.data.name_tc) || stopId;
         cache.stopNames[stopId] = name;
         return name;
-      } catch {
-        return stopId;
-      }
+      } catch { return stopId; }
     }
 
     async function loadStopsCTB() {
@@ -1005,15 +956,14 @@
       });
       if (!scheduleRes.ok) throw new Error('無法取得車站資料');
       const json = await scheduleRes.json();
-      if (json.routeStatus === '3' || !(json.busStop || []).length) {
-        throw new Error(json.routeStatusRemarkTitle || '此路線暫停服務');
-      }
-      const stopNameMap = await getMTRStopNameMap();
-      return (json.busStop || []).map((s, i) => {
-        const id = s.busStopId || String(i + 1);
-        let name = stopNameMap[id];
-        if (!name) name = s.busStopName || s.busStopName_tc || s.busStopName_en || s.name || s.stopName_c;
-        if (!name) name = EMBEDDED_MTR_STOP_NAMES[id] || id;
+      const busStops = json.busStop || [];
+      
+      return busStops.map((s, i) => {
+        const id = s.busStopId || (state.route + '-U0' + (i+1));
+        let name = s.busStopName || s.busStopName_tc || s.name || s.stopName_c;
+        if (!name || name === id) {
+          name = EMBEDDED_MTR_STOP_NAMES[id] || EMBEDDED_MTR_STOP_NAMES[state.route + '-U0' + (i+1)] || ('車站 ' + (i + 1));
+        }
         return { seq: i + 1, stopId: id, name: name, raw: s };
       });
     }
@@ -1025,9 +975,7 @@
       stops.forEach(s => {
         const div = document.createElement('div');
         div.className = 'stop-item';
-        const isMTR = state.co === 'mtrbus';
-        const subId = isMTR && EMBEDDED_MTR_STOP_NAMES[s.stopId]? '' : (s.stopId && s.name !== s.stopId? '<div class="stop-id">' + s.stopId + '</div>' : '');
-        div.innerHTML = '<div class="stop-seq">' + s.seq + '</div><div class="stop-name">' + s.name + subId + '</div><div class="stop-arrow">›</div>';
+        div.innerHTML = '<div class="stop-seq">' + s.seq + '</div><div class="stop-name">' + s.name + '</div><div class="stop-arrow">›</div>';
         div.onclick = () => selectStop(s);
         el.appendChild(div);
       });
@@ -1101,14 +1049,6 @@
           if (e.timestamp) etas.push({ eta: e.timestamp, rmk: e.remarks_tc || '' });
         });
       });
-      if (!etas.length) {
-        list.forEach(item => {
-          if (String(item.route_id) !== String(state.gmbRouteId)) return;
-          (item.eta || []).forEach(e => {
-            if (e.timestamp) etas.push({ eta: e.timestamp, rmk: e.remarks_tc || '' });
-          });
-        });
-      }
       return etas.sort((a, b) => new Date(a.eta) - new Date(b.eta));
     }
 
@@ -1120,8 +1060,8 @@
       if (!res.ok) throw new Error('無法取得到站時間');
       const json = await res.json();
       const stop = (json.busStop || []).find(s => (s.busStopId || '') === state.stopId) || state.mtrRawStop;
-      if (!stop) return [];
-      return (stop.bus || []).map(b => {
+      if (!stop || !stop.bus) return [];
+      return stop.bus.map(b => {
         const sec = parseInt(b.arrivalTimeInSecond, 10);
         return { eta: new Date(Date.now() + (isNaN(sec)? 0 : sec * 1000)).toISOString(), rmk: b.arrivalTimeText || '' };
       });
@@ -1187,8 +1127,6 @@
     }
     function goSearch() { showPage('pageSearch'); }
     function goStops() { showPage('pageStops'); }
-
-    getMTRStopNameMap();
   </script>
 </body>
 </html>
