@@ -70,7 +70,7 @@
     .search-input:focus { border-color: var(--primary); background: white; }
     .search-input::placeholder { color: #c7c7cc; font-weight: 400; letter-spacing: 0; }
 
-    /* Keypad - 已將位置向上移動 1.5 個按鍵高度 (46px * 1.5 = 69px) */
+    /* Keypad 樣式校正 */
     .keypad {
       flex-shrink: 0;
       background: #5a6570;
@@ -78,8 +78,6 @@
       user-select: none;
       position: relative;
       z-index: 10;
-      transform: translateY(-69px);
-      margin-bottom: -69px;
     }
     .key-row {
       display: flex;
@@ -91,11 +89,11 @@
     .key {
       flex: 1;
       max-width: 72px;
-      height: 46px;
+      height: 44px;
       border: none;
       border-radius: 8px;
       background: white;
-      font-size: 1.35rem;
+      font-size: 1.25rem;
       font-weight: 500;
       color: var(--text);
       cursor: pointer;
@@ -111,15 +109,13 @@
       transform: scale(0.96);
     }
     .key-letter {
-      flex: 1;
-      max-width: 48px;
-      width: 42px;
-      height: 42px;
+      flex: 0 0 40px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
-      font-size: 1.05rem;
+      font-size: 1rem;
       background: #d8dce0;
       color: #1c1c1e;
-      flex: 0 0 42px;
     }
     .key-letter:active { background: #b0b6bc; }
     .key-func {
@@ -145,9 +141,6 @@
       flex-direction: column;
       gap: 5px;
     }
-    .letter-pad .key-row {
-      justify-content: center;
-    }
 
     /* Results list */
     .results {
@@ -159,7 +152,7 @@
     .result-item {
       display: flex;
       align-items: center;
-      padding: 14px 16px;
+      padding: 12px 16px;
       border-bottom: 1px solid var(--border);
       cursor: pointer;
       gap: 12px;
@@ -167,13 +160,12 @@
     }
     .result-item:active { background: #f2f2f7; }
     
-    /* 路線號字體加大50% (原 1.15rem -> 1.725rem) */
     .result-num {
-      font-size: 1.725rem;
+      font-size: 1.5rem;
       font-weight: 700;
-      min-width: 64px;
+      min-width: 68px;
       text-align: center;
-      padding: 4px 10px;
+      padding: 4px 8px;
       border-radius: 6px;
       letter-spacing: 0.5px;
       line-height: 1.1;
@@ -186,16 +178,17 @@
     .plate-nlb { background: #007A3D; color: #fff; }          /* 嶼巴綠 */
     .plate-gmb { background: #00A651; color: #fff; }          /* 小巴綠 */
     .plate-mtrbus { background: #0077C8; color: #fff; }       /* 港鐵藍 */
+
     .result-info { flex: 1; min-width: 0; }
     .result-dest {
       font-size: 0.98rem;
-      font-weight: 500;
+      font-weight: 600;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .result-co {
-      font-size: 0.75rem;
+      font-size: 0.78rem;
       color: var(--muted);
       margin-top: 2px;
     }
@@ -209,12 +202,6 @@
       padding: 40px 20px;
       color: var(--muted);
       font-size: 0.95rem;
-    }
-    .error-state {
-      text-align: center;
-      padding: 24px 20px;
-      color: var(--red);
-      font-size: 0.9rem;
     }
 
     /* Sub pages */
@@ -234,8 +221,8 @@
       background: none;
       border: none;
       color: white;
-      font-size: 1.4rem;
-      padding: 4px 10px;
+      font-size: 1.5rem;
+      padding: 4px 12px;
       cursor: pointer;
       line-height: 1;
     }
@@ -244,7 +231,6 @@
       text-align: center;
       font-size: 1.05rem;
       font-weight: 600;
-      margin-right: 36px;
     }
 
     .stop-list, .eta-area {
@@ -269,7 +255,6 @@
       font-weight: 600;
     }
     .stop-name { font-size: 0.98rem; font-weight: 500; flex: 1; }
-    .stop-arrow { color: #c7c7cc; }
 
     /* ETA board */
     .eta-header-info {
@@ -277,33 +262,20 @@
       color: white;
       padding: 16px;
     }
-    
-    /* 預計到站頂部路線號字體加大50% (原 1.4rem -> 2.1rem) */
     .eta-route-num {
-      font-size: 2.1rem;
+      font-size: 2rem;
       font-weight: 700;
       display: inline-block;
-      padding: 4px 14px;
+      padding: 4px 12px;
       border-radius: 6px;
-      letter-spacing: 0.5px;
       line-height: 1.1;
     }
     .eta-route-num.plate-kmb { background: #E4002B; color: #fff; }
     .eta-route-num.plate-lwb { background: #F15A22; color: #fff; }
     .eta-route-num.plate-ctb { background: #FFD100; color: #1a1a1a; }
-    .eta-route-num.plate-nlb { background: #007A3D; color: #fff; }
-    .eta-route-num.plate-gmb { background: #00A651; color: #fff; }
-    .eta-route-num.plate-mtrbus { background: #0077C8; color: #fff; }
-    .eta-dest-text { font-size: 0.95rem; color: #aeaeb2; margin-top: 4px; }
-    .eta-stop-text { font-size: 0.9rem; margin-top: 8px; }
-    .eta-co-badge {
-      display: inline-block;
-      background: #3a3a3c;
-      padding: 2px 8px;
-      border-radius: 5px;
-      font-size: 0.72rem;
-      margin-top: 6px;
-    }
+    .eta-dest-text { font-size: 0.95rem; color: #aeaeb2; margin-top: 6px; }
+    .eta-stop-text { font-size: 1.1rem; font-weight: 600; margin-top: 8px; color: #fff; }
+    
     .eta-rows { padding: 8px 0; }
     .eta-row {
       display: flex;
@@ -316,7 +288,6 @@
       font-size: 1.4rem;
       font-weight: 700;
       color: var(--green);
-      font-variant-numeric: tabular-nums;
     }
     .eta-mins.soon { color: var(--amber); }
     .eta-mins.arrived { color: var(--red); }
@@ -324,11 +295,6 @@
       font-size: 0.88rem;
       color: var(--muted);
       text-align: right;
-    }
-    .eta-empty {
-      text-align: center;
-      padding: 40px 16px;
-      color: var(--muted);
     }
     .eta-toolbar {
       display: flex;
@@ -347,78 +313,29 @@
       font-size: 0.9rem;
       font-weight: 600;
       cursor: pointer;
-      font-family: inherit;
     }
-    .eta-btn:active { background: #e5e5ea; }
     .eta-btn.active-refresh {
       background: var(--primary);
       color: white;
     }
-    .eta-refresh-info {
-      text-align: center;
-      font-size: 0.75rem;
-      color: var(--muted);
-      padding: 6px 16px 10px;
-      background: white;
-    }
 
-    /* Favorites & History */
-    .section-title {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 16px 6px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: var(--muted);
-      letter-spacing: 0.5px;
-      background: #fafafa;
-      border-bottom: 1px solid var(--border);
-    }
-    .section-title .clear-link {
-      background: none;
-      border: none;
-      color: var(--primary);
-      font-size: 0.75rem;
-      font-weight: 500;
-      cursor: pointer;
-      font-family: inherit;
-      padding: 2px 4px;
-    }
     .fav-btn {
       background: none;
       border: none;
-      font-size: 1.25rem;
+      font-size: 1.3rem;
       cursor: pointer;
-      padding: 4px 6px;
-      line-height: 1;
-      flex-shrink: 0;
+      padding: 4px;
       color: #c7c7cc;
-      transition: color 0.15s, transform 0.1s;
     }
     .fav-btn.on { color: #ff9500; }
-    .fav-btn:active { transform: scale(0.9); }
-    .result-item .fav-btn { margin-left: auto; }
-    .home-hint {
-      text-align: center;
-      padding: 28px 20px 12px;
-      color: var(--muted);
-      font-size: 0.9rem;
-    }
-    .page-header .fav-btn {
-      color: rgba(255,255,255,0.7);
-      font-size: 1.3rem;
-      margin-right: 4px;
-    }
-    .page-header .fav-btn.on { color: #ffd60a; }
   </style>
 </head>
 <body>
   <div class="app">
 
-    <!-- ========== PAGE: SEARCH ========== -->
+    <!-- PAGE: SEARCH -->
     <div class="page active" id="pageSearch">
-      <div class="header">搜尋</div>
+      <div class="header">香港巴士到站時間</div>
       <div class="search-box">
         <input type="text" class="search-input" id="routeInput" placeholder="輸入路線號碼" readonly inputmode="none">
       </div>
@@ -447,10 +364,30 @@
             </div>
           </div>
           <div class="letter-pad" id="letterKeys">
-            <div class="key-row"><button class="key key-letter" data-k="A">A</button><button class="key key-letter" data-k="B">B</button><button class="key key-letter" data-k="C">C</button><button class="key key-letter" data-k="D">D</button></div>
-            <div class="key-row"><button class="key key-letter" data-k="E">E</button><button class="key key-letter" data-k="F">F</button><button class="key key-letter" data-k="H">H</button><button class="key key-letter" data-k="K">K</button></div>
-            <div class="key-row"><button class="key key-letter" data-k="M">M</button><button class="key key-letter" data-k="N">N</button><button class="key key-letter" data-k="P">P</button><button class="key key-letter" data-k="R">R</button></div>
-            <div class="key-row"><button class="key key-letter" data-k="S">S</button><button class="key key-letter" data-k="T">T</button><button class="key key-letter" data-k="W">W</button><button class="key key-letter" data-k="X">X</button></div>
+            <div class="key-row">
+              <button class="key key-letter" data-k="A">A</button>
+              <button class="key key-letter" data-k="B">B</button>
+              <button class="key key-letter" data-k="C">C</button>
+              <button class="key key-letter" data-k="D">D</button>
+            </div>
+            <div class="key-row">
+              <button class="key key-letter" data-k="E">E</button>
+              <button class="key key-letter" data-k="F">F</button>
+              <button class="key key-letter" data-k="H">H</button>
+              <button class="key key-letter" data-k="K">K</button>
+            </div>
+            <div class="key-row">
+              <button class="key key-letter" data-k="M">M</button>
+              <button class="key key-letter" data-k="N">N</button>
+              <button class="key key-letter" data-k="P">P</button>
+              <button class="key key-letter" data-k="R">R</button>
+            </div>
+            <div class="key-row">
+              <button class="key key-letter" data-k="S">S</button>
+              <button class="key key-letter" data-k="T">T</button>
+              <button class="key key-letter" data-k="W">W</button>
+              <button class="key key-letter" data-k="X">X</button>
+            </div>
           </div>
         </div>
       </div>
@@ -459,34 +396,30 @@
       </div>
     </div>
 
-    <!-- ========== PAGE: STOPS ========== -->
+    <!-- PAGE: STOPS -->
     <div class="page" id="pageStops">
       <div class="page-header">
         <button class="back-btn" onclick="goSearch()">‹</button>
         <div class="page-title" id="stopsTitle">選擇車站</div>
-        <button class="fav-btn" id="stopsFavBtn" onclick="toggleFavFromStops()" title="收藏此路線">☆</button>
       </div>
       <div class="stop-list" id="stopList">
         <div class="loading-state">載入車站中...</div>
       </div>
     </div>
 
-    <!-- ========== PAGE: ETA ========== -->
+    <!-- PAGE: ETA -->
     <div class="page" id="pageEta">
       <div class="page-header">
         <button class="back-btn" onclick="goStops()">‹</button>
         <div class="page-title">預計到站</div>
-        <button class="fav-btn" id="etaFavBtn" onclick="toggleFavFromEta()" title="收藏此路線">☆</button>
       </div>
       <div class="eta-area" id="etaArea">
         <div class="eta-header-info">
           <div class="eta-route-num" id="etaRoute">—</div>
           <div class="eta-dest-text" id="etaDest">—</div>
           <div class="eta-stop-text" id="etaStopName">—</div>
-          <div class="eta-co-badge" id="etaCo">—</div>
         </div>
         <div class="eta-rows" id="etaRows"></div>
-        <div class="eta-refresh-info" id="etaInfo"></div>
       </div>
       <div class="eta-toolbar">
         <button class="eta-btn" onclick="fetchETA()">🔄 刷新</button>
@@ -497,261 +430,289 @@
   </div>
 
   <script>
-    const LETTERS = ['A','B','C','D','E','F','H','K','M','N','P','R','S','T','W','X'];
-    const CO_NAMES = {
-      kmb: '九巴',
-      lwb: '龍運',
-      ctb: '城巴',
-      nlb: '嶼巴（大嶼山巴士）',
-      gmb: '專線小巴',
-      mtrbus: '港鐵巴士'
-    };
-
-    function isLWB(route) {
-      const r = String(route).toUpperCase();
-      if (/^A[3-5]\d/.test(r)) return true;
-      if (/^E[3-4]\d/.test(r)) return true;
-      if (/^S(1|64)/.test(r)) return true;
-      if (/^R(8|33|42)/.test(r)) return true;
-      if (/^N(30|31|36|39|42|64)/.test(r)) return true;
-      return false;
-    }
-
-    const letterBox = document.getElementById('letterKeys');
-    // 字母鍵已在 HTML 靜態產生；僅在空白時才動態補上（兼容舊版）
-    if (letterBox && !letterBox.children.length) {
-      for (let i = 0; i < LETTERS.length; i += 4) {
-        const row = document.createElement('div');
-        row.className = 'key-row';
-        LETTERS.slice(i, i + 4).forEach(L => {
-          const b = document.createElement('button');
-          b.className = 'key key-letter';
-          b.dataset.k = L;
-          b.textContent = L;
-          row.appendChild(b);
-        });
-        letterBox.appendChild(row);
-      }
-    }
-
-    // ========== 收藏 & 歷史 ==========
-    const LS_FAV = 'hkbus_fav_v1';
-    const LS_HIST = 'hkbus_hist_v1';
-    const HIST_MAX = 20;
-    const FAV_MAX = 30;
-
-    function loadJSON(key, fallback) {
-      try {
-        const s = localStorage.getItem(key);
-        if (!s) return fallback;
-        const v = JSON.parse(s);
-        return Array.isArray(v) ? v : fallback;
-      } catch { return fallback; }
-    }
-    function saveJSON(key, val) {
-      try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
-    }
-
-    function routeKey(m, route) {
-      return [
-        (route || m.route || '').toUpperCase(),
-        m.co || '',
-        m.bound || '',
-        m.serviceType || '1',
-        m.nlbRouteId || '',
-        m.gmbRouteId || '',
-        m.gmbRouteSeq || '',
-        m.mtrDir || '',
-        m.dirPath || ''
-      ].join('|');
-    }
-
-    function snapshotRoute(m, route) {
-      return {
-        key: routeKey(m, route),
-        route: (route || m.route || '').toUpperCase(),
-        co: m.co,
-        bound: m.bound,
-        serviceType: m.serviceType || '1',
-        label: m.label || '',
-        sub: m.sub || '',
-        dest: m.dest || '',
-        nlbRouteId: m.nlbRouteId || null,
-        gmbRouteId: m.gmbRouteId || null,
-        gmbRouteSeq: m.gmbRouteSeq || null,
-        dirPath: m.dirPath || null,
-        mtrDir: m.mtrDir || '',
-        at: Date.now()
-      };
-    }
-
-    function getFavs() { return loadJSON(LS_FAV, []); }
-    function getHist() { return loadJSON(LS_HIST, []); }
-
-    function isFav(m, route) {
-      const k = routeKey(m, route);
-      return getFavs().some(f => f.key === k);
-    }
-
-    function toggleFav(m, route) {
-      let list = getFavs();
-      const k = routeKey(m, route);
-      const idx = list.findIndex(f => f.key === k);
-      if (idx >= 0) {
-        list.splice(idx, 1);
-      } else {
-        list.unshift(snapshotRoute(m, route));
-        if (list.length > FAV_MAX) list = list.slice(0, FAV_MAX);
-      }
-      saveJSON(LS_FAV, list);
-      return idx < 0; // true if now favorited
-    }
-
-    function addHistory(m, route) {
-      let list = getHist();
-      const snap = snapshotRoute(m, route);
-      list = list.filter(h => h.key !== snap.key);
-      list.unshift(snap);
-      if (list.length > HIST_MAX) list = list.slice(0, HIST_MAX);
-      saveJSON(LS_HIST, list);
-    }
-
-    function clearHistory() {
-      saveJSON(LS_HIST, []);
-      if (!inputVal) renderHome();
-    }
-
-    function clearFavs() {
-      if (!confirm('確定清除全部收藏？')) return;
-      saveJSON(LS_FAV, []);
-      if (!inputVal) renderHome();
-      updateHeaderFavBtns();
-    }
-
-    function favItemFromState() {
-      return {
-        route: state.route,
-        co: state.co,
-        bound: state.bound,
-        serviceType: state.serviceType || '1',
-        label: state.directionLabel || '',
-        sub: '',
-        dest: state.directionLabel || '',
-        nlbRouteId: state.nlbRouteId,
-        gmbRouteId: state.gmbRouteId,
-        gmbRouteSeq: state.gmbRouteSeq,
-        dirPath: state.dirPath,
-        mtrDir: state.mtrDir || ''
-      };
-    }
-
-    function updateHeaderFavBtns() {
-      if (!state.route || !state.co) return;
-      const m = favItemFromState();
-      const on = isFav(m, state.route);
-      ['stopsFavBtn', 'etaFavBtn'].forEach(id => {
-        const btn = document.getElementById(id);
-        if (!btn) return;
-        btn.textContent = on ? '★' : '☆';
-        btn.classList.toggle('on', on);
-      });
-    }
-
-    function toggleFavFromStops() {
-      if (!state.route) return;
-      const m = favItemFromState();
-      toggleFav(m, state.route);
-      updateHeaderFavBtns();
-    }
-    function toggleFavFromEta() {
-      toggleFavFromStops();
-    }
-
-    function renderSavedItem(item, el, showStar) {
-      const div = document.createElement('div');
-      div.className = 'result-item';
-      const plate = 'plate-' + (item.co || 'kmb');
-      const destText = (item.label || '').replace(/^.*?→\s*/, '') || item.dest || item.route;
-      const coTag = (item.co === 'nlb' || item.co === 'ctb' || item.co === 'gmb' || item.co === 'mtrbus')
-        ? ' - ' + shortCo(item.co) : '';
-      const starOn = isFav(item, item.route);
-      div.innerHTML =
-        '<div class="result-num ' + plate + '">' + item.route + '</div>' +
-        '<div class="result-info">' +
-          '<div class="result-dest">往 ' + destText + coTag + '</div>' +
-          '<div class="result-co">' + (CO_NAMES[item.co] || item.co || '') + (item.sub ? ' · ' + item.sub : '') + '</div>' +
-        '</div>' +
-        (showStar
-          ? '<button class="fav-btn' + (starOn ? ' on' : '') + '" data-fav="1">' + (starOn ? '★' : '☆') + '</button>'
-          : '') +
-        '<div class="result-arrow">›</div>';
-      div.addEventListener('click', e => {
-        if (e.target.closest('[data-fav]')) {
-          e.stopPropagation();
-          toggleFav(item, item.route);
-          if (!inputVal) renderHome();
-          else {
-            // refresh star on this row
-            const btn = div.querySelector('[data-fav]');
-            if (btn) {
-              const on = isFav(item, item.route);
-              btn.textContent = on ? '★' : '☆';
-              btn.classList.toggle('on', on);
-            }
-          }
-          return;
-        }
-        selectRoute(item, item.route);
-      });
-      el.appendChild(div);
-    }
-
-    function renderHome() {
-      const el = document.getElementById('results');
-      const favs = getFavs();
-      const hist = getHist();
-      el.innerHTML = '';
-      if (!favs.length && !hist.length) {
-        el.innerHTML = '<div class="home-hint">輸入路線號碼開始搜尋<br><small style="opacity:.7">選過的路線會出現在這裡</small></div>';
-        return;
-      }
-      if (favs.length) {
-        const t = document.createElement('div');
-        t.className = 'section-title';
-        t.innerHTML = '<span>★ 收藏</span><button class="clear-link" type="button">清除</button>';
-        t.querySelector('.clear-link').onclick = clearFavs;
-        el.appendChild(t);
-        favs.forEach(item => renderSavedItem(item, el, true));
-      }
-      if (hist.length) {
-        const t = document.createElement('div');
-        t.className = 'section-title';
-        t.innerHTML = '<span>最近搜尋</span><button class="clear-link" type="button">清除</button>';
-        t.querySelector('.clear-link').onclick = clearHistory;
-        el.appendChild(t);
-        hist.forEach(item => renderSavedItem(item, el, true));
-      }
-    }
-
+    // 全域快取，大幅提速
+    let routesCache = { kmb: [], ctb: [] };
+    let isDataLoaded = false;
 
     let inputVal = '';
-    let searchTimer = null;
     let state = {
-      co: null, route: null, bound: null, serviceType: null,
-      directionLabel: null, stopId: null, stopName: null,
-      nlbRouteId: null, gmbRouteId: null, gmbRouteSeq: null,
-      dirPath: null, mtrRawStop: null, mtrDir: null,
-      auto: false, timer: null
+      co: null, route: null, bound: null, serviceType: '1',
+      stopId: null, stopName: null, auto: false, timer: null
     };
 
-    let cache = { 
-      kmbRoutes: null, kmbAt: 0, 
-      nlbRoutes: null, nlbAt: 0,
-      stopNames: {}
-    };
-    const TTL = 30 * 60 * 1000;
-    // 專線小巴路線索引與站序（內嵌，解決本機開啟 CORS 問題）
-    const GMB_ROUTE_INDEX = {"1":[{"r":"HKI","id":2006408,"c":"1","d":[{"s":1,"o":"山頂(公共交通總站)","t":"中環(香港站公共運輸交匯處)"},{"s":2,"o":"中環(香港站公共運輸交匯處)","t":"山頂(公共交通總站)"}]},{"r":"NT","id":2002337,"c":"1","d":[{"s":1,"o":"西貢","t":"九龍灣(德福花園)"},{"s":2,"o":"九龍灣(德福花園)","t":"西貢"}]}],"10":[{"r":"HKI","id":2006706,"c":"10","d":[{"s":1,"o":"銅鑼灣(謝斐道)","t":"數碼港公共運輸交匯處"},{"s":2,"o":"數碼港巴士總站","t":"謝斐道, 近兆安廣場"}]}],"10P":[{"r":"HKI","id":2006739,"c":"10P","d":[{"s":1,"o":"謝斐道, 近兆安廣場","t":"數碼港巴士總站"},{"s":2,"o":"數碼港巴士總站","t":"謝斐道, 近兆安廣場"}]}],"12":[{"r":"HKI","id":2002285,"c":"12","d":[{"s":1,"o":"觀龍樓","t":"西營盤(循環線)"}]},{"r":"KLN","id":2002329,"c":"12","d":[{"s":1,"o":"白田","t":"旺角東站"},{"s":2,"o":"旺角東站","t":"白田"}]},{"r":"NT","id":2004763,"c":"12","d":[{"s":1,"o":"寶琳","t":"順利"}]},{"r":"NT","id":2004764,"c":"12","d":[{"s":1,"o":"西貢","t":"寶琳"},{"s":2,"o":"寶琳","t":"西貢"}]}],"13":[{"r":"HKI","id":2002286,"c":"13","d":[{"s":1,"o":"西環邨","t":"西營盤(循環線)"}]},{"r":"KLN","id":2003571,"c":"13","d":[{"s":1,"o":"九龍塘(廣播道)","t":"紅磡(紅鸞道)"},{"s":2,"o":"紅磡(紅鸞道)","t":"九龍塘(廣播道)"}]},{"r":"NT","id":2007629,"c":"13","d":[{"s":1,"o":"靈實醫院","t":"觀塘(裕民坊)"},{"s":2,"o":"觀塘(裕民坊)","t":"靈實醫院"}]}],"14M":[{"r":"HKI","id":2000970,"c":"14M","d":[{"s":1,"o":"蘭芳道","t":"睦誠道"}]},{"r":"HKI","id":2000971,"c":"14M","d":[{"s":1,"o":"蘭芳道","t":"睦誠道"}]},{"r":"HKI","id":2000972,"c":"14M","d":[{"s":1,"o":"利園山道","t":"樂陶苑"}]},{"r":"HKI","id":2000973,"c":"14M","d":[{"s":1,"o":"利園山道","t":"樂翠台"}]}],"16A":[{"r":"HKI","id":2002287,"c":"16A","d":[{"s":1,"o":"柴灣站","t":"舂坎角(慈氏護養院)"},{"s":2,"o":"舂坎角(慈氏護養院)","t":"柴灣站"}]},{"r":"KLN","id":2004630,"c":"16A","d":[{"s":1,"o":"豐盛街","t":"坪石邨(循環線)"}]}],"16M":[{"r":"HKI","id":2002289,"c":"16M","d":[{"s":1,"o":"柴灣站","t":"舂坎角"},{"s":2,"o":"舂坎角","t":"柴灣站"}]}],"16X":[{"r":"HKI","id":2002291,"c":"16X","d":[{"s":1,"o":"柴灣站","t":"赤柱灘道"},{"s":2,"o":"赤柱灘道","t":"柴灣站"}]}],"18M":[{"r":"HKI","id":2002317,"c":"18M","d":[{"s":1,"o":"柴灣站","t":"歌連臣角(懲教所)"},{"s":2,"o":"歌連臣角(懲教所)","t":"柴灣站"}]},{"r":"KLN","id":2002085,"c":"18M","d":[{"s":1,"o":"黃大仙公共小型巴士(專綫)服務總站","t":"慈雲山(北)"},{"s":2,"o":"慈雲山(北)","t":"黃大仙公共小型巴士(專綫)服務總站"}]}],"1A":[{"r":"HKI","id":2006441,"c":"1A","d":[{"s":1,"o":"中環(香港站公共運輸交匯處)","t":"麥當奴道(循環線)"}]},{"r":"NT","id":2002355,"c":"1A","d":[{"s":1,"o":"西貢","t":"鑽石山(彩虹道)公共運輸交匯處"},{"s":2,"o":"鑽石山(彩虹道)公共運輸交匯處","t":"西貢"}]},{"r":"NT","id":2002357,"c":"1A","d":[{"s":1,"o":"白沙灣","t":"鑽石山(彩虹道)公共運輸交匯處"}]},{"r":"NT","id":2002358,"c":"1A","d":[{"s":1,"o":"灰窰里","t":"鑽石山(彩虹道)公共運輸交匯處"}]},{"r":"NT","id":2002359,"c":"1A","d":[{"s":1,"o":"西貢北","t":"鑽石山(彩虹道)公共運輸交匯處"}]}],"2":[{"r":"HKI","id":2006474,"c":"2","d":[{"s":1,"o":"中環(香港站)","t":"舊山頂道(循環線)"}]},{"r":"HKI","id":2006475,"c":"2","d":[{"s":1,"o":"中環(香港站)","t":"舊山頂道(循環線)"}]},{"r":"KLN","id":2009246,"c":"2","d":[{"s":1,"o":"黃埔花園公共運輸交匯處","t":"又一城公共交通交匯處"},{"s":2,"o":"又一城公共交通交匯處","t":"黃埔花園公共運輸交匯處"}]},{"r":"NT","id":2002342,"c":"2","d":[{"s":1,"o":"西貢","t":"蠔涌"},{"s":2,"o":"蠔涌","t":"西貢"}]},{"r":"NT","id":2002344,"c":"2","d":[{"s":1,"o":"北港","t":"西貢"}]},{"r":"NT","id":2002349,"c":"2","d":[{"s":1,"o":"西貢(宜春街)","t":"界咸(循環線)"}]}],"20":[{"r":"HKI","id":2002319,"c":"20","d":[{"s":1,"o":"西灣河(嘉亨灣)公共交通總站","t":"柴灣工業城(循環線)"}]},{"r":"HKI","id":2002320,"c":"20","d":[{"s":1,"o":"西灣河(嘉亨灣)公共交通總站","t":"柴灣 (豐業街)(循環線)"}]},{"r":"KLN","id":2004989,"c":"20","d":[{"s":1,"o":"新蒲崗","t":"慈雲山(北)(循環線)"}]}],"20M":[{"r":"HKI","id":2002415,"c":"20M","d":[{"s":1,"o":"興民邨","t":"柴灣工業城(循環線)"}]},{"r":"HKI","id":2002448,"c":"20M","d":[{"s":1,"o":"興民邨","t":"柴灣 (豐業街)(循環線)"}]},{"r":"KLN","id":2004990,"c":"20M","d":[{"s":1,"o":"新蒲崗","t":"黃大仙站"},{"s":2,"o":"黄大仙站","t":"新蒲崗"}]},{"r":"NT","id":2001463,"c":"20M","d":[{"s":1,"o":"鳳園","t":"大埔中心(循環線)"}]}],"21A":[{"r":"HKI","id":2000967,"c":"21A","d":[{"s":1,"o":"銅鑼灣（蘭芳道）","t":"勵德邨 (循環線)"}]},{"r":"NT","id":2001278,"c":"21A","d":[{"s":1,"o":"大埔頭","t":"大埔墟"},{"s":2,"o":"大埔墟","t":"大埔頭"}]}],"21M":[{"r":"HKI","id":2000968,"c":"21M","d":[{"s":1,"o":"銅鑼灣（蘭芳道）","t":"大坑徑 (循環線)"}]}],"22":[{"r":"HKI","id":2000997,"c":"22","d":[{"s":1,"o":"薄扶林花園","t":"中環(交易廣場)"},{"s":2,"o":"中環(交易廣場)","t":"薄扶林花園"}]},{"r":"HKI","id":2003045,"c":"22","d":[{"s":1,"o":"薄扶林花園","t":"中環(交易廣場)"},{"s":2,"o":"中環(交易廣場)","t":"薄扶林花園"}]}],"22S":[{"r":"HKI","id":2000999,"c":"22S","d":[{"s":1,"o":"薄扶林花園","t":"中環(中環碼頭)"},{"s":2,"o":"中環(中環碼頭)","t":"薄扶林花園"}]},{"r":"HKI","id":2001004,"c":"22S","d":[{"s":1,"o":"中環(中環碼頭)","t":"薄扶林花園"}]},{"r":"HKI","id":2003050,"c":"22S","d":[{"s":1,"o":"薄扶林花園","t":"中環(中環碼頭)"}]},{"r":"HKI","id":2003051,"c":"22S","d":[{"s":1,"o":"中環(中環碼頭)","t":"薄扶林花園"}]}],"22X":[{"r":"HKI","id":2003048,"c":"22X","d":[{"s":1,"o":"薄扶林花園","t":"中環(中環碼頭)"},{"s":2,"o":"中環(中環碼頭)","t":"薄扶林花園"}]},{"r":"HKI","id":2003075,"c":"22X","d":[{"s":1,"o":"薄扶林花園","t":"中環(中環碼頭)"}]}],"23":[{"r":"HKI","id":2003042,"c":"23","d":[{"s":1,"o":"堅尼地城站","t":"薄扶林(循環線)"}]},{"r":"KLN","id":2008322,"c":"23","d":[{"s":1,"o":"觀塘 (雲漢街)","t":"裕民坊公共運輸交匯處"},{"s":2,"o":"裕民坊公共運輸交匯處","t":"觀塘 (雲漢街)"}]}],"23M":[{"r":"HKI","id":2003043,"c":"23M","d":[{"s":1,"o":"堅尼地城站","t":"置富花園"},{"s":2,"o":"置富花園","t":"堅尼地城站"}]},{"r":"KLN","id":2008389,"c":"23M","d":[{"s":1,"o":"裕民坊公共運輸交匯處","t":"藍田站 (茜發道)"},{"s":2,"o":"藍田站 (茜發道)","t":"裕民坊公共運輸交匯處"}]}],"24A":[{"r":"HKI","id":2002021,"c":"24A","d":[{"s":1,"o":"金鐘站(德立街)","t":"肇輝台(循環線)"}]}],"24M":[{"r":"HKI","id":2002052,"c":"24M","d":[{"s":1,"o":"畢拉山","t":"金鐘站(德立街)"},{"s":2,"o":"金鐘站(德立街)","t":"畢拉山"}]},{"r":"HKI","id":2002053,"c":"24M","d":[{"s":1,"o":"畢拉山","t":"金鐘站(德立街)"},{"s":2,"o":"金鐘站(德立街)","t":"畢拉山"}]},{"r":"KLN","id":2008454,"c":"24M","d":[{"s":1,"o":"興田 (碧雲道)","t":"油塘公共運輸交匯處"},{"s":2,"o":"油塘公共運輸交匯處","t":"興田 (碧雲道)"}]}],"25":[{"r":"HKI","id":2002020,"c":"25","d":[{"s":1,"o":"上寶馬山","t":"銅鑼灣(循環線)"}]}],"26":[{"r":"HKI","id":2004527,"c":"26","d":[{"s":1,"o":"利園山道, 鳳鳴大廈外","t":"香港港安醫院 (循環線)"}]},{"r":"KLN","id":2002815,"c":"26","d":[{"s":1,"o":"土瓜灣(浙江街)","t":"九龍站"},{"s":2,"o":"九龍站","t":"土瓜灣(浙江街)"}]},{"r":"NT","id":2005253,"c":"26","d":[{"s":1,"o":"香港教育大學","t":"馬鞍山海栢花園"},{"s":2,"o":"馬鞍山海栢花園","t":"香港教育大學"}]},{"r":"NT","id":2005254,"c":"26","d":[{"s":1,"o":"頌安邨","t":"香港教育大學"}]}],"27":[{"r":"HKI","id":2007498,"c":"27","d":[{"s":1,"o":"鴨脷洲 (惠風街)","t":"香港仔 (西安街)"},{"s":2,"o":"香港仔 (西安街)","t":"鴨脷洲 (惠風街)"}]},{"r":"NT","id":2007860,"c":"27","d":[{"s":1,"o":"香港科學園","t":"沙田(排頭街)"},{"s":2,"o":"沙田(排頭街)","t":"香港科學園"}]}],"27A":[{"r":"HKI","id":2007501,"c":"27A","d":[{"s":1,"o":"香港仔 (西安街)","t":"鴨脷洲 (循環線)"}]},{"r":"NT","id":2007861,"c":"27A","d":[{"s":1,"o":"白石角(天賦海灣)","t":"沙田(排頭街)"},{"s":2,"o":"沙田(排頭街)","t":"白石角(天賦海灣)"}]},{"r":"NT","id":2007862,"c":"27A","d":[{"s":1,"o":"白石角(天賦海灣)","t":"沙田(排頭街)(經科技大道西)"},{"s":2,"o":"沙田(排頭街)(經科技大道西)","t":"白石角(天賦海灣)"}]},{"r":"NT","id":2007893,"c":"27A","d":[{"s":1,"o":"白石角(天賦海灣)","t":"沙田(排頭街)"},{"s":2,"o":"沙田(排頭街)","t":"白石角(天賦海灣)"}]},{"r":"NT","id":2007894,"c":"27A","d":[{"s":1,"o":"白石角(天賦海灣)","t":"沙田(排頭街)"},{"s":2,"o":"沙田(排頭街)","t":"白石角(天賦海灣)"}]}],"28":[{"r":"HKI","id":2006476,"c":"28","d":[{"s":1,"o":"碧瑤灣(上)","t":"銅鑼灣(新會道)"},{"s":2,"o":"銅鑼灣(新會道)","t":"碧瑤灣(上)"}]},{"r":"HKI","id":2006507,"c":"28","d":[{"s":1,"o":"碧瑤灣(上)","t":"銅鑼灣(新會道)"}]}],"28M":[{"r":"HKI","id":2006509,"c":"28M","d":[{"s":1,"o":"碧瑤灣(上)","t":"香港大學站(循環線)"}]},{"r":"KLN","id":2001003,"c":"28M","d":[{"s":1,"o":"九龍城（偉恒昌新邨）","t":"旺角站"},{"s":2,"o":"旺角站","t":"九龍城（偉恒昌新邨）"}]}],"28S":[{"r":"HKI","id":2006508,"c":"28S","d":[{"s":1,"o":"碧瑤灣(上)","t":"銅鑼灣(新會道)"}]},{"r":"NT","id":2010076,"c":"28S","d":[{"s":1,"o":"白石角(天賦海灣)","t":"沙田(白鶴汀街)(循環線)"}]}],"29":[{"r":"HKI","id":2007499,"c":"29","d":[{"s":1,"o":"鴨脷洲邨","t":"深灣道公共交通總站(循環線)"}]},{"r":"NT","id":2001855,"c":"29","d":[{"s":1,"o":"馬料水碼頭","t":"運頭塘"},{"s":2,"o":"運頭塘","t":"馬料水碼頭"}]}],"29A":[{"r":"HKI","id":2007530,"c":"29A","d":[{"s":1,"o":"鴨脷洲邨","t":"海洋公園 (水上樂園)"},{"s":2,"o":"海洋公園 (水上樂園)","t":"鴨脷洲邨"}]},{"r":"KLN","id":2001006,"c":"29A","d":[{"s":1,"o":"九龍塘(沙福道)公共交通交匯處","t":"廣播道 (循環線)"}]}],"3":[{"r":"HKI","id":2006510,"c":"3","d":[{"s":1,"o":"中環(香港站公共運輸交匯處)","t":"寶珊道"},{"s":2,"o":"寶珊道","t":"中環(香港站公共運輸交匯處)"}]},{"r":"HKI","id":2006511,"c":"3","d":[{"s":1,"o":"中環(香港站公共運輸交匯處)","t":"寶珊道"}]},{"r":"KLN","id":2006276,"c":"3","d":[{"s":1,"o":"尖沙咀(亞士厘道)","t":"大同新邨"},{"s":2,"o":"大同新邨","t":"尖沙咀(亞士厘道)"}]},{"r":"KLN","id":2006283,"c":"3","d":[{"s":1,"o":"尖沙咀(亞士厘道)","t":"大同新邨"}]},{"r":"NT","id":2009016,"c":"3","d":[{"s":1,"o":"西貢","t":"菠蘿輋"},{"s":2,"o":"菠蘿輋","t":"西貢"}]}],"30":[{"r":"HKI","id":2003472,"c":"30","d":[{"s":1,"o":"銅鑼灣(蘭芳道)","t":"跑馬地(冬青道)"},{"s":2,"o":"跑馬地(冬青道)","t":"銅鑼灣(蘭芳道)"}]}],"31":[{"r":"HKI","id":2006738,"c":"31","d":[{"s":1,"o":"田灣邨","t":"銅鑼灣(謝斐道)"},{"s":2,"o":"銅鑼灣(謝斐道)","t":"田灣邨"}]},{"r":"NT","id":2006574,"c":"31","d":[{"s":1,"o":"元朗(康景街)","t":"唐人新村(循環線)"}]},{"r":"NT","id":2006575,"c":"31","d":[{"s":1,"o":"元朗(康景街)","t":"唐人新村(循環線)"}]}],"31X":[{"r":"HKI","id":2009741,"c":"31X","d":[{"s":1,"o":"田灣邨","t":"銅鑼灣(謝斐道)"}]}],"32":[{"r":"HKI","id":2005689,"c":"32","d":[{"s":1,"o":"康山","t":"筲箕灣站"},{"s":2,"o":"筲箕灣站","t":"康山"}]},{"r":"NT","id":2006577,"c":"32","d":[{"s":1,"o":"元朗站(北)公共運輸交匯處","t":"丹桂村"},{"s":2,"o":"丹桂村","t":"元朗站(北)公共運輸交匯處"}]}],"32A":[{"r":"HKI","id":2005688,"c":"32A","d":[{"s":1,"o":"康景花園","t":"英皇道(太古城中心)(循環線)"}]}],"33":[{"r":"HKI","id":2005685,"c":"33","d":[{"s":1,"o":"康山","t":"北角(馬寶道)"},{"s":2,"o":"北角(馬寶道)","t":"康山"}]},{"r":"NT","id":2002321,"c":"33","d":[{"s":1,"o":"元朗(泰豐街)","t":"下白泥"},{"s":2,"o":"下白泥","t":"元朗(泰豐街)"}]}],"33M":[{"r":"HKI","id":2005684,"c":"33M","d":[{"s":1,"o":"康山","t":"太古站(循環線)"}]},{"r":"KLN","id":2001010,"c":"33M","d":[{"s":1,"o":"海港花園","t":"黃大仙站"},{"s":2,"o":"黃大仙站","t":"海港花園"}]}],"35M":[{"r":"HKI","id":2004092,"c":"35M","d":[{"s":1,"o":"香港仔(石排灣)","t":"灣仔(莊士敦道)"},{"s":2,"o":"灣仔(莊士敦道)","t":"香港仔(石排湾)"}]}],"36X":[{"r":"HKI","id":2005290,"c":"36X","d":[{"s":1,"o":"鴨脷洲 (平欄街)","t":"銅鑼灣 (渣甸街)"},{"s":2,"o":"銅鑼灣 (渣甸街)","t":"鴨脷洲 (平欄街)"}]}],"37":[{"r":"HKI","id":2005289,"c":"37","d":[{"s":1,"o":"鴨脷洲 (平欄街)","t":"利東邨(循環線)"}]},{"r":"NT","id":2008632,"c":"37","d":[{"s":1,"o":"元朗(福康街)","t":"攸潭尾村公所"},{"s":2,"o":"攸潭尾村公所","t":"元朗(福康街)"}]},{"r":"NT","id":2008633,"c":"37","d":[{"s":1,"o":"攸潭尾村公所","t":"元朗(福康街)"}]}],"39C":[{"r":"HKI","id":2001260,"c":"39C","d":[{"s":1,"o":"鴨脷洲漁安苑","t":"香港仔(循環線) "}]}],"39M":[{"r":"HKI","id":2001261,"c":"39M","d":[{"s":1,"o":"鴨脷洲漁安苑","t":"天后公共運輸交匯處"},{"s":2,"o":"天后公共運輸交匯處","t":"鴨脷洲漁安苑"}]},{"r":"KLN","id":2004660,"c":"39M","d":[{"s":1,"o":"樂富","t":"東頭(循環線)"}]},{"r":"KLN","id":2004661,"c":"39M","d":[{"s":1,"o":"樂富","t":"東頭(循環線)"}]}],"3A":[{"r":"HKI","id":2006540,"c":"3A","d":[{"s":1,"o":"中環(香港站公共運輸交匯處)","t":"干德道"},{"s":2,"o":"干德道","t":"中環(香港站公共運輸交匯處)"}]},{"r":"HKI","id":2006541,"c":"3A","d":[{"s":1,"o":"中環(香港站公共運輸交匯處)","t":"干德道"}]},{"r":"NT","id":2009015,"c":"3A","d":[{"s":1,"o":"西貢","t":"南山新村"},{"s":2,"o":"南山新村","t":"西貢"}]}],"40":[{"r":"HKI","id":2001262,"c":"40","d":[{"s":1,"o":"赤柱村","t":"渣甸街"},{"s":2,"o":"渣甸街","t":"赤柱村"}]},{"r":"HKI","id":2001263,"c":"40","d":[{"s":1,"o":"馬坑邨 ","t":"渣甸街"}]},{"r":"NT","id":2004956,"c":"40","d":[{"s":1,"o":"小坑村","t":"屯門市中心(循環線)"}]}],"40X":[{"r":"HKI","id":2001265,"c":"40X","d":[{"s":1,"o":"赤柱監獄","t":"渣甸街"},{"s":2,"o":"渣甸街","t":"赤柱監獄"}]}],"43M":[{"r":"HKI","id":2002250,"c":"43M","d":[{"s":1,"o":"峰華邨","t":"柴灣站(循環線)"}]},{"r":"KLN","id":2000976,"c":"43M","d":[{"s":1,"o":"大角咀(櫻桃街)","t":"油麻地港鐵站(循環線)"}]},{"r":"KLN","id":2000977,"c":"43M","d":[{"s":1,"o":"旺角(柏景灣)巴士總站","t":"油麻地港鐵站(循環線)"}]},{"r":"KLN","id":2000978,"c":"43M","d":[{"s":1,"o":"旺角(柏景灣)巴士總站","t":"油麻地港鐵站(循環線)"}]},{"r":"KLN","id":2000981,"c":"43M","d":[{"s":1,"o":"旺角(柏景灣)巴士總站","t":"油麻地港鐵站(循環線)"}]},{"r":"KLN","id":2000982,"c":"43M","d":[{"s":1,"o":"旺角(柏景灣)巴士總站","t":"油麻地港鐵站(循環線)"}]},{"r":"KLN","id":2000983,"c":"43M","d":[{"s":1,"o":"欣翔道(御金國峯)","t":"油麻地港鐵站(循環線)"}]},{"r":"KLN","id":2000985,"c":"43M","d":[{"s":1,"o":"油麻地港鐵站","t":"海庭道(西九龍政府合署)"}]},{"r":"KLN","id":2000986,"c":"43M","d":[{"s":1,"o":"海庭道(西九龍政府合署)","t":"油麻地港鐵站"}]}],"44M":[{"r":"HKI","id":2002217,"c":"44M","d":[{"s":1,"o":"柴灣站","t":"小西灣邨(循環線)"}]},{"r":"KLN","id":2004593,"c":"44M","d":[{"s":1,"o":"昂船洲","t":"長沙灣(長順街)"},{"s":2,"o":"長沙灣(長順街)","t":"昂船洲"}]},{"r":"KLN","id":2004595,"c":"44M","d":[{"s":1,"o":"昂船洲","t":"長沙灣(長順街)"}]},{"r":"KLN","id":2005022,"c":"44M","d":[{"s":1,"o":"長沙灣(長順街)","t":"昂船洲"}]}],"45A":[{"r":"HKI","id":2005291,"c":"45A","d":[{"s":1,"o":"西區(第一街)","t":"干德道 (循環線)"}]}],"45S":[{"r":"HKI","id":2005292,"c":"45S","d":[{"s":1,"o":"西區(第一街)","t":"干德道(循環線)"}]}],"47E":[{"r":"HKI","id":2004076,"c":"47E","d":[{"s":1,"o":"東區尤德夫人那打素醫院","t":"小西灣邨"}]},{"r":"HKI","id":2004088,"c":"47E","d":[{"s":1,"o":"小西灣第三期","t":"東區尤德夫人那打素醫院(循環線)"}]}],"47M":[{"r":"HKI","id":2004068,"c":"47M","d":[{"s":1,"o":"柴灣站","t":"小西灣第三期(循環線)"}]},{"r":"HKI","id":2004071,"c":"47M","d":[{"s":1,"o":"柴灣站","t":"柴灣(曉翠街)(循環線)"}]},{"r":"HKI","id":2004072,"c":"47M","d":[{"s":1,"o":"柴灣站","t":"柴灣(永平街)(循環線)"}]},{"r":"NT","id":2007769,"c":"47M","d":[{"s":1,"o":"華景山莊","t":"荔景站(循環線)"}]}],"47S":[{"r":"HKI","id":2004074,"c":"47S","d":[{"s":1,"o":"柴灣站","t":"富欣花園(循環線)"}]},{"r":"NT","id":2008852,"c":"47S","d":[{"s":1,"o":"屯門碼頭","t":"旺角"},{"s":2,"o":"旺角","t":"屯門碼頭"}]}],"48M":[{"r":"HKI","id":2003902,"c":"48M","d":[{"s":1,"o":"柴灣站(利眾街)","t":"東區尤德夫人那打素醫院"},{"s":2,"o":"東區尤德夫人那打素醫院","t":"柴灣站(利眾街)"}]}],"49M":[{"r":"HKI","id":2000988,"c":"49M","d":[{"s":1,"o":"天后站","t":"寶馬山 (循環線)"}]},{"r":"HKI","id":2000989,"c":"49M","d":[{"s":1,"o":"天后站","t":"寶馬山 (循環線)"}]},{"r":"KLN","id":2007300,"c":"49M","d":[{"s":1,"o":"順天","t":"坪石(循環線)"}]}],"4A":[{"r":"HKI","id":2004095,"c":"4A","d":[{"s":1,"o":"香港仔(石排灣)","t":"銅鑼灣(景隆街)"},{"s":2,"o":"銅鑼灣(景隆街)","t":"香港仔(石排灣)"}]},{"r":"NT","id":2009017,"c":"4A","d":[{"s":1,"o":"西貢","t":"對面海 (海濱別墅)"},{"s":2,"o":"對面海 (海濱別墅)","t":"西貢"}]}],"4B":[{"r":"HKI","id":2004096,"c":"4B","d":[{"s":1,"o":"香港仔(石排灣)","t":"灣仔(循環線)"}]}],"4C":[{"r":"HKI","id":2004097,"c":"4C","d":[{"s":1,"o":"香港仔(石排灣)","t":"銅鑼灣(景隆街)"},{"s":2,"o":"銅鑼灣(景隆街)","t":"香港仔(石排灣)"}]}],"4M":[{"r":"HKI","id":2004098,"c":"4M","d":[{"s":1,"o":"香港仔(石排灣)","t":"黃竹坑站"},{"s":2,"o":"黃竹坑站","t":"香港仔(石排灣)"}]},{"r":"HKI","id":2004100,"c":"4M","d":[{"s":1,"o":"香港仔(南寧街)","t":"黃竹坑站"},{"s":2,"o":"黃竹坑站","t":"香港仔(南寧街)"}]},{"r":"HKI","id":2004131,"c":"4M","d":[{"s":1,"o":"香港仔(石排灣)","t":"黃竹坑站"}]}],"4S":[{"r":"HKI","id":2004099,"c":"4S","d":[{"s":1,"o":"石排灣","t":"香港仔(循環線)"}]}],"5":[{"r":"HKI","id":2004081,"c":"5","d":[{"s":1,"o":"香港仔(南寧街)","t":"銅鑼灣(謝斐道)"},{"s":2,"o":"銅鑼灣(謝斐道)","t":"香港仔(南寧街)"}]}],"50":[{"r":"HKI","id":2000990,"c":"50","d":[{"s":1,"o":"耀東邨","t":"西灣河 (循環線)"}]},{"r":"KLN","id":2008487,"c":"50","d":[{"s":1,"o":"基督教聯合醫院","t":"裕民坊公共運輸交匯處 (循環線)"}]}],"51":[{"r":"HKI","id":2002813,"c":"51","d":[{"s":1,"o":"田灣邨","t":"香港仔(循環線)"}]}],"51A":[{"r":"HKI","id":2002812,"c":"51A","d":[{"s":1,"o":"華貴邨","t":"田灣邨(循環線)"}]}],"51S":[{"r":"HKI","id":2002811,"c":"51S","d":[{"s":1,"o":"華貴邨","t":"香港仔(循環線)"}]}],"52":[{"r":"HKI","id":2005220,"c":"52","d":[{"s":1,"o":"香港仔(漁暉道)","t":"赤柱監獄"},{"s":2,"o":"赤柱監獄","t":"香港仔(漁暉道)"}]},{"r":"HKI","id":2005286,"c":"52","d":[{"s":1,"o":"赤柱監獄","t":"香港仔(漁暉道)"}]},{"r":"HKI","id":2005287,"c":"52","d":[{"s":1,"o":"赤柱","t":"香港仔(漁暉道)"}]},{"r":"HKI","id":2005288,"c":"52","d":[{"s":1,"o":"赤柱廣場","t":"香港仔(漁暉道)"}]},{"r":"KLN","id":2008000,"c":"52","d":[{"s":1,"o":"竹園邨","t":"新蒲崗"},{"s":2,"o":"新蒲崗","t":"竹園邨"}]}],"54":[{"r":"HKI","id":2003636,"c":"54","d":[{"s":1,"o":"中環(碼頭)","t":"瑪麗醫院(循環線)"}]},{"r":"HKI","id":2003637,"c":"54","d":[{"s":1,"o":"中環(碼頭)","t":"瑪麗醫院(循環線)"}]},{"r":"HKI","id":2009840,"c":"54","d":[{"s":1,"o":"瑪麗醫院","t":"中環(碼頭)"}]},{"r":"HKI","id":2009842,"c":"54","d":[{"s":1,"o":"中環(碼頭)","t":"瑪麗醫院"}]},{"r":"KLN","id":2003174,"c":"54","d":[{"s":1,"o":"順天","t":"樂富"},{"s":2,"o":"樂富","t":"順天"}]}],"54M":[{"r":"HKI","id":2003685,"c":"54M","d":[{"s":1,"o":"堅尼地城站","t":"瑪麗醫院"},{"s":2,"o":"瑪麗醫院","t":"堅尼地城站"}]},{"r":"KLN","id":2003177,"c":"54M","d":[{"s":1,"o":"順天","t":"坪石(循環線)"}]}],"54S":[{"r":"HKI","id":2003735,"c":"54S","d":[{"s":1,"o":"摩星嶺道, 怡林閣對面","t":"堅尼地城站"}]},{"r":"HKI","id":2003768,"c":"54S","d":[{"s":1,"o":"堅尼地城站","t":"瑪麗醫院"}]},{"r":"KLN","id":2003179,"c":"54S","d":[{"s":1,"o":"順利紀律部隊宿舍","t":"黃大仙(沙田坳道)(循環線)"}]}],"55":[{"r":"HKI","id":2003771,"c":"55","d":[{"s":1,"o":"瑪麗醫院","t":"中環站(干諾道中)(循環線)"}]}],"56":[{"r":"HKI","id":2001129,"c":"56","d":[{"s":1,"o":"羅便臣道","t":"馬寶道"},{"s":2,"o":"馬寶道","t":"羅便臣道"}]},{"r":"KLN","id":2001524,"c":"56","d":[{"s":1,"o":"麗晶花園","t":"崇仁街"},{"s":2,"o":"崇仁街","t":"麗晶花園"}]}],"56A":[{"r":"HKI","id":2001130,"c":"56A","d":[{"s":1,"o":"羅便臣道","t":"天后站"},{"s":2,"o":"天后站","t":"羅便臣道"}]},{"r":"HKI","id":2001131,"c":"56A","d":[{"s":1,"o":"羅便臣道","t":"邊寧頓街"}]},{"r":"HKI","id":2001133,"c":"56A","d":[{"s":1,"o":"羅便臣道","t":"灣仔"}]},{"r":"NT","id":2001020,"c":"56A","d":[{"s":1,"o":"粉嶺站","t":"和滿街小巴總站"},{"s":2,"o":"和滿街公共小巴總站","t":"粉嶺站"}]},{"r":"NT","id":2001458,"c":"56A","d":[{"s":1,"o":"和滿街小巴總站","t":"粉嶺車站"}]},{"r":"NT","id":2001459,"c":"56A","d":[{"s":1,"o":"海聯廣場","t":"粉嶺站"}]}],"56B":[{"r":"HKI","id":2011523,"c":"56B","d":[{"s":1,"o":"羅便臣道","t":"天后公共運輸交匯處"}]},{"r":"NT","id":2001023,"c":"56B","d":[{"s":1,"o":"粉嶺站","t":"丹竹坑"},{"s":2,"o":"丹竹坑","t":"粉嶺站"}]}],"58":[{"r":"HKI","id":2002580,"c":"58","d":[{"s":1,"o":"香港仔(湖南街)","t":"堅尼地城站"},{"s":2,"o":"堅尼地城站","t":"香港仔(湖南街)"}]},{"r":"HKI","id":2002646,"c":"58","d":[{"s":1,"o":"沙灣徑","t":"堅尼地城站"}]},{"r":"HKI","id":2002679,"c":"58","d":[{"s":1,"o":"大口環道","t":"香港仔"}]}],"58A":[{"r":"HKI","id":2002582,"c":"58A","d":[{"s":1,"o":"香港仔(湖南街)","t":"堅尼地城站"},{"s":2,"o":"堅尼地城站","t":"香港仔(湖南街)"}]}],"58M":[{"r":"HKI","id":2002614,"c":"58M","d":[{"s":1,"o":"貝沙灣","t":"堅尼地城站"},{"s":2,"o":"堅尼地城站","t":"貝沙灣"}]}],"59":[{"r":"HKI","id":2002712,"c":"59","d":[{"s":1,"o":"堅尼地城站","t":"深灣道公共交通總站"},{"s":2,"o":"深灣道公共交通總站","t":"堅尼地城站"}]},{"r":"KLN","id":2004397,"c":"59","d":[{"s":1,"o":"翠屏南邨","t":"協和街(循環線)"}]},{"r":"KLN","id":2004857,"c":"59","d":[{"s":1,"o":"翠屏南邨","t":"協和街(循環線)"}]}],"59A":[{"r":"HKI","id":2002746,"c":"59A","d":[{"s":1,"o":"香港仔(東勝道)","t":"深灣道公共交通總站"},{"s":2,"o":"深灣道公共交通總站","t":"香港仔(東勝道)"}]},{"r":"HKI","id":2002748,"c":"59A","d":[{"s":1,"o":"香港仔(東勝道)","t":"南濤閣"},{"s":2,"o":"南濤閣","t":"香港仔(東勝道)"}]},{"r":"NT","id":2009312,"c":"59A","d":[{"s":1,"o":"上水鄉","t":"上水站(循環線)"}]}],"59B":[{"r":"HKI","id":2002714,"c":"59B","d":[{"s":1,"o":"香港仔(東勝道)","t":"深灣道公共交通總站(經葛量洪醫院)(循環線)"}]},{"r":"NT","id":2011292,"c":"59B","d":[{"s":1,"o":"上水彩石邨","t":"石湖墟新豐路 (循環線)"}]}],"59X":[{"r":"HKI","id":2002745,"c":"59X","d":[{"s":1,"o":"堅尼地城站","t":"葛量洪醫院"}]}],"5M":[{"r":"HKI","id":2004077,"c":"5M","d":[{"s":1,"o":"黃竹坑站","t":"葛量洪醫院"},{"s":2,"o":"葛量洪醫院","t":"黄竹坑站"}]},{"r":"KLN","id":2003537,"c":"5M","d":[{"s":1,"o":"窩打老道山(學餘里)","t":"旺角站(循環線)"}]},{"r":"KLN","id":2003538,"c":"5M","d":[{"s":1,"o":"窩打老道山(學餘里)","t":"旺角站(循環線)(經花園街)"}]},{"r":"KLN","id":2003570,"c":"5M","d":[{"s":1,"o":"窩打老道山(學餘里)","t":"旺角站(循環線)(經亞皆老街)"}]}],"61":[{"r":"HKI","id":2004084,"c":"61","d":[{"s":1,"o":"小西灣(藍灣半島)","t":"旺角 (快富街)"},{"s":2,"o":"旺角 (快富街)","t":"小西灣(藍灣半島)"}]}],"62":[{"r":"HKI","id":2004090,"c":"62","d":[{"s":1,"o":"杏花邨公共交通交匯處","t":"小西灣(富怡花園)(循環線)"}]}],"62A":[{"r":"HKI","id":2004091,"c":"62A","d":[{"s":1,"o":"小西灣(藍灣半島)公共運輸交匯處","t":"杏花邨公共交通交匯處"},{"s":2,"o":"杏花邨公共交通交匯處","t":"小西灣(藍灣半島)公共運輸交匯處"}]}],"63":[{"r":"HKI","id":2003405,"c":"63","d":[{"s":1,"o":"海怡半島","t":"瑪麗醫院"},{"s":2,"o":"瑪麗醫院","t":"海怡半島"}]},{"r":"KLN","id":2004396,"c":"63","d":[{"s":1,"o":"藍田(廣田邨)","t":"裕民坊公共運輸交匯處 (循環線)"}]}],"63A":[{"r":"HKI","id":2003408,"c":"63A","d":[{"s":1,"o":"香港仔(南寧街)","t":"華富邨(循環線)"}]},{"r":"NT","id":2008224,"c":"63A","d":[{"s":1,"o":"美松苑","t":"大圍站(村南道)"},{"s":2,"o":"大圍站(村南道)","t":"美松苑"}]}],"65":[{"r":"HKI","id":2008025,"c":"65","d":[{"s":1,"o":"東區尤德夫人那打素醫院","t":"北角(堡壘街)"},{"s":2,"o":"北角(堡壘街)","t":"東區尤德夫人那打素醫院"}]}],"65A":[{"r":"HKI","id":2008060,"c":"65A","d":[{"s":1,"o":"柴灣(康民街)","t":"鰂魚涌(途經東區尤德夫人那打素醫院)(循環線)"}]},{"r":"NT","id":2009082,"c":"65A","d":[{"s":1,"o":"黃泥頭","t":"沙田市中心"},{"s":2,"o":"沙田市中心","t":"黃泥頭"}]},{"r":"NT","id":2009114,"c":"65A","d":[{"s":1,"o":"黃泥頭","t":"沙田站"},{"s":2,"o":"沙田站","t":"黃泥頭"}]}],"65X":[{"r":"HKI","id":2008092,"c":"65X","d":[{"s":1,"o":"東區尤德夫人那打素醫院","t":"北角渡輪碼頭公共運輸交匯處"},{"s":2,"o":"北角渡輪碼頭公共運輸交匯處","t":"東區尤德夫人那打素醫院"}]},{"r":"NT","id":2011160,"c":"65X","d":[{"s":1,"o":"黃泥頭","t":"第一城站 (循環線)"}]}],"66":[{"r":"HKI","id":2005293,"c":"66","d":[{"s":1,"o":"愛秩序灣","t":"柴灣(環翠道)"}]}],"66A":[{"r":"HKI","id":2005294,"c":"66A","d":[{"s":1,"o":"愛秩序灣","t":"東區尤德夫人那打素醫院"}]}],"68":[{"r":"HKI","id":2005295,"c":"68","d":[{"s":1,"o":"愛秩序灣","t":"鰂魚涌(海灣街)"}]},{"r":"KLN","id":2011358,"c":"68","d":[{"s":1,"o":"彩雲邨","t":"九龍灣(循環線)"}]}],"69":[{"r":"HKI","id":2000410,"c":"69","d":[{"s":1,"o":"數碼港","t":"鰂魚涌(船塢里)(循環線)"}]},{"r":"KLN","id":2006936,"c":"69","d":[{"s":1,"o":"麗港城","t":"九龍城(獅子石道)"},{"s":2,"o":"九龍城(獅子石道)","t":"麗港城"}]},{"r":"KLN","id":2007035,"c":"69","d":[{"s":1,"o":"麗港城","t":"九龍城(獅子石道)"}]},{"r":"KLN","id":2007169,"c":"69","d":[{"s":1,"o":"麗港城","t":"九龍灣 (零碳天地)"},{"s":2,"o":"九龍灣 (零碳天地)","t":"麗港城"}]}],"69A":[{"r":"HKI","id":2000819,"c":"69A","d":[{"s":1,"o":"數碼港","t":"黃竹坑站"},{"s":2,"o":"黃竹坑站","t":"數碼港"}]},{"r":"KLN","id":2007068,"c":"69A","d":[{"s":1,"o":"麗港城","t":"通菜街"},{"s":2,"o":"通菜街","t":"麗港城"}]},{"r":"KLN","id":2007168,"c":"69A","d":[{"s":1,"o":"麗港城","t":"通菜街"}]}],"69X":[{"r":"HKI","id":2000511,"c":"69X","d":[{"s":1,"o":"數碼港","t":"銅鑼灣(駱克道)"},{"s":2,"o":"銅鑼灣(駱克道)","t":"數碼港"}]},{"r":"HKI","id":2000961,"c":"69X","d":[{"s":1,"o":"數碼港","t":"銅鑼灣(駱克道)"},{"s":2,"o":"銅鑼灣(駱克道)","t":"數碼港"}]}],"8":[{"r":"HKI","id":2004085,"c":"8","d":[{"s":1,"o":"碧瑤灣(下)","t":"中環(交易廣場)"}]},{"r":"KLN","id":2006309,"c":"8","d":[{"s":1,"o":"尖沙咀(漢口道)","t":"何文田邨"},{"s":2,"o":"何文田邨","t":"尖沙咀(漢口道)"}]},{"r":"KLN","id":2006312,"c":"8","d":[{"s":1,"o":"尖沙咀(漢口道)","t":"何文田(忠孝街)"},{"s":2,"o":"何文田(忠孝街)","t":"尖沙咀(漢口道)"}]},{"r":"KLN","id":2006314,"c":"8","d":[{"s":1,"o":"尖沙咀(漢口道)","t":"何文田邨"}]}],"8X":[{"r":"HKI","id":2004087,"c":"8X","d":[{"s":1,"o":"碧瑤灣(下)","t":"中環(交易廣場)"},{"s":2,"o":"中環(交易廣場)","t":"碧瑤灣(下)"}]}],"9":[{"r":"HKI","id":2002283,"c":"9","d":[{"s":1,"o":"中環(交易廣場)","t":"寶雲道(循環線)"}]},{"r":"NT","id":2002547,"c":"9","d":[{"s":1,"o":"麥理浩夫人度假村","t":"西貢"},{"s":2,"o":"西貢","t":"麥理浩夫人度假村"}]},{"r":"NT","id":2002548,"c":"9","d":[{"s":1,"o":"大網仔","t":"西貢"}]}],"N27":[{"r":"HKI","id":2007502,"c":"N27","d":[{"s":1,"o":"香港仔 (西安街)","t":"鴨脷洲 (循環線)"}]}],"N31":[{"r":"HKI","id":2006772,"c":"N31","d":[{"s":1,"o":"田灣邨","t":"銅鑼灣(謝斐道)"},{"s":2,"o":"銅鑼灣(謝斐道)","t":"田灣邨"}]}],"N40":[{"r":"HKI","id":2001264,"c":"N40","d":[{"s":1,"o":"赤柱村","t":"渣甸街"},{"s":2,"o":"渣甸街","t":"赤柱村"}]}],"N4A":[{"r":"HKI","id":2004086,"c":"N4A","d":[{"s":1,"o":"香港仔(石排灣)","t":"銅鑼灣(景隆街)"}]}],"N4C":[{"r":"HKI","id":2004089,"c":"N4C","d":[{"s":1,"o":"香港仔(石排灣)","t":"銅鑼灣(景隆街)"},{"s":2,"o":"銅鑼灣(景隆街)","t":"香港仔(石排灣)"}]}],"N4M":[{"r":"HKI","id":2010995,"c":"N4M","d":[{"s":1,"o":"香港仔(石排灣)","t":"黃竹坑站"},{"s":2,"o":"黃竹坑站","t":"香港仔(石排灣)"}]}],"N4X":[{"r":"HKI","id":2004093,"c":"N4X","d":[{"s":1,"o":"銅鑼灣(景隆街)","t":"深灣道公共交通總站(循環線)"}]}],"N51S":[{"r":"HKI","id":2002814,"c":"N51S","d":[{"s":1,"o":"華貴邨","t":"香港仔(循環線)"}]}],"12A":[{"r":"KLN","id":2002331,"c":"12A","d":[{"s":1,"o":"旺角東站","t":"大同新邨"},{"s":2,"o":"大同新邨","t":"旺角東站"}]}],"12B":[{"r":"KLN","id":2002333,"c":"12B","d":[{"s":1,"o":"旺角東站","t":"港灣豪庭"},{"s":2,"o":"港灣豪庭","t":"旺角東站"}]},{"r":"KLN","id":2002335,"c":"12B","d":[{"s":1,"o":"港灣豪庭","t":"西洋菜南街"}]}],"12S":[{"r":"KLN","id":2002336,"c":"12S","d":[{"s":1,"o":"大角咀(櫻桃街)","t":"旺角東站(循環線)"}]}],"13A":[{"r":"KLN","id":2003604,"c":"13A","d":[{"s":1,"o":"九龍塘(廣播道)","t":"樂富"},{"s":2,"o":"樂富","t":"九龍塘(廣播道)"}]},{"r":"KLN","id":2003606,"c":"13A","d":[{"s":1,"o":"樂富","t":"九龍塘(廣播道)"},{"s":2,"o":"九龍塘(廣播道)","t":"樂富"}]}],"13M":[{"r":"KLN","id":2003603,"c":"13M","d":[{"s":1,"o":"紅磡(紅鸞道)","t":"紅磡站(循環線)"}]}],"16":[{"r":"KLN","id":2004629,"c":"16","d":[{"s":1,"o":"扎山道(彩雲邨)","t":"坪石邨(循環線)"}]},{"r":"NT","id":2006641,"c":"16","d":[{"s":1,"o":"寶琳","t":"布袋澳"},{"s":2,"o":"布袋澳","t":"寶琳"}]},{"r":"NT","id":2006672,"c":"16","d":[{"s":1,"o":"坑口(重華路)","t":"大坳門"},{"s":2,"o":"大坳門","t":"坑口(重華路)"}]}],"16B":[{"r":"KLN","id":2004632,"c":"16B","d":[{"s":1,"o":"曉暉花園","t":"坪石公共運輸交匯處一樓"},{"s":2,"o":"坪石公共運輸交匯處一樓","t":"曉暉花園"}]}],"16S":[{"r":"KLN","id":2004631,"c":"16S","d":[{"s":1,"o":"峻弦","t":"坪石邨(循環線)"}]}],"17M":[{"r":"KLN","id":2006677,"c":"17M","d":[{"s":1,"o":"太子站","t":"九龍醫院"}]},{"r":"KLN","id":2006679,"c":"17M","d":[{"s":1,"o":"九龍醫院","t":"通菜街"}]},{"r":"NT","id":2006675,"c":"17M","d":[{"s":1,"o":"寶琳站","t":"翠林"},{"s":2,"o":"翠林","t":"寶琳站"}]},{"r":"NT","id":2006676,"c":"17M","d":[{"s":1,"o":"翠林","t":"寶琳站(經康寶路)"}]}],"19":[{"r":"KLN","id":2002087,"c":"19","d":[{"s":1,"o":"新蒲崗","t":"慈雲山道(沙田坳邨)"},{"s":2,"o":"慈雲山道(沙田坳邨)","t":"新蒲崗"}]},{"r":"KLN","id":2002151,"c":"19","d":[{"s":1,"o":"富山公共交通總站","t":"鑽石山站公共交通交匯處"}]}],"19A":[{"r":"KLN","id":2002091,"c":"19A","d":[{"s":1,"o":"鑽石山站公共運輸交匯處","t":"宏景花園(循環線) "}]}],"19M":[{"r":"KLN","id":2002092,"c":"19M","d":[{"s":1,"o":"鑽石山站公共運輸交匯處","t":"慈雲山道(沙田坳邨)"},{"s":2,"o":"慈雲山道(沙田坳邨)","t":"鑽石山站公共運輸交匯處"}]}],"19S":[{"r":"KLN","id":2002118,"c":"19S","d":[{"s":1,"o":"鑽石山站公共運輸交匯處","t":"慈雲山購物中心"},{"s":2,"o":"慈雲山購物中心","t":"鑽石山站公共運輸交匯處"}]}],"22A":[{"r":"KLN","id":2005782,"c":"22A","d":[{"s":1,"o":"樂華邨","t":"觀塘碼頭"}]},{"r":"KLN","id":2005783,"c":"22A","d":[{"s":1,"o":"樂華邨","t":"觀塘碼頭"}]}],"22M":[{"r":"KLN","id":2009048,"c":"22M","d":[{"s":1,"o":"樂華邨","t":"裕民坊公共運輸交匯處"},{"s":2,"o":"裕民坊公共運輸交匯處","t":"樂華邨"}]}],"23B":[{"r":"KLN","id":2008355,"c":"23B","d":[{"s":1,"o":"裕民坊公共運輸交匯處","t":"茶果嶺"},{"s":2,"o":"茶果嶺","t":"裕民坊公共運輸交匯處"}]}],"23C":[{"r":"KLN","id":2008391,"c":"23C","d":[{"s":1,"o":"藍田站 (茜發道)","t":"油塘站 (茶果嶺道)(循環線)"}]}],"23P":[{"r":"KLN","id":2009477,"c":"23P","d":[{"s":1,"o":"高嶺道","t":"藍田站 (茜發道)"},{"s":2,"o":"藍田站 (茜發道)","t":"高嶺道"}]}],"23S":[{"r":"KLN","id":2008393,"c":"23S","d":[{"s":1,"o":"麗港城 (第二期)","t":"藍田站 (茜發道)"}]},{"r":"NT","id":2001360,"c":"23S","d":[{"s":1,"o":"大埔墟站專線小巴總站","t":"打鐵屻通路"},{"s":2,"o":"打鐵屻通路","t":"大埔墟站專線小巴總站"}]}],"24":[{"r":"KLN","id":2008421,"c":"24","d":[{"s":1,"o":"藍田 (平田公共運輸交匯處)","t":"三家村碼頭 (循環線)"}]},{"r":"NT","id":2009873,"c":"24","d":[{"s":1,"o":"大埔 (富蝶邨)","t":"大埔 (廣福道) (循環線)"}]}],"24S":[{"r":"KLN","id":2011622,"c":"24S","d":[{"s":1,"o":"油塘 (東源街)","t":"油塘 (高超道)(循環線)"}]}],"25A":[{"r":"KLN","id":2006045,"c":"25A","d":[{"s":1,"o":"九龍塘(沙福道)公共交通交匯處","t":"東頭邨(東隆道)"},{"s":2,"o":"東頭邨(東隆道)","t":"九龍塘(沙福道)公共交通交匯處"}]}};
+    // 初始化與預先載入路線數據 (背景非同步載入)
+    window.addEventListener('DOMContentLoaded', () => {
+      initKeypad();
+      preloadAllRoutes();
+    });
+
+    async function preloadAllRoutes() {
+      try {
+        const [kmbRes, ctbRes] = await Promise.all([
+          fetch('https://data.etabus.gov.hk/v1/transport/kmb/route/').then(r => r.json()).catch(() => ({data:[]})),
+          fetch('https://data.etabus.gov.hk/v1/transport/citybus-nwfb/route/ctb').then(r => r.json()).catch(() => ({data:[]}))
+        ]);
+
+        routesCache.kmb = kmbRes.data || [];
+        routesCache.ctb = ctbRes.data || [];
+        isDataLoaded = true;
+      } catch (e) {
+        console.error("預載路線失敗:", e);
+      }
+    }
+
+    // 事件委派：綁定鍵盤點擊事件
+    function initKeypad() {
+      document.getElementById('keypad').addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        const key = btn.dataset.k;
+
+        if (key === 'clear') {
+          inputVal = '';
+        } else if (key === 'back') {
+          inputVal = inputVal.slice(0, -1);
+        } else if (key && inputVal.length < 6) {
+          inputVal += key;
+        }
+
+        document.getElementById('routeInput').value = inputVal;
+        onSearchInput();
+      });
+    }
+
+    // 搜尋觸發邏輯 (記憶體高快取比對)
+    function onSearchInput() {
+      const resultsEl = document.getElementById('results');
+      if (!inputVal) {
+        resultsEl.innerHTML = '<div class="empty-state">輸入路線號碼開始搜尋</div>';
+        return;
+      }
+
+      const q = inputVal.trim().toUpperCase();
+      let matched = [];
+
+      // 1. KMB 搜尋
+      routesCache.kmb.forEach(r => {
+        if (r.route === q) {
+          matched.push({
+            co: 'kmb',
+            route: r.route,
+            bound: r.bound,
+            serviceType: r.service_type,
+            dest: r.dest_tc
+          });
+        }
+      });
+
+      // 2. CTB 搜尋
+      routesCache.ctb.forEach(r => {
+        if (r.route === q) {
+          matched.push({
+            co: 'ctb',
+            route: r.route,
+            bound: 'inbound', // 預設值，後續帶入車站
+            dest: r.dest_tc
+          });
+        }
+      });
+
+      renderSearchResults(matched);
+    }
+
+    function renderSearchResults(list) {
+      const resultsEl = document.getElementById('results');
+      resultsEl.innerHTML = '';
+
+      if (list.length === 0) {
+        resultsEl.innerHTML = '<div class="empty-state">' + (isDataLoaded ? '未找到相關路線' : '資料載入中，請稍後...') + '</div>';
+        return;
+      }
+
+      list.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'result-item';
+        const plate = 'plate-' + item.co;
+        const coName = item.co === 'kmb' ? '九巴' : '城巴';
+
+        div.innerHTML = `
+          <div class="result-num ${plate}">${item.route}</div>
+          <div class="result-info">
+            <div class="result-dest">往 ${item.dest}</div>
+            <div class="result-co">${coName}</div>
+          </div>
+          <div class="result-arrow">›</div>
+        `;
+
+        div.addEventListener('click', () => selectRoute(item));
+        resultsEl.appendChild(div);
+      });
+    }
+
+    // 選擇路線 -> 顯示車站列表
+    async function selectRoute(item) {
+      state.co = item.co;
+      state.route = item.route;
+      state.bound = item.bound;
+      state.serviceType = item.serviceType || '1';
+
+      switchPage('pageStops');
+      document.getElementById('stopsTitle').textContent = `${item.route} - 選擇車站`;
+      const stopListEl = document.getElementById('stopList');
+      stopListEl.innerHTML = '<div class="loading-state">載入車站中...</div>';
+
+      try {
+        let stops = [];
+        if (state.co === 'kmb') {
+          const res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${state.route}/${state.bound === 'O' ? 'outbound' : 'inbound'}/${state.serviceType}`).then(r => r.json());
+          
+          // 取得站名詳情
+          const stopDetails = await Promise.all(res.data.map(s => 
+            fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop/${s.stop}`).then(r => r.json())
+          ));
+
+          stops = res.data.map((s, idx) => ({
+            seq: s.seq,
+            stopId: s.stop,
+            name: stopDetails[idx].data.name_tc
+          }));
+        } else if (state.co === 'ctb') {
+          const res = await fetch(`https://data.etabus.gov.hk/v1/transport/citybus-nwfb/route-stop/ctb/${state.route}/outbound`).then(r => r.json());
+          
+          const stopDetails = await Promise.all(res.data.map(s => 
+            fetch(`https://data.etabus.gov.hk/v1/transport/citybus-nwfb/stop/${s.stop}`).then(r => r.json())
+          ));
+
+          stops = res.data.map((s, idx) => ({
+            seq: s.seq,
+            stopId: s.stop,
+            name: stopDetails[idx].data.name_tc
+          }));
+        }
+
+        renderStops(stops);
+      } catch (e) {
+        stopListEl.innerHTML = '<div class="loading-state">無法取得車站清單</div>';
+      }
+    }
+
+    function renderStops(stops) {
+      const stopListEl = document.getElementById('stopList');
+      stopListEl.innerHTML = '';
+
+      stops.forEach(s => {
+        const div = document.createElement('div');
+        div.className = 'stop-item';
+        div.innerHTML = `
+          <div class="stop-seq">${s.seq}</div>
+          <div class="stop-name">${s.name}</div>
+          <div class="result-arrow">›</div>
+        `;
+        div.addEventListener('click', () => selectStop(s));
+        stopListEl.appendChild(div);
+      });
+    }
+
+    // 選擇車站 -> 查看 ETA 到站時間
+    function selectStop(stop) {
+      state.stopId = stop.stopId;
+      state.stopName = stop.name;
+
+      switchPage('pageEta');
+      const etaRoute = document.getElementById('etaRoute');
+      etaRoute.textContent = state.route;
+      etaRoute.className = `eta-route-num plate-${state.co}`;
+      document.getElementById('etaStopName').textContent = state.stopName;
+
+      fetchETA();
+    }
+
+    // 極速取得 ETA 到站時間
+    async function fetchETA() {
+      const rowsEl = document.getElementById('etaRows');
+      rowsEl.innerHTML = '<div class="loading-state">更新到站時間...</div>';
+
+      try {
+        let url = '';
+        if (state.co === 'kmb') {
+          url = `https://data.etabus.gov.hk/v1/transport/kmb/eta/${state.stopId}/${state.route}/${state.serviceType}`;
+        } else {
+          url = `https://data.etabus.gov.hk/v1/transport/citybus-nwfb/eta/ctb/${state.stopId}/${state.route}`;
+        }
+
+        const res = await fetch(url).then(r => r.json());
+        const etas = res.data || [];
+
+        rowsEl.innerHTML = '';
+        if (etas.length === 0) {
+          rowsEl.innerHTML = '<div class="loading-state">暫無到站班次</div>';
+          return;
+        }
+
+        etas.slice(0, 3).forEach(item => {
+          if (!item.eta) return;
+
+          const etaTime = new Date(item.eta);
+          const diffMins = Math.round((etaTime - new Date()) / 60000);
+
+          let minsText = '';
+          let colorClass = '';
+
+          if (diffMins <= 0) {
+            minsText = '即將到站 / 已到達';
+            colorClass = 'arrived';
+          } else {
+            minsText = `${diffMins} 分鐘`;
+            if (diffMins <= 3) colorClass = 'soon';
+          }
+
+          const timeStr = etaTime.toTimeString().substring(0, 5);
+
+          const row = document.createElement('div');
+          row.className = 'eta-row';
+          row.innerHTML = `
+            <div class="eta-mins ${colorClass}">${minsText}</div>
+            <div class="eta-clock">預計 ${timeStr}</div>
+          `;
+          rowsEl.appendChild(row);
+        });
+
+      } catch (e) {
+        rowsEl.innerHTML = '<div class="loading-state">無法載入到站時間</div>';
+      }
+    }
+
+    // 自動刷新切換
+    function toggleAuto() {
+      state.auto = !state.auto;
+      const btn = document.getElementById('btnAuto');
+
+      if (state.auto) {
+        btn.classList.add('active-refresh');
+        btn.textContent = '⏸ 停止自動刷新';
+        state.timer = setInterval(fetchETA, 10000); // 10秒自動更新
+      } else {
+        btn.classList.remove('active-refresh');
+        btn.textContent = '▶ 自動刷新';
+        clearInterval(state.timer);
+      }
+    }
+
+    // 頁面切換控制
+    function switchPage(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+
+      if (pageId !== 'pageEta' && state.timer) {
+        clearInterval(state.timer);
+        state.auto = false;
+        document.getElementById('btnAuto').classList.remove('active-refresh');
+        document.getElementById('btnAuto').textContent = '▶ 自動刷新';
+      }
+    }
+
+    function goSearch() { switchPage('pageSearch'); }
+    function goStops() { switchPage('pageStops'); }
   </script>
 </body>
 </html>
