@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>巴士到站時間</title>
+  <title>香港巴士到站時間 - 已修正港鐵巴士站名</title>
   <style>
     :root {
-      --primary: #E4002B; /* 參考截圖的紅色 */
-      --primary-dark: #C80024;
+      --primary: #0096E6; /* 多啦A夢藍色 */
+      --primary-dark: #007CC2;
       --bg: #F2F2F7;
       --card: #ffffff;
       --text: #000000;
@@ -16,7 +16,7 @@
       --green: #34C759;
       --amber: #FF9500;
       --red: #FF3B30;
-      --keypad-bg: #5E7382; /* 參考截圖鍵盤背景色 */
+      --keypad-bg: #4A789C; /* 搭配藍色主題的鍵盤背景色 */
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     html, body {
@@ -46,7 +46,7 @@
       letter-spacing: 1px;
     }
    .search-box {
-      background: #EFEFF4;
+      background: #EBF5FF;
       padding: 8px 12px;
       flex-shrink: 0;
       border-bottom: 1px solid var(--border);
@@ -55,7 +55,7 @@
       width: 100%;
       padding: 8px 12px;
       font-size: 1.05rem;
-      border: none;
+      border: 1px solid #BCE0FD;
       border-radius: 6px;
       outline: none;
       background: white;
@@ -63,8 +63,8 @@
       text-align: left;
       font-weight: 500;
     }
-   .search-input:focus { background: white; }
-   .search-input::placeholder { color: #C7C7CC; font-weight: 400; text-align: left; }
+   .search-input:focus { background: white; border-color: var(--primary); }
+   .search-input::placeholder { color: #A0C4E2; font-weight: 400; text-align: left; }
    .results {
       flex: 1;
       overflow-y: auto;
@@ -172,7 +172,7 @@
    .key-letter:active { background: #D1D1D6; }
    .key-func {
       background: #FFFFFF;
-      color: #A6B4C0;
+      color: #83A1B9;
       font-size: 1.2rem;
       font-weight: bold;
     }
@@ -458,7 +458,7 @@
     };
     const TTL = 30 * 60 * 1000;
 
-    // ===== 核心修正：港鐵巴士站名對照表 =====
+    // ===== 港鐵巴士站名對照表 =====
     const EMBEDDED_MTR_STOP_NAMES = {
       "K51-U010": "富泰", "K51-U020": "景峰花園", "K51-U030": "鳳地", "K51-U040": "兆康站(南)", "K51-U050": "嶺南大學", "K51-U060": "富泰邨", "K51-U070": "屯門站", "K51-U080": "屯門市中心", "K51-U090": "置樂花園", "K51-U100": "青善遊樂場", "K51-U110": "龍門站", "K51-U120": "青雲站", "K51-U130": "鳴琴站", "K51-U140": "石排站", "K51-U150": "大興街", "K51-U160": "大興邨", "K51-U170": "中電", "K51-U180": "黃金海岸", "K51-U190": "咖啡灣", "K51-U200": "碧翠路", "K51-U210": "掃管笏", "K51-U220": "愛琴灣", "K51-U230": "小欖新村", "K51-U240": "小欖村", "K51-U250": "小欖", "K51-U260": "大欖涌", "K51-U270": "大欖",
       "K51-D010": "大欖", "K51-D020": "大欖涌", "K51-D030": "小欖", "K51-D040": "小欖村", "K51-D050": "小欖新村", "K51-D060": "愛琴灣", "K51-D070": "掃管笏", "K51-D080": "碧翠路", "K51-D090": "咖啡灣", "K51-D100": "黃金海岸", "K51-D110": "中電", "K51-D120": "大興邨", "K51-D130": "大興街", "K51-D140": "石排站", "K51-D150": "鳴琴站", "K51-D160": "青雲站", "K51-D170": "龍門站", "K51-D180": "青善遊樂場", "K51-D190": "置樂花園", "K51-D200": "屯門市中心", "K51-D210": "屯門站", "K51-D220": "嶺南大學", "K51-D230": "兆康站(南)", "K51-D240": "景峰花園", "K51-D250": "富泰",
@@ -470,8 +470,7 @@
       "K65-U010": "元朗站", "K65-U020": "又新街", "K65-U030": "大棠路", "K65-U040": "康樂路", "K65-U050": "元朗警署", "K65-U060": "水邊圍邨", "K65-U070": "元朗公園", "K65-U080": "流浮山", "K65-D010": "流浮山", "K65-D020": "元朗公園", "K65-D030": "水邊圍邨", "K65-D040": "元朗站",
       "K65A-U010": "天水圍站", "K65A-U020": "天瑞", "K65A-U030": "天恩", "K65A-U040": "流浮山",
       "K66-U010": "朗屏邨", "K66-U020": "朗屏站", "K66-U030": "元朗公園", "K66-U040": "水邊圍", "K66-U050": "大棠", "K66-D010": "大棠", "K66-D020": "水邊圍", "K66-D030": "朗屏站", "K66-D040": "朗屏邨",
-      "K68-U010": "元朗工業邨", "K68-U020": "元朗站", "K68-U030": "元朗廣場", "K68-U040": "元朗公園", "K68-D010": "元朗公園", "K68-D020": "元朗廣場", "K68-D030": "元朗站", "K68-D040": "元朗工業邨",
-      "K73-U010": "天恆邨", "K73-U020": "天澤邨", "K73-U030": "天逸邨", "K73-U040": "天富苑", "K73-U050": "天水圍站", "K73-U060": "元朗西", "K73-D010": "元朗西", "K73-D020": "天水圍站", "K73-D030": "天富苑", "K73-D040": "天恆邨",
+      "K68-U010": "元朗工業邨", "K68-U020": "元朗站", "K68-U030": "元朗廣場", "K68-U040": "元朗公園", "K68-D010": "元朗公園", "K68-D020": "元朗廣場", "K68-D030": "元朗站", "K68-D040": "元朗工業邨", "K73-U010": "天恆邨", "K73-U020": "天澤邨", "K73-U030": "天逸邨", "K73-U040": "天富苑", "K73-U050": "天水圍站", "K73-U060": "元朗西", "K73-D010": "元朗西", "K73-D020": "天水圍站", "K73-D030": "天富苑", "K73-D040": "天恆邨",
       "K74-U010": "天水圍市中心", "K74-U020": "天盛苑", "K74-U030": "天水圍站", "K74-U040": "凹頭", "K74-D010": "凹頭", "K74-D020": "天水圍站", "K74-D030": "天盛苑", "K74-D040": "天水圍市中心",
       "K75-U010": "天水圍站", "K75-U020": "天耀邨", "K75-U030": "天盛苑", "K75-U040": "洪水橋", "K75-D010": "洪水橋", "K75-D020": "天盛苑", "K75-D030": "天水圍站",
       "K75A-U010": "天水圍站", "K75A-U020": "洪水橋", "K75A-D010": "洪水橋", "K75A-D020": "天水圍站",
@@ -603,7 +602,6 @@
       list.forEach(m => {
         const div = document.createElement('div');
         div.className = 'result-item';
-        const plate = 'plate-' + (m.co || 'kmb');
         const destText = m.label.replace(/^.*?→\s*/, '');
         const coSubText = CO_NAMES[m.co] ? CO_NAMES[m.co] + ' (資料由 DATA.GOV.HK 提供)' : '資料由 DATA.GOV.HK 提供';
         
@@ -617,10 +615,6 @@
         div.onclick = () => selectRoute(m, route);
         el.appendChild(div);
       });
-    }
-
-    function shortCo(co) {
-      return { ctb: '城巴', nlb: '嶼巴', gmb: '小巴', mtrbus: '港鐵巴士', kmb: '' }[co] || '';
     }
 
     async function searchKMB(route) {
@@ -857,7 +851,7 @@
       showPage('pageEta');
       const etaRouteEl = document.getElementById('etaRoute');
       etaRouteEl.textContent = state.route;
-      etaRouteEl.className = 'eta-route-num plate-' + (state.co || 'kmb');
+      etaRouteEl.className = 'eta-route-num';
       document.getElementById('etaDest').textContent = state.directionLabel;
       document.getElementById('etaStopName').textContent = s.name;
       document.getElementById('etaCo').textContent = CO_NAMES[state.co] || state.co;
