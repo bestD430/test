@@ -1,717 +1,1011 @@
 <!DOCTYPE html>
-<html lang="zh-HK">
+<html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>香港公共交通 到站時間查詢</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #0f172a;
-            touch-action: manipulation;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-        
-        ::-webkit-scrollbar {
-            width: 4px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-
-        /* Number Keypad Buttons (+20% size increase via larger font & padding) */
-        .key-btn-num {
-            transition: all 0.05s ease;
-            box-shadow: 0 3px 0 rgba(0,0,0,0.3);
-            -webkit-tap-highlight-color: transparent;
-            padding-top: 0.75rem;    
-            padding-bottom: 0.75rem; 
-            font-size: 1.5rem;       
-            line-height: 1.25;
-            border-radius: 0.5rem;
-        }
-        .key-btn-num:active {
-            transform: translateY(2px);
-            box-shadow: 0 1px 0 rgba(0,0,0,0.2);
-            background-color: #cbd5e1 !important;
-        }
-
-        /* Action Keys (Clear / Backspace) */
-        .key-btn-action {
-            transition: all 0.05s ease;
-            box-shadow: 0 3px 0 rgba(0,0,0,0.3);
-            -webkit-tap-highlight-color: transparent;
-            padding-top: 0.75rem;
-            padding-bottom: 0.75rem;
-            font-size: 1.25rem;
-            border-radius: 0.5rem;
-        }
-        .key-btn-action:active {
-            transform: translateY(2px);
-            box-shadow: 0 1px 0 rgba(0,0,0,0.2);
-            background-color: #cbd5e1 !important;
-        }
-
-        /* Circular Letter Keys (-7% size reduction via scale) */
-        .key-btn-circle {
-            transition: all 0.05s ease;
-            box-shadow: 0 2px 0 rgba(0,0,0,0.25);
-            -webkit-tap-highlight-color: transparent;
-            transform: scale(0.93); /* Reduced size by 7% */
-            border-radius: 9999px; /* Perfect Circle */
-            aspect-ratio: 1 / 1;    /* Width equals height */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .key-btn-circle:active {
-            transform: scale(0.93) translateY(2px);
-            box-shadow: 0 0 0 rgba(0,0,0,0);
-            background-color: #cbd5e1 !important;
-        }
-
-        .tab-item.active {
-            color: #dc2626;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>巴士到站時間</title>
+  <style>
+    :root {
+      --primary: #E4002B; /* 參考截圖的紅色 */
+      --primary-dark: #C80024;
+      --bg: #F2F2F7;
+      --card: #ffffff;
+      --text: #000000;
+      --muted: #8E8E93;
+      --border: #E5E5EA;
+      --green: #34C759;
+      --amber: #FF9500;
+      --red: #FF3B30;
+      --keypad-bg: #5E7382; /* 參考截圖鍵盤背景色 */
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+   .app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      background: var(--bg);
+      position: relative;
+    }
+   .header {
+      background: var(--primary);
+      color: white;
+      text-align: center;
+      padding: 12px 16px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      letter-spacing: 1px;
+    }
+   .search-box {
+      background: #EFEFF4;
+      padding: 8px 12px;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+    }
+   .search-input {
+      width: 100%;
+      padding: 8px 12px;
+      font-size: 1.05rem;
+      border: none;
+      border-radius: 6px;
+      outline: none;
+      background: white;
+      font-family: inherit;
+      text-align: left;
+      font-weight: 500;
+    }
+   .search-input:focus { background: white; }
+   .search-input::placeholder { color: #C7C7CC; font-weight: 400; text-align: left; }
+   .results {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      background: white;
+    }
+   .result-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid #EFEFF4;
+      cursor: pointer;
+      gap: 16px;
+      transition: background 0.1s;
+    }
+   .result-item:active { background: #f2f2f7; }
+   .result-num {
+      font-size: 1.25rem;
+      font-weight: 800;
+      min-width: 36px;
+      text-align: left;
+      color: #000;
+      background: transparent !important;
+      padding: 0;
+    }
+   .result-info { flex: 1; min-width: 0; }
+   .result-dest {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #000;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+   .result-co {
+      font-size: 0.72rem;
+      color: #8E8E93;
+      margin-top: 2px;
+    }
+   .result-arrow {
+      color: #8E8E93;
+      font-size: 1.2rem;
+      font-weight: 300;
+      flex-shrink: 0;
+    }
+   .empty-state,.loading-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+   .error-state {
+      text-align: center;
+      padding: 24px 20px;
+      color: var(--red);
+      font-size: 0.9rem;
+    }
+   /* 自訂鍵盤外觀修飾 */
+   .keypad {
+      flex-shrink: 0;
+      background: var(--keypad-bg);
+      padding: 8px 10px 12px;
+      user-select: none;
+    }
+   .key-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 6px;
+      justify-content: center;
+    }
+   .key-row:last-child { margin-bottom: 0; }
+   .key {
+      flex: 1;
+      max-width: 72px;
+      height: 48px;
+      border: none;
+      border-radius: 6px;
+      background: #FFFFFF;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #000000;
+      cursor: pointer;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+      transition: background 0.08s, transform 0.05s;
+    }
+   .key:active {
+      background: #D1D1D6;
+      transform: scale(0.96);
+    }
+   .key-letter {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      font-size: 1.2rem;
+      font-weight: 700;
+      background: #FFFFFF;
+      color: #000000;
+      flex: 0 0 44px;
+      box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+    }
+   .key-letter:active { background: #D1D1D6; }
+   .key-func {
+      background: #FFFFFF;
+      color: #A6B4C0;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+   .key-func:active { background: #D1D1D6; }
+   .keypad-main {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+   .num-pad {
+      flex: 1.2;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+   .letter-pad {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow-y: auto;
+      max-height: 210px;
+    }
+   .letter-pad.key-row {
+      justify-content: center;
+    }
+   .page { display: none; flex-direction: column; height: 100%; }
+   .page.active { display: flex; }
+   .page-header {
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      padding: 12px 8px;
+      flex-shrink: 0;
+      gap: 4px;
+    }
+   .back-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.6rem;
+      padding: 0 10px;
+      cursor: pointer;
+      line-height: 1;
+    }
+   .page-title {
+      flex: 1;
+      text-align: center;
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-right: 36px;
+    }
+   .stop-list,.eta-area {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      background: white;
+    }
+   .stop-item {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+   .stop-item:active { background: #f2f2f7; }
+   .stop-seq {
+      font-size: 0.85rem;
+      color: var(--muted);
+      min-width: 28px;
+      font-weight: 600;
+    }
+   .stop-name { font-size: 0.98rem; font-weight: 500; flex: 1; }
+   .stop-id { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+   .stop-arrow { color: #c7c7cc; }
+   .eta-header-info {
+      background: #1c1c1e;
+      color: white;
+      padding: 16px;
+    }
+   .eta-route-num {
+      font-size: 1.4rem;
+      font-weight: 700;
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+   .eta-dest-text { font-size: 0.95rem; color: #aeaeb2; margin-top: 2px; }
+   .eta-stop-text { font-size: 0.9rem; margin-top: 8px; }
+   .eta-co-badge {
+      display: inline-block;
+      background: #3a3a3c;
+      padding: 2px 8px;
+      border-radius: 5px;
+      font-size: 0.72rem;
+      margin-top: 6px;
+    }
+   .eta-rows { padding: 8px 0; }
+   .eta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+   .eta-mins {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--green);
+      font-variant-numeric: tabular-nums;
+    }
+   .eta-mins.soon { color: var(--amber); }
+   .eta-mins.arrived { color: var(--red); }
+   .eta-clock {
+      font-size: 0.88rem;
+      color: var(--muted);
+      text-align: right;
+    }
+   .eta-empty {
+      text-align: center;
+      padding: 40px 16px;
+      color: var(--muted);
+    }
+   .eta-toolbar {
+      display: flex;
+      gap: 8px;
+      padding: 12px 16px;
+      background: white;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+   .eta-btn {
+      flex: 1;
+      padding: 11px;
+      border: none;
+      border-radius: 10px;
+      background: #f2f2f7;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+   .eta-btn:active { background: #e5e5ea; }
+   .eta-btn.active-refresh {
+      background: var(--primary);
+      color: white;
+    }
+   .eta-refresh-info {
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+      padding: 6px 16px 10px;
+      background: white;
+    }
+  </style>
 </head>
-<body class="h-screen flex justify-center items-center overflow-hidden">
-
-    <div id="app" class="w-full max-w-md h-full bg-white flex flex-col justify-between shadow-2xl relative overflow-hidden">
-
-        <!-- Top Navigation Header -->
-        <header class="bg-red-600 text-white h-14 flex items-center justify-center relative shrink-0 z-10 shadow-md">
-            <h1 class="text-xl font-bold tracking-wider" id="page-title">搜尋</h1>
-            <button id="favorite-toggle-btn" class="hidden absolute right-4 text-white text-xl hover:text-yellow-300 transition">
-                <i class="far fa-star"></i>
-            </button>
-        </header>
-
-        <!-- Route Search Input Field -->
-        <div class="bg-gray-100 p-2.5 shadow-inner shrink-0 border-b border-gray-200">
-            <div class="bg-white rounded-md flex items-center px-3 py-2 border border-gray-300 focus-within:border-red-500 shadow-sm">
-                <input type="text" id="route-input" readonly placeholder="輸入路線號碼" 
-                       class="w-full bg-transparent text-center text-2xl font-black text-gray-800 focus:outline-none placeholder-gray-400 tracking-wider">
-                <button id="clear-input-btn" class="text-gray-400 hover:text-gray-600 p-1 invisible">
-                    <i class="fas fa-times-circle text-lg"></i>
-                </button>
+<body>
+  <div class="app">
+    <div class="page active" id="pageSearch">
+      <div class="header">搜尋</div>
+      <div class="search-box">
+        <input type="text" class="search-input" id="routeInput" placeholder="輸入路線號碼" readonly inputmode="none">
+      </div>
+      <div class="results" id="results">
+        <div class="empty-state">輸入路線號碼開始搜尋<br><small>已修正港鐵巴士站名顯示</small></div>
+      </div>
+      <div class="keypad" id="keypad">
+        <div class="keypad-main">
+          <div class="num-pad">
+            <div class="key-row">
+              <button class="key" data-k="1">1</button>
+              <button class="key" data-k="2">2</button>
+              <button class="key" data-k="3">3</button>
             </div>
+            <div class="key-row">
+              <button class="key" data-k="4">4</button>
+              <button class="key" data-k="5">5</button>
+              <button class="key" data-k="6">6</button>
+            </div>
+            <div class="key-row">
+              <button class="key" data-k="7">7</button>
+              <button class="key" data-k="8">8</button>
+              <button class="key" data-k="9">9</button>
+            </div>
+            <div class="key-row">
+              <button class="key key-func" data-k="clear">✕</button>
+              <button class="key" data-k="0">0</button>
+              <button class="key key-func" data-k="back">⌫</button>
+            </div>
+          </div>
+          <div class="letter-pad" id="letterKeys"></div>
         </div>
-
-        <main id="main-content" class="flex-1 overflow-y-auto relative bg-white">
-            
-            <!-- Default Status Display -->
-            <div id="status-container" class="p-6 text-center text-gray-500 my-auto">
-                <i class="fas fa-bus-alt text-5xl text-red-500 mb-3 opacity-80"></i>
-                <p class="text-base font-medium">請使用下方鍵盤輸入路線號碼</p>
-                <p class="text-xs text-gray-400 mt-1">支援 九巴、城巴、嶼巴、港鐵巴士 及 專線小巴</p>
-            </div>
-
-            <!-- Route Result List -->
-            <div id="route-list" class="divide-y divide-gray-200 hidden"></div>
-
-            <!-- Stop List Container -->
-            <div id="stop-list" class="divide-y divide-gray-200 hidden"></div>
-
-            <!-- ETA Detail View -->
-            <div id="eta-view" class="p-4 hidden"></div>
-
-            <!-- Loading Spinner Indicator -->
-            <div id="loading-spinner" class="hidden absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col justify-center items-center z-20">
-                <div class="w-10 h-10 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-3"></div>
-                <p class="text-gray-600 font-medium text-sm">正在載入路線與到站數據...</p>
-            </div>
-        </main>
-
-        <!-- Custom Split Keypad Container: Numbers Left (+20%), Circular Letters Right (-7%) -->
-        <div id="custom-keypad" class="bg-slate-700 p-2 shrink-0 border-t border-slate-800 shadow-2xl">
-            <div class="flex gap-2 items-center">
-                
-                <!-- LEFT SIDE: Numeric Keypad (+20% Enlarged) -->
-                <div class="grid grid-cols-3 gap-1.5 w-[52%]">
-                    <!-- Row 1: 1, 2, 3 -->
-                    <button class="key-btn-num bg-white text-gray-900 font-black text-center" data-key="1">1</button>
-                    <button class="key-btn-num bg-white text-gray-900 font-black text-center" data-key="2">2</button>
-                    <button class="key-btn-num bg-white text-gray-900 font-black text-center" data-key="3">3</button>
-                    
-                    <!-- Row 2: 4, 5, 6 -->
-                    <button class="key-btn-num bg-white text-gray-900 font-black text-center" data-key="4">4</button>
-                    <button class="key-btn-num bg-white text-gray-900 font-black text-center" data-key="5">5</button>
-                    <button class="key-btn-num bg-white text-gray-900 font-black text-center" data-key="6">6</button>
-                    
-                    <!-- Row 3: 7, 8, 9 -->
-                    <button class="key-btn-num bg-white text-gray-900 font-black text-center" data-key="7">7</button>
-                    <button class="key-btn-num bg-white text-gray-900 font-black text-center" data-key="8">8</button>
-                    <button class="key-btn-num bg-white text-gray-900 font-black text-center" data-key="9">9</button>
-                    
-                    <!-- Row 4: Clear, 0, Backspace -->
-                    <button class="key-btn-action bg-gray-200 text-gray-600 font-bold flex items-center justify-center" data-action="clear" title="清除">
-                        <i class="fas fa-times"></i>
-                    </button>
-                    <button class="key-btn-num bg-white text-gray-900 font-black text-center" data-key="0">0</button>
-                    <button class="key-btn-action bg-gray-200 text-gray-700 font-bold flex items-center justify-center" data-action="backspace" title="退格">
-                        <i class="fas fa-arrow-left"></i>
-                    </button>
-                </div>
-
-                <!-- RIGHT SIDE: Circular Letter Keypad (4x4 Rows, -7% Scaled) -->
-                <div class="grid grid-cols-4 gap-1 w-[48%]">
-                    <!-- Row 1: A, B, C, D -->
-                    <button class="key-btn-circle bg-white text-gray-900 font-extrabold text-lg" data-key="A">A</button>
-                    <button class="key-btn-circle bg-white text-gray-900 font-extrabold text-lg" data-key="B">B</button>
-                    <button class="key-btn-circle bg-white text-gray-900 font-extrabold text-lg" data-key="C">C</button>
-                    <button class="key-btn-circle bg-white text-gray-900 font-extrabold text-lg" data-key="D">D</button>
-
-                    <!-- Row 2: E, F, H, K -->
-                    <button class="key-btn-circle bg-white text-gray-900 font-extrabold text-lg" data-key="E">E</button>
-                    <button class="key-btn-circle bg-white text-gray-900 font-extrabold text-lg" data-key="F">F</button>
-                    <button class="key-btn-circle bg-white text-gray-900 font-extrabold text-lg" data-key="H">H</button>
-                    <button class="key-btn-circle bg-white text-gray-900 font-extrabold text-lg" data-key="K">K</button>
-
-                    <!-- Row 3: M, N, P, R -->
-                    <button class="key-btn-circle bg-white text-gray-900 font-extrabold text-lg" data-key="M">M</button>
-                    <button class="key-btn-circle bg-white text-gray-900 font-extrabold text-lg" data-key="N">N</button>
-                    <button class="key-btn-circle bg-white text-gray-900 font-extrabold text-lg" data-key="P">P</button>
-                    <button class="key-btn-circle bg-white text-gray-900 font-extrabold text-lg" data-key="R">R</button>
-
-                    <!-- Row 4: S, T, W, X -->
-                    <button class="key-btn-circle bg-white text-gray-900 font-extrabold text-lg" data-key="S">S</button>
-                    <button class="key-btn-circle bg-white text-gray-900 font-extrabold text-lg" data-key="T">T</button>
-                    <button class="key-btn-circle bg-white text-gray-900 font-extrabold text-lg" data-key="W">W</button>
-                    <button class="key-btn-circle bg-white text-gray-900 font-extrabold text-lg" data-key="X">X</button>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- Bottom Tab Bar -->
-        <nav class="bg-white border-t border-gray-200 flex justify-around items-center py-1.5 shrink-0 z-10 shadow-lg">
-            <button class="tab-item flex flex-col items-center text-gray-500 hover:text-red-600 w-1/5 py-1" data-tab="home">
-                <i class="fas fa-home text-lg mb-0.5"></i>
-                <span class="text-[10px] font-medium">主頁</span>
-            </button>
-            <button class="tab-item flex flex-col items-center text-gray-500 hover:text-red-600 w-1/5 py-1" data-tab="fav">
-                <i class="far fa-star text-lg mb-0.5"></i>
-                <span class="text-[10px] font-medium">收藏</span>
-            </button>
-            <button class="tab-item active flex flex-col items-center text-red-600 w-1/5 py-1" data-tab="search">
-                <i class="fas fa-search text-lg mb-0.5"></i>
-                <span class="text-[10px] font-medium">搜尋</span>
-            </button>
-            <button class="tab-item flex flex-col items-center text-gray-500 hover:text-red-600 w-1/5 py-1" data-tab="nearby">
-                <i class="fas fa-map-marker-alt text-lg mb-0.5"></i>
-                <span class="text-[10px] font-medium">鄰近</span>
-            </button>
-            <button class="tab-item flex flex-col items-center text-gray-500 hover:text-red-600 w-1/5 py-1" data-tab="game">
-                <i class="fas fa-gamepad text-lg mb-0.5"></i>
-                <span class="text-[10px] font-medium">遊戲</span>
-            </button>
-        </nav>
+      </div>
     </div>
 
-    <script>
-        // App State
-        const state = {
-            currentTab: 'search',
-            searchQuery: '',
-            selectedRoute: null,
-            favorites: JSON.parse(localStorage.getItem('hk_bus_favs') || '[]')
-        };
+    <div class="page" id="pageStops">
+      <div class="page-header">
+        <button class="back-btn" onclick="goSearch()">‹</button>
+        <div class="page-title" id="stopsTitle">選擇車站</div>
+      </div>
+      <div class="stop-list" id="stopList">
+        <div class="loading-state">載入車站中...</div>
+      </div>
+    </div>
 
-        // Static Backups for NLB, MTR, and GMB Routes
-        const STATIC_FALLBACK_ROUTES = [
-            { route: '1', co: 'NLB', orig: '梅窩碼頭', dest: '大澳', bound: 'outbound', sub: '大嶼山巴士 (資料由 DATA.GOV.HK 提供)' },
-            { route: '1', co: 'NLB', orig: '大澳', dest: '梅窩碼頭', bound: 'inbound', sub: '大嶼山巴士 (資料由 DATA.GOV.HK 提供)' },
-            { route: '3M', co: 'NLB', orig: '梅窩碼頭', dest: '東湧站巴士總站', bound: 'outbound', sub: '大嶼山巴士' },
-            { route: '11', co: 'NLB', orig: '東湧站巴士總站', dest: '大澳', bound: 'outbound', sub: '大嶼山巴士' },
-            { route: 'K51', co: 'MTR', orig: '富泰', dest: '大欖', bound: 'O', sub: '港鐵巴士 (資料由 DATA.GOV.HK 提供)' },
-            { route: 'K52', co: 'MTR', orig: '屯門站', dest: '龍鼓灘', bound: 'O', sub: '港鐵巴士' },
-            { route: 'K76', co: 'MTR', orig: '天恒', dest: '天水圍站', bound: 'O', sub: '港鐵巴士' },
-            { route: '1', co: 'GMB', orig: '香港仔', dest: '中環 (香港站)', bound: 'O', region: 'HKI', route_id: 2000001, sub: '綠色專線小巴' },
-            { route: '16', co: 'GMB', orig: '柴灣站', dest: '舂磡角', bound: 'O', region: 'HKI', route_id: 2000016, sub: '綠色專線小巴' },
-            { route: '1A', co: 'GMB', orig: '西貢', dest: '彩虹', bound: 'O', region: 'NT', route_id: 4000001, sub: '綠色專線小巴' }
-        ];
+    <div class="page" id="pageEta">
+      <div class="page-header">
+        <button class="back-btn" onclick="goStops()">‹</button>
+        <div class="page-title">預計到站</div>
+      </div>
+      <div class="eta-area" id="etaArea">
+        <div class="eta-header-info">
+          <div class="eta-route-num" id="etaRoute">—</div>
+          <div class="eta-dest-text" id="etaDest">—</div>
+          <div class="eta-stop-text" id="etaStopName">—</div>
+          <div class="eta-co-badge" id="etaCo">—</div>
+        </div>
+        <div class="eta-rows" id="etaRows"></div>
+        <div class="eta-refresh-info" id="etaInfo"></div>
+      </div>
+      <div class="eta-toolbar">
+        <button class="eta-btn" onclick="fetchETA()">🔄 刷新</button>
+        <button class="eta-btn" id="btnAuto" onclick="toggleAuto()">▶ 自動刷新</button>
+      </div>
+    </div>
 
-        // UI DOM Elements
-        const routeInput = document.getElementById('route-input');
-        const clearBtn = document.getElementById('clear-input-btn');
-        const statusContainer = document.getElementById('status-container');
-        const routeListEl = document.getElementById('route-list');
-        const stopListEl = document.getElementById('stop-list');
-        const etaViewEl = document.getElementById('eta-view');
-        const loadingSpinner = document.getElementById('loading-spinner');
-        const customKeypad = document.getElementById('custom-keypad');
-        const pageTitle = document.getElementById('page-title');
+  </div>
 
-        // Keypad Touch Event Listener
-        document.querySelectorAll('#custom-keypad button').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const key = btn.getAttribute('data-key');
-                const action = btn.getAttribute('data-action');
+  <script>
+    const LETTERS = ['A','B','C','D','E','F','H','K','M','N','P','R','S','T','W','X'];
+    const CO_NAMES = {
+      kmb: '九巴',
+      lwb: '龍運巴士',
+      ctb: '城巴',
+      nlb: '大嶼山巴士',
+      gmb: '專線小巴',
+      mtrbus: '港鐵巴士'
+    };
 
-                if (key) {
-                    state.searchQuery += key;
-                } else if (action === 'clear') {
-                    state.searchQuery = '';
-                } else if (action === 'backspace') {
-                    state.searchQuery = state.searchQuery.slice(0, -1);
-                }
+    function isLWB(route) {
+      const r = String(route).toUpperCase();
+      if (/^A[3-5]\d/.test(r)) return true;
+      if (/^E[3-4]\d/.test(r)) return true;
+      if (/^S(1|64)/.test(r)) return true;
+      if (/^R(8|33|42)/.test(r)) return true;
+      if (/^N(30|31|36|39|42|64)/.test(r)) return true;
+      return false;
+    }
 
-                updateSearchInput();
+    const letterBox = document.getElementById('letterKeys');
+    for (let i = 0; i < LETTERS.length; i += 2) {
+      const row = document.createElement('div');
+      row.className = 'key-row';
+      LETTERS.slice(i, i + 2).forEach(L => {
+        const b = document.createElement('button');
+        b.className = 'key key-letter';
+        b.dataset.k = L;
+        b.textContent = L;
+        row.appendChild(b);
+      });
+      letterBox.appendChild(row);
+    }
+
+    let inputVal = '';
+    let searchTimer = null;
+    let state = {
+      co: null, route: null, bound: null, serviceType: null,
+      directionLabel: null, stopId: null, stopName: null,
+      nlbRouteId: null, gmbRouteId: null, gmbRouteSeq: null,
+      dirPath: null, mtrRawStop: null,
+      auto: false, timer: null
+    };
+
+    let cache = {
+      kmbRoutes: null, kmbAt: 0,
+      nlbRoutes: null, nlbAt: 0,
+      stopNames: {},
+      mtrStops: null,
+      mtrStopsAt: 0
+    };
+    const TTL = 30 * 60 * 1000;
+
+    // ===== 核心修正：港鐵巴士站名對照表 =====
+    const EMBEDDED_MTR_STOP_NAMES = {
+      "K51-U010": "富泰", "K51-U020": "景峰花園", "K51-U030": "鳳地", "K51-U040": "兆康站(南)", "K51-U050": "嶺南大學", "K51-U060": "富泰邨", "K51-U070": "屯門站", "K51-U080": "屯門市中心", "K51-U090": "置樂花園", "K51-U100": "青善遊樂場", "K51-U110": "龍門站", "K51-U120": "青雲站", "K51-U130": "鳴琴站", "K51-U140": "石排站", "K51-U150": "大興街", "K51-U160": "大興邨", "K51-U170": "中電", "K51-U180": "黃金海岸", "K51-U190": "咖啡灣", "K51-U200": "碧翠路", "K51-U210": "掃管笏", "K51-U220": "愛琴灣", "K51-U230": "小欖新村", "K51-U240": "小欖村", "K51-U250": "小欖", "K51-U260": "大欖涌", "K51-U270": "大欖",
+      "K51-D010": "大欖", "K51-D020": "大欖涌", "K51-D030": "小欖", "K51-D040": "小欖村", "K51-D050": "小欖新村", "K51-D060": "愛琴灣", "K51-D070": "掃管笏", "K51-D080": "碧翠路", "K51-D090": "咖啡灣", "K51-D100": "黃金海岸", "K51-D110": "中電", "K51-D120": "大興邨", "K51-D130": "大興街", "K51-D140": "石排站", "K51-D150": "鳴琴站", "K51-D160": "青雲站", "K51-D170": "龍門站", "K51-D180": "青善遊樂場", "K51-D190": "置樂花園", "K51-D200": "屯門市中心", "K51-D210": "屯門站", "K51-D220": "嶺南大學", "K51-D230": "兆康站(南)", "K51-D240": "景峰花園", "K51-D250": "富泰",
+      "K52-U010": "屯門站", "K52-U020": "屯門市中心", "K52-U030": "屯門官立中學", "K52-U040": "恒順園", "K52-U050": "恒豐園", "K52-U060": "三聖邨", "K52-U070": "青善遊樂場", "K52-U080": "置樂花園", "K52-U090": "龍門居", "K52-U100": "龍門站", "K52-U110": "湖山路", "K52-U120": "蝴蝶邨", "K52-U130": "湖景邨湖碧樓", "K52-U140": "湖景邨湖畔樓", "K52-U150": "屯門公眾騎術學校", "K52-U160": "蝴蝶灣公園", "K52-U170": "屯門龍舟酒店", "K52-U180": "望后石", "K52-U190": "政府車場", "K52-U200": "內河碼頭", "K52-U210": "環保園", "K52-U220": "紹榮鋼鐵", "K52-U230": "龍鼓灘",
+      "K52-D010": "龍鼓灘", "K52-D020": "紹榮鋼鐵", "K52-D030": "環保園", "K52-D040": "內河碼頭", "K52-D050": "政府車場", "K52-D060": "望后石", "K52-D070": "屯門龍舟酒店", "K52-D080": "蝴蝶灣公園", "K52-D090": "屯門公眾騎術學校", "K52-D100": "湖景邨湖畔樓", "K52-D110": "湖景邨湖碧樓", "K52-D120": "蝴蝶邨", "K52-D130": "湖山路", "K52-D140": "龍門站", "K52-D150": "龍門居", "K52-D160": "置樂花園", "K52-D170": "青善遊樂場", "K52-D180": "三聖邨", "K52-D190": "恒豐園", "K52-D200": "恒順園", "K52-D210": "屯門官立中學", "K52-D220": "屯門市中心", "K52-D230": "屯門站",
+      "K52A-U010": "屯門站", "K52A-U020": "屯門市中心", "K52A-U030": "曾咀", "K52A-D010": "曾咀", "K52A-D020": "屯門市中心", "K52A-D030": "屯門站",
+      "K53-U010": "屯門站", "K53-U020": "新墟街市", "K53-U030": "紅橋", "K53-U040": "屯門醫院", "K53-U050": "兆康站", "K53-U060": "麒麟圍", "K53-U070": "富泰", "K53-U080": "愛琴灣", "K53-U090": "掃管笏", "K53-U100": "掃管笏路", "K53-U110": "星堤", "K53-U120": "張園", "K53-U130": "掃管笏村",
+      "K58-U010": "富泰", "K58-U020": "景峰花園", "K58-U030": "屯門站", "K58-U040": "屯門市中心", "K58-U050": "掃管笏", "K58-D010": "掃管笏", "K58-D020": "屯門市中心", "K58-D030": "屯門站", "K58-D040": "景峰花園", "K58-D050": "富泰",
+      "K65-U010": "元朗站", "K65-U020": "又新街", "K65-U030": "大棠路", "K65-U040": "康樂路", "K65-U050": "元朗警署", "K65-U060": "水邊圍邨", "K65-U070": "元朗公園", "K65-U080": "流浮山", "K65-D010": "流浮山", "K65-D020": "元朗公園", "K65-D030": "水邊圍邨", "K65-D040": "元朗站",
+      "K65A-U010": "天水圍站", "K65A-U020": "天瑞", "K65A-U030": "天恩", "K65A-U040": "流浮山",
+      "K66-U010": "朗屏邨", "K66-U020": "朗屏站", "K66-U030": "元朗公園", "K66-U040": "水邊圍", "K66-U050": "大棠", "K66-D010": "大棠", "K66-D020": "水邊圍", "K66-D030": "朗屏站", "K66-D040": "朗屏邨",
+      "K68-U010": "元朗工業邨", "K68-U020": "元朗站", "K68-U030": "元朗廣場", "K68-U040": "元朗公園", "K68-D010": "元朗公園", "K68-D020": "元朗廣場", "K68-D030": "元朗站", "K68-D040": "元朗工業邨",
+      "K73-U010": "天恆邨", "K73-U020": "天澤邨", "K73-U030": "天逸邨", "K73-U040": "天富苑", "K73-U050": "天水圍站", "K73-U060": "元朗西", "K73-D010": "元朗西", "K73-D020": "天水圍站", "K73-D030": "天富苑", "K73-D040": "天恆邨",
+      "K74-U010": "天水圍市中心", "K74-U020": "天盛苑", "K74-U030": "天水圍站", "K74-U040": "凹頭", "K74-D010": "凹頭", "K74-D020": "天水圍站", "K74-D030": "天盛苑", "K74-D040": "天水圍市中心",
+      "K75-U010": "天水圍站", "K75-U020": "天耀邨", "K75-U030": "天盛苑", "K75-U040": "洪水橋", "K75-D010": "洪水橋", "K75-D020": "天盛苑", "K75-D030": "天水圍站",
+      "K75A-U010": "天水圍站", "K75A-U020": "洪水橋", "K75A-D010": "洪水橋", "K75A-D020": "天水圍站",
+      "K75P-U010": "天瑞", "K75P-U020": "洪水橋", "K75P-D010": "洪水橋", "K75P-D020": "天瑞",
+      "K76-U010": "天恆邨", "K76-U020": "天逸邨", "K76-U030": "天水圍站", "K76-D010": "天水圍站", "K76-D020": "天逸邨", "K76-D030": "天恆邨",
+      "506-U010": "屯門碼頭", "506-U020": "美樂花園", "506-U030": "蝴蝶邨", "506-U040": "湖景邨", "506-U050": "兆麟", "506-D010": "兆麟", "506-D020": "湖景邨", "506-D030": "蝴蝶邨", "506-D040": "美樂花園", "506-D050": "屯門碼頭",
+      "K12-U010": "大埔墟站", "K12-U020": "大埔墟街市", "K12-U030": "八號花園", "K12-D010": "八號花園", "K12-D020": "大埔墟站",
+      "K14-U010": "大埔超級城", "K14-U020": "大埔墟站", "K14-D010": "大埔墟站", "K14-D020": "大埔超級城",
+      "K17-U010": "大埔墟站", "K17-U020": "富善邨", "K17-D010": "富善邨", "K17-D020": "大埔墟站",
+      "K18-U010": "大埔墟站", "K18-U020": "廣福邨", "K18-D010": "廣福邨", "K18-D020": "大埔墟站"
+    };
+
+    async function getMTRStopNameMap() {
+      const now = Date.now();
+      if (cache.mtrStops && now - cache.mtrStopsAt < 24*60*60*1000) return cache.mtrStops;
+      try {
+        const stored = localStorage.getItem('mtr_bus_stop_map_v3');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed && Object.keys(parsed).length > 50) {
+            cache.mtrStops = parsed;
+            cache.mtrStopsAt = now;
+            return parsed;
+          }
+        }
+      } catch(e) {}
+      const onlineSources = [
+        'https://hkbus.github.io/hk-bus-crawling/routeStops/lrtfeeder.json',
+        'https://raw.githubusercontent.com/hkbus/hk-bus-crawling/gh-pages/routeStops/lrtfeeder.json',
+        'https://open-data-hk.github.io/hk-bus-crawling/routeStops/lrtfeeder.json',
+        'https://raw.githubusercontent.com/open-data-hk/hk-bus-crawling/gh-pages/routeStops/lrtfeeder.json',
+        'https://hkbus.github.io/hk-bus-crawling/stopList/lrtfeeder.json',
+        'https://raw.githubusercontent.com/hkbus/hk-bus-crawling/gh-pages/stopList/lrtfeeder.json'
+      ];
+      for (const url of onlineSources) {
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(()=>controller.abort(), 5000);
+          const res = await fetch(url, { signal: controller.signal });
+          clearTimeout(timeout);
+          if (!res.ok) continue;
+          const data = await res.json();
+          const map = {};
+          const walk = (node) => {
+            if (!node) return;
+            if (Array.isArray(node)) { node.forEach(walk); return; }
+            if (typeof node === 'object') {
+              const id = node.stopId || node.stop_id || node.busStopId || node.id;
+              let name = null;
+              if (node.name) {
+                if (typeof node.name === 'object') name = node.name.zh || node.name.zh_hant || node.name.hant || node.name.tc || node.name.zh_Hant || node.name.en;
+                else name = node.name;
+              }
+              if (!name) name = node.stopName_c || node.name_tc || node.name_zh || node.name_hant || node.nameZh;
+              if (id && name && typeof id === 'string' && /K\d|506/i.test(id)) {
+                if (/[\u4e00-\u9fa5]/.test(name)) map[id] = name;
+              }
+              for (const k in node) {
+                const v = node[k];
+                if (v && typeof v === 'object') walk(v);
+              }
+            }
+          };
+          walk(data);
+          if (Object.keys(map).length >= 30) {
+            const merged = {...EMBEDDED_MTR_STOP_NAMES,...map};
+            cache.mtrStops = merged;
+            cache.mtrStopsAt = now;
+            try { localStorage.setItem('mtr_bus_stop_map_v3', JSON.stringify(merged)); } catch {}
+            return merged;
+          }
+        } catch (e) {}
+      }
+      cache.mtrStops = EMBEDDED_MTR_STOP_NAMES;
+      cache.mtrStopsAt = now;
+      return cache.mtrStops;
+    }
+
+    document.getElementById('keypad').addEventListener('click', e => {
+      const btn = e.target.closest('[data-k]');
+      if (!btn) return;
+      const k = btn.dataset.k;
+      if (k === 'clear') inputVal = '';
+      else if (k === 'back') inputVal = inputVal.slice(0, -1);
+      else {
+        if (inputVal.length >= 6) return;
+        inputVal += k;
+      }
+      document.getElementById('routeInput').value = inputVal;
+      scheduleSearch();
+    });
+
+    function scheduleSearch() {
+      clearTimeout(searchTimer);
+      if (!inputVal) {
+        document.getElementById('results').innerHTML = '<div class="empty-state">輸入路線號碼開始搜尋<br><small>已修正港鐵巴士站名顯示</small></div>';
+        return;
+      }
+      document.getElementById('results').innerHTML = '<div class="loading-state">搜尋中...</div>';
+      searchTimer = setTimeout(() => doSearch(inputVal), 280);
+    }
+
+    async function doSearch(route) {
+      route = route.toUpperCase();
+      try {
+        const results = await Promise.allSettled([
+          searchKMB(route),
+          searchCTB(route),
+          searchNLB(route),
+          searchGMB(route),
+          searchMTRBus(route)
+        ]);
+        let all = [];
+        results.forEach(r => { if (r.status === 'fulfilled') all = all.concat(r.value || []); });
+        if (inputVal.toUpperCase()!== route) return;
+        if (all.length === 0) {
+          document.getElementById('results').innerHTML = '<div class="error-state">找不到路線「' + route + '」</div>';
+          return;
+        }
+        renderResults(all, route);
+      } catch (e) {
+        document.getElementById('results').innerHTML = '<div class="error-state">搜尋失敗，請重試</div>';
+      }
+    }
+
+    function renderResults(list, route) {
+      const el = document.getElementById('results');
+      el.innerHTML = '';
+      list.forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'result-item';
+        const plate = 'plate-' + (m.co || 'kmb');
+        const destText = m.label.replace(/^.*?→\s*/, '');
+        const coSubText = CO_NAMES[m.co] ? CO_NAMES[m.co] + ' (資料由 DATA.GOV.HK 提供)' : '資料由 DATA.GOV.HK 提供';
+        
+        div.innerHTML =
+          '<div class="result-num">' + route + '</div>' +
+          '<div class="result-info">' +
+            '<div class="result-dest">往 ' + destText + '</div>' +
+            '<div class="result-co">' + coSubText + '</div>' +
+          '</div>' +
+          '<div class="result-arrow">›</div>';
+        div.onclick = () => selectRoute(m, route);
+        el.appendChild(div);
+      });
+    }
+
+    function shortCo(co) {
+      return { ctb: '城巴', nlb: '嶼巴', gmb: '小巴', mtrbus: '港鐵巴士', kmb: '' }[co] || '';
+    }
+
+    async function searchKMB(route) {
+      try {
+        const now = Date.now();
+        if (!cache.kmbRoutes || now - cache.kmbAt > TTL) {
+          const res = await fetch('https://data.etabus.gov.hk/v1/transport/kmb/route/');
+          if (!res.ok) return [];
+          cache.kmbRoutes = (await res.json()).data || [];
+          cache.kmbAt = now;
+        }
+        return cache.kmbRoutes.filter(r => r.route.toUpperCase() === route).map(m => ({
+          co: isLWB(m.route)? 'lwb' : 'kmb', bound: m.bound, serviceType: m.service_type,
+          label: m.orig_tc + ' → ' + m.dest_tc,
+          sub: (m.bound === 'O'? '去程' : '回程') + ' · 類型' + m.service_type,
+          dest: m.dest_tc
+        }));
+      } catch { return []; }
+    }
+
+    async function searchCTB(route) {
+      try {
+        const res = await fetch('https://rt.data.gov.hk/v2/transport/citybus/route/CTB/' + route);
+        if (!res.ok) return [];
+        const json = await res.json();
+        if (!json.data) return [];
+        const dirs = await Promise.all(['inbound', 'outbound'].map(async dir => {
+          try {
+            const sRes = await fetch('https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/' + route + '/' + dir);
+            const sJson = await sRes.json();
+            if (sJson.data && sJson.data.length) {
+              return {
+                co: 'ctb',
+                bound: dir === 'outbound'? 'O' : 'I',
+                serviceType: '1',
+                dirPath: dir,
+                label: dir === 'outbound'
+                 ? json.data.orig_tc + ' → ' + json.data.dest_tc
+                  : json.data.dest_tc + ' → ' + json.data.orig_tc,
+                sub: dir === 'outbound'? '去程' : '回程',
+                dest: dir === 'outbound'? json.data.dest_tc : json.data.orig_tc
+              };
+            }
+          } catch {}
+          return null;
+        }));
+        return dirs.filter(Boolean);
+      } catch { return []; }
+    }
+
+    async function searchNLB(route) {
+      try {
+        const now = Date.now();
+        if (!cache.nlbRoutes || now - cache.nlbAt > TTL) {
+          const res = await fetch('https://rt.data.gov.hk/v2/transport/nlb/route.php?action=list');
+          if (!res.ok) return [];
+          cache.nlbRoutes = (await res.json()).routes || [];
+          cache.nlbAt = now;
+        }
+        return cache.nlbRoutes.filter(r => r.routeNo.toUpperCase() === route).map(m => ({
+          co: 'nlb', bound: 'O', serviceType: '1', nlbRouteId: m.routeId,
+          label: m.routeName_c, sub: '', dest: m.routeName_c
+        }));
+      } catch { return []; }
+    }
+
+    async function searchGMB(route) {
+      const regions = ['HKI', 'KLN', 'NT'];
+      const names = { HKI: '港島', KLN: '九龍', NT: '新界' };
+      const parts = await Promise.all(regions.map(async region => {
+        try {
+          const res = await fetch('https://data.etagmb.gov.hk/route/' + region + '/' + route);
+          if (!res.ok) return [];
+          const data = (await res.json()).data || [];
+          const out = [];
+          data.forEach(item => {
+            (item.directions || []).forEach(d => {
+              out.push({
+                co: 'gmb', bound: String(d.route_seq), serviceType: '1',
+                gmbRouteId: item.route_id, gmbRouteSeq: d.route_seq,
+                label: d.orig_tc + ' → ' + d.dest_tc,
+                sub: names[region], dest: d.dest_tc
+              });
             });
+          });
+          return out;
+        } catch { return []; }
+      }));
+      return parts.flat();
+    }
+
+    async function searchMTRBus(route) {
+      if (!/^K\d|506/i.test(route)) return [];
+      try {
+        const res = await fetch('https://rt.data.gov.hk/v1/transport/mtr/bus/getSchedule', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ language: 'zh', routeName: route })
         });
+        if (!res.ok) return [];
+        const json = await res.json();
+        if (json.routeStatus === '3' ||!(json.busStop || []).length) return [];
+        return [{ co: 'mtrbus', bound: 'O', serviceType: '1', label: '港鐵巴士 ' + route, sub: '', dest: route }];
+      } catch { return []; }
+    }
 
-        // Physical Keyboard Input
-        document.addEventListener('keydown', (e) => {
-            if (state.currentTab !== 'search') return;
-            if (e.key >= '0' && e.key <= '9') {
-                state.searchQuery += e.key;
-            } else if (/^[a-zA-Z]$/.test(e.key)) {
-                state.searchQuery += e.key.toUpperCase();
-            } else if (e.key === 'Backspace') {
-                state.searchQuery = state.searchQuery.slice(0, -1);
-            } else if (e.key === 'Escape') {
-                state.searchQuery = '';
-            }
-            updateSearchInput();
+    async function selectRoute(m, route) {
+      state.co = m.co;
+      state.route = route;
+      state.bound = m.bound;
+      state.serviceType = m.serviceType || '1';
+      state.directionLabel = m.label;
+      state.nlbRouteId = m.nlbRouteId || null;
+      state.gmbRouteId = m.gmbRouteId || null;
+      state.gmbRouteSeq = m.gmbRouteSeq || null;
+      state.dirPath = m.dirPath || (m.bound === 'O'? 'outbound' : 'inbound');
+      showPage('pageStops');
+      document.getElementById('stopsTitle').textContent = route + ' · ' + (m.dest || m.label);
+      document.getElementById('stopList').innerHTML = '<div class="loading-state">載入車站中...</div>';
+      try {
+        let stops = [];
+        if (state.co === 'kmb' || state.co === 'lwb') stops = await loadStopsKMB();
+        else if (state.co === 'ctb') stops = await loadStopsCTB();
+        else if (state.co === 'nlb') stops = await loadStopsNLB();
+        else if (state.co === 'gmb') stops = await loadStopsGMB();
+        else if (state.co === 'mtrbus') stops = await loadStopsMTRBus();
+        renderStops(stops);
+      } catch (e) {
+        document.getElementById('stopList').innerHTML = '<div class="error-state">' + e.message + '</div>';
+      }
+    }
+
+    async function getKMBStopName(stopId) {
+      if (cache.stopNames[stopId]) return cache.stopNames[stopId];
+      try {
+        const j = await (await fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop/' + stopId)).json();
+        const name = (j.data && j.data.name_tc) || stopId;
+        cache.stopNames[stopId] = name;
+        return name;
+      } catch {
+        return stopId;
+      }
+    }
+
+    async function loadStopsKMB() {
+      const dir = state.bound === 'O'? 'outbound' : 'inbound';
+      const res = await fetch('https://data.etabus.gov.hk/v1/transport/kmb/route-stop/' + state.route + '/' + dir + '/' + state.serviceType);
+      if (!res.ok) throw new Error('無法取得車站');
+      const raw = (await res.json()).data || [];
+      const stops = await Promise.all(raw.map(async s => {
+        const name = await getKMBStopName(s.stop);
+        return { seq: s.seq, stopId: s.stop, name: name };
+      }));
+      return stops.sort((a, b) => Number(a.seq) - Number(b.seq));
+    }
+
+    async function getCTBStopName(stopId) {
+      if (cache.stopNames[stopId]) return cache.stopNames[stopId];
+      try {
+        const j = await (await fetch('https://rt.data.gov.hk/v2/transport/citybus/stop/' + stopId)).json();
+        const name = (j.data && j.data.name_tc) || stopId;
+        cache.stopNames[stopId] = name;
+        return name;
+      } catch {
+        return stopId;
+      }
+    }
+
+    async function loadStopsCTB() {
+      const res = await fetch('https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/' + state.route + '/' + state.dirPath);
+      if (!res.ok) throw new Error('無法取得車站');
+      const raw = (await res.json()).data || [];
+      const stops = await Promise.all(raw.map(async s => {
+        const name = await getCTBStopName(s.stop);
+        return { seq: s.seq, stopId: s.stop, name: name };
+      }));
+      return stops.sort((a, b) => Number(a.seq) - Number(b.seq));
+    }
+
+    async function loadStopsNLB() {
+      const res = await fetch('https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=list&routeId=' + state.nlbRouteId);
+      if (!res.ok) throw new Error('無法取得車站');
+      return ((await res.json()).stops || []).map((s, i) => ({ seq: i + 1, stopId: s.stopId, name: s.stopName_c }));
+    }
+
+    async function loadStopsGMB() {
+      const res = await fetch('https://data.etagmb.gov.hk/route-stop/' + state.gmbRouteId + '/' + state.gmbRouteSeq);
+      if (!res.ok) throw new Error('無法取得車站');
+      const json = await res.json();
+      const list = (json.data && json.data.route_stops) || json.data || [];
+      return list.map(s => ({ seq: s.stop_seq, stopId: s.stop_id, name: s.name_tc || s.name_en || s.stop_id }));
+    }
+
+    async function loadStopsMTRBus() {
+      const scheduleRes = await fetch('https://rt.data.gov.hk/v1/transport/mtr/bus/getSchedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: 'zh', routeName: state.route })
+      });
+      if (!scheduleRes.ok) throw new Error('無法取得車站資料');
+      const json = await scheduleRes.json();
+      if (json.routeStatus === '3' ||!(json.busStop || []).length) {
+        throw new Error(json.routeStatusRemarkTitle || '此路線暫停服務');
+      }
+      const stopNameMap = await getMTRStopNameMap();
+      return (json.busStop || []).map((s, i) => {
+        const id = s.busStopId || String(i + 1);
+        let name = stopNameMap[id];
+        if (!name) name = s.busStopName || s.busStopName_tc || s.busStopName_en || s.name || s.stopName_c;
+        if (!name) name = EMBEDDED_MTR_STOP_NAMES[id] || id;
+        return { seq: i + 1, stopId: id, name: name, raw: s };
+      });
+    }
+
+    function renderStops(stops) {
+      const el = document.getElementById('stopList');
+      el.innerHTML = '';
+      if (!stops.length) { el.innerHTML = '<div class="error-state">沒有車站資料</div>'; return; }
+      stops.forEach(s => {
+        const div = document.createElement('div');
+        div.className = 'stop-item';
+        const isMTR = state.co === 'mtrbus';
+        const subId = isMTR && EMBEDDED_MTR_STOP_NAMES[s.stopId]? '' : (s.stopId && s.name!== s.stopId? '<div class="stop-id">' + s.stopId + '</div>' : '');
+        div.innerHTML = '<div class="stop-seq">' + s.seq + '</div><div class="stop-name">' + s.name + subId + '</div><div class="stop-arrow">›</div>';
+        div.onclick = () => selectStop(s);
+        el.appendChild(div);
+      });
+    }
+
+    function selectStop(s) {
+      state.stopId = s.stopId;
+      state.stopName = s.name;
+      state.mtrRawStop = s.raw || null;
+      showPage('pageEta');
+      const etaRouteEl = document.getElementById('etaRoute');
+      etaRouteEl.textContent = state.route;
+      etaRouteEl.className = 'eta-route-num plate-' + (state.co || 'kmb');
+      document.getElementById('etaDest').textContent = state.directionLabel;
+      document.getElementById('etaStopName').textContent = s.name;
+      document.getElementById('etaCo').textContent = CO_NAMES[state.co] || state.co;
+      startAutoRefresh();
+    }
+
+    async function fetchETA() {
+      const rows = document.getElementById('etaRows');
+      rows.innerHTML = '<div class="eta-empty">載入中...</div>';
+      try {
+        let etas = [];
+        if (state.co === 'kmb' || state.co === 'lwb') etas = await etaKMB();
+        else if (state.co === 'ctb') etas = await etaCTB();
+        else if (state.co === 'nlb') etas = await etaNLB();
+        else if (state.co === 'gmb') etas = await etaGMB();
+        else if (state.co === 'mtrbus') etas = await etaMTR();
+        renderETA(etas);
+      } catch (e) {
+        rows.innerHTML = '<div class="eta-empty">' + (e.message || '載入失敗') + '</div>';
+      }
+    }
+
+    async function etaKMB() {
+      const res = await fetch('https://data.etabus.gov.hk/v1/transport/kmb/eta/' + state.stopId + '/' + state.route + '/' + state.serviceType);
+      if (!res.ok) throw new Error('無法取得到站時間');
+      return ((await res.json()).data || []).filter(e => e.dir === state.bound && e.eta)
+       .map(e => ({ eta: e.eta, rmk: e.rmk_tc || '' }))
+       .sort((a, b) => new Date(a.eta) - new Date(b.eta));
+    }
+
+    async function etaCTB() {
+      const res = await fetch('https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/' + state.stopId + '/' + state.route);
+      if (!res.ok) throw new Error('無法取得到站時間');
+      const dir = state.bound === 'O'? 'O' : 'I';
+      return ((await res.json()).data || []).filter(e => e.dir === dir && e.eta)
+       .map(e => ({ eta: e.eta, rmk: e.rmk_tc || e.rmk || '' }))
+       .sort((a, b) => new Date(a.eta) - new Date(b.eta));
+    }
+
+    async function etaNLB() {
+      const res = await fetch('https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=estimatedArrivals&routeId=' + state.nlbRouteId + '&stopId=' + state.stopId + '&language=zh');
+      if (!res.ok) throw new Error('無法取得到站時間');
+      return ((await res.json()).estimatedArrivals || []).filter(e => e.estimatedArrivalTime)
+       .map(e => ({ eta: e.estimatedArrivalTime.replace(' ', 'T') + '+08:00', rmk: e.routeVariantName || '' }))
+       .sort((a, b) => new Date(a.eta) - new Date(b.eta));
+    }
+
+    async function etaGMB() {
+      const res = await fetch('https://data.etagmb.gov.hk/eta/stop/' + state.stopId);
+      if (!res.ok) throw new Error('無法取得到站時間');
+      const json = await res.json();
+      const list = json.data || [];
+      const etas = [];
+      list.forEach(item => {
+        if (String(item.route_id)!== String(state.gmbRouteId)) return;
+        if (state.gmbRouteSeq!= null && String(item.route_seq)!== String(state.gmbRouteSeq)) return;
+        (item.eta || []).forEach(e => {
+          if (e.timestamp) etas.push({ eta: e.timestamp, rmk: e.remarks_tc || '' });
         });
-
-        clearBtn.addEventListener('click', () => {
-            state.searchQuery = '';
-            updateSearchInput();
+      });
+      if (!etas.length) {
+        list.forEach(item => {
+          if (String(item.route_id)!== String(state.gmbRouteId)) return;
+          (item.eta || []).forEach(e => {
+            if (e.timestamp) etas.push({ eta: e.timestamp, rmk: e.remarks_tc || '' });
+          });
         });
+      }
+      return etas.sort((a, b) => new Date(a.eta) - new Date(b.eta));
+    }
 
-        function updateSearchInput() {
-            routeInput.value = state.searchQuery;
-            if (state.searchQuery.length > 0) {
-                clearBtn.classList.remove('invisible');
-                fetchRoutes(state.searchQuery);
-            } else {
-                clearBtn.classList.add('invisible');
-                resetViews();
-            }
-        }
+    async function etaMTR() {
+      const res = await fetch('https://rt.data.gov.hk/v1/transport/mtr/bus/getSchedule', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: 'zh', routeName: state.route })
+      });
+      if (!res.ok) throw new Error('無法取得到站時間');
+      const json = await res.json();
+      const stop = (json.busStop || []).find(s => (s.busStopId || '') === state.stopId) || state.mtrRawStop;
+      if (!stop) return [];
+      return (stop.bus || []).map(b => {
+        const sec = parseInt(b.arrivalTimeInSecond, 10);
+        return { eta: new Date(Date.now() + (isNaN(sec)? 0 : sec * 1000)).toISOString(), rmk: b.arrivalTimeText || '' };
+      });
+    }
 
-        function resetViews() {
-            routeListEl.innerHTML = '';
-            routeListEl.classList.add('hidden');
-            stopListEl.classList.add('hidden');
-            etaViewEl.classList.add('hidden');
-            statusContainer.classList.remove('hidden');
-            statusContainer.innerHTML = `
-                <i class="fas fa-bus-alt text-5xl text-red-500 mb-3 opacity-80"></i>
-                <p class="text-base font-medium">請使用下方鍵盤輸入路線號碼</p>
-                <p class="text-xs text-gray-400 mt-1">支援 九巴、城巴、嶼巴、港鐵巴士 及 專線小巴</p>
-            `;
-        }
+    function renderETA(etas) {
+      const rows = document.getElementById('etaRows');
+      if (!etas ||!etas.length) {
+        rows.innerHTML = '<div class="eta-empty">暫無預計到站時間<br><small>可能是非服務時間或末班車已過</small></div>';
+        document.getElementById('etaInfo').textContent = '最後更新：' + new Date().toLocaleTimeString('zh-HK');
+        return;
+      }
+      rows.innerHTML = '';
+      const now = new Date();
+      etas.slice(0, 6).forEach(e => {
+        const d = new Date(e.eta);
+        if (isNaN(d.getTime())) return;
+        const mins = Math.round((d - now) / 60000);
+        let text, cls = '';
+        if (mins <= 0) { text = '即將到達'; cls = 'arrived'; }
+        else if (mins <= 2) { text = mins + ' 分鐘'; cls = 'soon'; }
+        else { text = mins + ' 分鐘'; }
+        const clock = d.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit', hour12: false });
+        const div = document.createElement('div');
+        div.className = 'eta-row';
+        div.innerHTML = '<div class="eta-mins ' + cls + '">' + text + '</div><div class="eta-clock">' + clock + (e.rmk? '<br>' + e.rmk : '') + '</div>';
+        rows.appendChild(div);
+      });
+      document.getElementById('etaInfo').textContent = '資料時間：' + new Date().toLocaleTimeString('zh-HK');
+    }
 
-        // Search Routes Across All Operators (KMB, CTB, NLB, GMB, MTR)
-        async function fetchRoutes(query) {
-            showLoading(true);
-            const q = query.trim().toUpperCase();
-            let matchedRoutes = [];
+    function startAutoRefresh() {
+      stopAutoRefresh();
+      state.auto = true;
+      const btn = document.getElementById('btnAuto');
+      if (btn) {
+        btn.textContent = '⏸ 停止自動刷新';
+        btn.classList.add('active-refresh');
+      }
+      fetchETA();
+      state.timer = setInterval(fetchETA, 20000);
+    }
 
-            // 1. Fetch KMB Routes
-            try {
-                const kmbRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route/`).then(res => res.json());
-                if (kmbRes && kmbRes.data) {
-                    const kmbMatches = kmbRes.data.filter(r => r.route === q).map(r => ({
-                        route: r.route,
-                        co: 'KMB',
-                        orig: r.orig_tc || r.orig_en,
-                        dest: r.dest_tc || r.dest_en,
-                        bound: r.bound,
-                        sub: '九巴'
-                    }));
-                    matchedRoutes = [...matchedRoutes, ...kmbMatches];
-                }
-            } catch (err) {
-                console.warn('KMB Fetch Error', err);
-            }
+    function stopAutoRefresh() {
+      state.auto = false;
+      if (state.timer) { clearInterval(state.timer); state.timer = null; }
+      const btn = document.getElementById('btnAuto');
+      if (btn) {
+        btn.textContent = '▶ 自動刷新';
+        btn.classList.remove('active-refresh');
+      }
+    }
 
-            // 2. Fetch CTB (Citybus) Routes
-            try {
-                const ctbRes = await fetch(`https://data.etabus.gov.hk/v1/transport/citybus-nwfb/route/ctb/${q}`).then(res => res.json());
-                if (ctbRes && ctbRes.data) {
-                    const r = ctbRes.data;
-                    matchedRoutes.push({
-                        route: r.route,
-                        co: 'CTB',
-                        orig: r.orig_tc || r.orig_en,
-                        dest: r.dest_tc || r.dest_en,
-                        bound: 'outbound',
-                        sub: '城巴 (資料由 DATA.GOV.HK 提供)'
-                    });
-                    matchedRoutes.push({
-                        route: r.route,
-                        co: 'CTB',
-                        orig: r.dest_tc || r.dest_en,
-                        dest: r.orig_tc || r.orig_en,
-                        bound: 'inbound',
-                        sub: '城巴 (資料由 DATA.GOV.HK 提供)'
-                    });
-                }
-            } catch (err) {
-                console.warn('CTB Fetch Error', err);
-            }
+    function toggleAuto() {
+      if (state.auto) stopAutoRefresh();
+      else startAutoRefresh();
+    }
 
-            // 3. Fetch NLB (New Lantao Bus) Routes
-            try {
-                const nlbRes = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/route.php?action=list`).then(res => res.json());
-                if (nlbRes && nlbRes.routes) {
-                    const nlbMatches = nlbRes.routes.filter(r => r.routeNo === q).map(r => ({
-                        route: r.routeNo,
-                        routeId: r.routeId,
-                        co: 'NLB',
-                        orig: r.routeNameC ? r.routeNameC.split('>')[0].trim() : '大嶼山',
-                        dest: r.routeNameC ? r.routeNameC.split('>')[1].trim() : '大嶼山',
-                        bound: 'O',
-                        sub: '大嶼山巴士 (資料由 DATA.GOV.HK 提供)'
-                    }));
-                    matchedRoutes = [...matchedRoutes, ...nlbMatches];
-                }
-            } catch (err) {
-                console.warn('NLB Fetch Error', err);
-            }
+    function showPage(id) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      if (id!== 'pageEta') stopAutoRefresh();
+    }
+    function goSearch() { showPage('pageSearch'); }
+    function goStops() { showPage('pageStops'); }
 
-            // 4. Fetch GMB (Green Minibus) Routes
-            try {
-                const regions = ['HKI', 'KLN', 'NT'];
-                for (const reg of regions) {
-                    const gmbRes = await fetch(`https://data.etagmb.gov.hk/route/${reg}/${q}`).then(res => res.json()).catch(() => null);
-                    if (gmbRes && gmbRes.data) {
-                        gmbRes.data.forEach(g => {
-                            matchedRoutes.push({
-                                route: g.code,
-                                route_id: g.route_id,
-                                co: 'GMB',
-                                region: reg,
-                                orig: g.description_tc ? g.description_tc.split('至')[0] : '小巴總站',
-                                dest: g.description_tc ? g.description_tc.split('至')[1] : '小巴目的地',
-                                bound: 'O',
-                                sub: '專線小巴 (資料由 DATA.GOV.HK 提供)'
-                            });
-                        });
-                    }
-                }
-            } catch (err) {
-                console.warn('GMB Fetch Error', err);
-            }
-
-            // Merge Static Fallback Data
-            const fallbacks = STATIC_FALLBACK_ROUTES.filter(r => r.route === q);
-            fallbacks.forEach(f => {
-                if (!matchedRoutes.some(m => m.route === f.route && m.co === f.co && m.dest === f.dest)) {
-                    matchedRoutes.push(f);
-                }
-            });
-
-            showLoading(false);
-            renderRouteList(matchedRoutes);
-        }
-
-        function renderRouteList(routes) {
-            routeListEl.innerHTML = '';
-            stopListEl.classList.add('hidden');
-            etaViewEl.classList.add('hidden');
-
-            if (routes.length === 0) {
-                routeListEl.classList.add('hidden');
-                statusContainer.classList.remove('hidden');
-                statusContainer.innerHTML = `
-                    <i class="fas fa-exclamation-circle text-4xl text-gray-400 mb-2"></i>
-                    <p class="text-base font-medium">找不到路線 "${state.searchQuery}"</p>
-                    <p class="text-xs text-gray-400 mt-1">請嘗試輸入其他路線 (如 1, 1A, B1, E33, K51)</p>
-                `;
-                return;
-            }
-
-            statusContainer.classList.add('hidden');
-            routeListEl.classList.remove('hidden');
-
-            routes.forEach(r => {
-                const item = document.createElement('div');
-                item.className = 'flex items-center justify-between px-4 py-3.5 bg-white hover:bg-gray-50 active:bg-gray-100 cursor-pointer border-b border-gray-200 transition';
-                
-                item.innerHTML = `
-                    <div class="flex items-center space-x-4">
-                        <div class="w-12 text-2xl font-black text-gray-900 tracking-tight text-center">
-                            ${r.route}
-                        </div>
-                        <div>
-                            <div class="text-base font-bold text-gray-900">
-                                <span class="text-xs font-normal text-gray-600 mr-1">往</span>${r.dest}
-                            </div>
-                            ${r.sub ? `<div class="text-[11px] text-gray-400 mt-0.5">${r.sub}</div>` : ''}
-                        </div>
-                    </div>
-                    <div class="text-gray-400 text-sm">
-                        <i class="fas fa-chevron-right"></i>
-                    </div>
-                `;
-
-                item.addEventListener('click', () => {
-                    selectRoute(r);
-                });
-
-                routeListEl.appendChild(item);
-            });
-        }
-
-        async function selectRoute(routeObj) {
-            state.selectedRoute = routeObj;
-            showLoading(true);
-
-            let stops = [];
-
-            try {
-                if (routeObj.co === 'KMB') {
-                    const res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${routeObj.route}/outbound/1`)
-                        .then(r => r.json()).catch(() => null);
-                    if (res && res.data) {
-                        stops = res.data.map((s, idx) => ({
-                            stopId: s.stop,
-                            seq: s.seq,
-                            name: `巴士站 ${s.seq}`
-                        }));
-                    }
-                } else if (routeObj.co === 'NLB' && routeObj.routeId) {
-                    const res = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=list&routeId=${routeObj.routeId}`)
-                        .then(r => r.json()).catch(() => null);
-                    if (res && res.stops) {
-                        stops = res.stops.map((s, idx) => ({
-                            stopId: s.stopId,
-                            seq: idx + 1,
-                            name: s.stopNameC || s.stopNameE
-                        }));
-                    }
-                } else if (routeObj.co === 'GMB' && routeObj.route_id) {
-                    const res = await fetch(`https://data.etagmb.gov.hk/route-stop/${routeObj.route_id}/1`)
-                        .then(r => r.json()).catch(() => null);
-                    if (res && res.data && res.data.route_stops) {
-                        stops = res.data.route_stops.map((s, idx) => ({
-                            stopId: s.stop_id,
-                            seq: s.seq,
-                            name: s.name_tc || `小巴站 ${s.seq}`
-                        }));
-                    }
-                }
-            } catch (e) {
-                console.warn('Error fetching stops', e);
-            }
-
-            // Default Stops Fallback
-            if (stops.length === 0) {
-                stops = [
-                    { stopId: 'S1', seq: 1, name: `${routeObj.orig} 總站` },
-                    { stopId: 'S2', seq: 2, name: '市中心總站 / 轉車站' },
-                    { stopId: 'S3', seq: 3, name: '港鐵站出口' },
-                    { stopId: 'S4', seq: 4, name: '主要商場大街' },
-                    { stopId: 'S5', seq: 5, name: `${routeObj.dest} 總站` }
-                ];
-            }
-
-            showLoading(false);
-            renderStopsList(stops);
-        }
-
-        function renderStopsList(stops) {
-            routeListEl.classList.add('hidden');
-            stopListEl.classList.remove('hidden');
-            stopListEl.innerHTML = `
-                <div class="bg-gray-100 px-4 py-2.5 text-xs font-bold text-gray-600 flex justify-between items-center border-b border-gray-200">
-                    <span>${state.selectedRoute.route} 往 ${state.selectedRoute.dest}</span>
-                    <button id="back-to-routes" class="text-red-600 hover:underline flex items-center">
-                        <i class="fas fa-chevron-left mr-1"></i> 返回路線列表
-                    </button>
-                </div>
-            `;
-
-            document.getElementById('back-to-routes').addEventListener('click', () => {
-                stopListEl.classList.add('hidden');
-                routeListEl.classList.remove('hidden');
-            });
-
-            stops.forEach(stop => {
-                const item = document.createElement('div');
-                item.className = 'p-3.5 bg-white hover:bg-gray-50 cursor-pointer flex justify-between items-center border-b border-gray-100';
-                item.innerHTML = `
-                    <div class="flex items-center space-x-3">
-                        <span class="w-6 h-6 rounded-full bg-red-100 text-red-600 text-xs font-bold flex items-center justify-center">
-                            ${stop.seq}
-                        </span>
-                        <span class="text-gray-800 font-bold text-sm">${stop.name}</span>
-                    </div>
-                    <div class="text-xs text-red-600 font-bold bg-red-50 px-2 py-1 rounded border border-red-100">
-                        查到站時間
-                    </div>
-                `;
-
-                item.addEventListener('click', () => {
-                    fetchETA(stop);
-                });
-
-                stopListEl.appendChild(item);
-            });
-        }
-
-        async function fetchETA(stop) {
-            showLoading(true);
-            let etas = [];
-
-            try {
-                if (state.selectedRoute.co === 'KMB') {
-                    const res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/eta/${stop.stopId}/${state.selectedRoute.route}/1`)
-                        .then(r => r.json()).catch(() => null);
-                    if (res && res.data) {
-                        etas = res.data.map(e => ({
-                            min: e.eta ? Math.max(0, Math.round((new Date(e.eta) - new Date()) / 60000)) : '--',
-                            remarks: e.rmk_tc || '即時預測'
-                        })).filter(e => e.min !== '--');
-                    }
-                } else if (state.selectedRoute.co === 'NLB' && state.selectedRoute.routeId) {
-                    const res = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=estimatedArrivals&routeId=${state.selectedRoute.routeId}&stopId=${stop.stopId}`)
-                        .then(r => r.json()).catch(() => null);
-                    if (res && res.estimatedArrivals) {
-                        etas = res.estimatedArrivals.map(e => ({
-                            min: e.estimatedArrivalEstimatedTime ? Math.max(0, Math.round((new Date(e.estimatedArrivalEstimatedTime) - new Date()) / 60000)) : '--',
-                            remarks: '原定班次'
-                        }));
-                    }
-                }
-            } catch (e) {
-                console.warn('ETA fetch error', e);
-            }
-
-            // Fallback Simulated ETAs for smooth UI
-            if (etas.length === 0) {
-                etas = [
-                    { min: Math.floor(Math.random() * 3) + 2, remarks: '即將到達' },
-                    { min: Math.floor(Math.random() * 6) + 7, remarks: '原定班次' },
-                    { min: Math.floor(Math.random() * 10) + 15, remarks: '原定班次' }
-                ];
-            }
-
-            showLoading(false);
-            renderETAView(stop, etas);
-        }
-
-        function renderETAView(stop, etas) {
-            stopListEl.classList.add('hidden');
-            etaViewEl.classList.remove('hidden');
-
-            etaViewEl.innerHTML = `
-                <div class="flex items-center justify-between mb-4">
-                    <button id="back-to-stops" class="text-gray-600 hover:text-gray-900 flex items-center text-sm font-medium">
-                        <i class="fas fa-chevron-left mr-1"></i> 返回車站列表
-                    </button>
-                    <span class="bg-red-600 text-white text-xs px-2 py-0.5 rounded font-bold">${state.selectedRoute.co}</span>
-                </div>
-
-                <div class="bg-red-50 rounded-xl p-4 border border-red-100 mb-4">
-                    <div class="text-3xl font-black text-red-600 mb-1">${state.selectedRoute.route}</div>
-                    <div class="text-lg font-bold text-gray-800">往 ${state.selectedRoute.dest}</div>
-                    <div class="text-sm text-gray-600 mt-2 flex items-center">
-                        <i class="fas fa-map-marker-alt text-red-500 mr-1.5"></i>
-                        <span>${stop.name}</span>
-                    </div>
-                </div>
-
-                <div class="space-y-2.5">
-                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">即時預計到站時間 (ETA)</h3>
-                    ${etas.map((eta, i) => `
-                        <div class="flex items-center justify-between p-3.5 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
-                            <div class="flex items-center space-x-3">
-                                <span class="w-7 h-7 rounded-full bg-slate-800 text-white text-xs font-bold flex items-center justify-center">
-                                    ${i + 1}
-                                </span>
-                                <span class="text-sm text-gray-600 font-medium">${eta.remarks}</span>
-                            </div>
-                            <div class="text-right">
-                                <span class="text-2xl font-black text-red-600">${eta.min}</span>
-                                <span class="text-xs text-gray-500 font-bold ml-0.5">分鐘</span>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-
-            document.getElementById('back-to-stops').addEventListener('click', () => {
-                etaViewEl.classList.add('hidden');
-                stopListEl.classList.remove('hidden');
-            });
-        }
-
-        // Bottom Tab Nav Listener
-        document.querySelectorAll('.tab-item').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.tab-item').forEach(t => {
-                    t.classList.remove('active', 'text-red-600');
-                    t.classList.add('text-gray-500');
-                });
-                tab.classList.add('active', 'text-red-600');
-                tab.classList.remove('text-gray-500');
-
-                const tabName = tab.getAttribute('data-tab');
-                state.currentTab = tabName;
-
-                if (tabName === 'search') {
-                    pageTitle.innerText = '搜尋';
-                    customKeypad.classList.remove('hidden');
-                    resetViews();
-                } else {
-                    customKeypad.classList.add('hidden');
-                    routeListEl.classList.add('hidden');
-                    stopListEl.classList.add('hidden');
-                    etaViewEl.classList.add('hidden');
-                    statusContainer.classList.remove('hidden');
-
-                    if (tabName === 'home') {
-                        pageTitle.innerText = '主頁';
-                        statusContainer.innerHTML = `
-                            <i class="fas fa-city text-5xl text-gray-400 mb-3"></i>
-                            <p class="text-base font-bold text-gray-700">歡迎使用香港交通 ETA</p>
-                            <p class="text-xs text-gray-400 mt-1">點擊下方「搜尋」標籤開始查詢路線</p>
-                        `;
-                    } else if (tabName === 'fav') {
-                        pageTitle.innerText = '收藏';
-                        statusContainer.innerHTML = `
-                            <i class="far fa-star text-5xl text-yellow-400 mb-3"></i>
-                            <p class="text-base font-bold text-gray-700">暫無收藏路線</p>
-                            <p class="text-xs text-gray-400 mt-1">您可以將常用路線加入收藏方便快速查看</p>
-                        `;
-                    } else if (tabName === 'nearby') {
-                        pageTitle.innerText = '鄰近';
-                        statusContainer.innerHTML = `
-                            <i class="fas fa-crosshairs text-5xl text-blue-500 mb-3 animate-pulse"></i>
-                            <p class="text-base font-bold text-gray-700">正在定位您的位置...</p>
-                            <p class="text-xs text-gray-400 mt-1">搜尋附近的巴士及小巴站</p>
-                        `;
-                    } else if (tabName === 'game') {
-                        pageTitle.innerText = '遊戲';
-                        statusContainer.innerHTML = `
-                            <i class="fas fa-gamepad text-5xl text-purple-500 mb-3"></i>
-                            <p class="text-base font-bold text-gray-700">候車小遊戲</p>
-                            <p class="text-xs text-gray-400 mt-1">打發候車時間的小遊戲即將推出</p>
-                        `;
-                    }
-                }
-            });
-        });
-
-        function showLoading(show) {
-            if (show) {
-                loadingSpinner.classList.remove('hidden');
-            } else {
-                loadingSpinner.classList.add('hidden');
-            }
-        }
-    </script>
+    getMTRStopNameMap().then(m=>console.log('MTR stop map ready', Object.keys(m).length));
+  </script>
 </body>
 </html>
