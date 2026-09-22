@@ -70,12 +70,16 @@
     .search-input:focus { border-color: var(--primary); background: white; }
     .search-input::placeholder { color: #c7c7cc; font-weight: 400; letter-spacing: 0; }
 
-    /* Keypad */
+    /* Keypad - 已將位置向上移動 1.5 個按鍵高度 (46px * 1.5 = 69px) */
     .keypad {
       flex-shrink: 0;
       background: #5a6570;
       padding: 8px 6px 10px;
       user-select: none;
+      position: relative;
+      z-index: 10;
+      transform: translateY(-69px);
+      margin-bottom: -69px;
     }
     .key-row {
       display: flex;
