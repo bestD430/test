@@ -476,7 +476,7 @@
       co: null, route: null, bound: null, serviceType: null,
       directionLabel: null, stopId: null, stopName: null,
       nlbRouteId: null, gmbRouteId: null, gmbRouteSeq: null,
-      dirPath: null, mtrRawStop: null,
+      dirPath: null, mtrRawStop: null, mtrDir: null,
       auto: false, timer: null
     };
 
@@ -651,7 +651,7 @@
     }
 
     async function searchMTRBus(route) {
-      if (!/^K\d/i.test(route)) return [];
+      if (!/^K\d/i.test(route) && !/^506$/i.test(route)) return [];
       try {
         const res = await fetch('https://rt.data.gov.hk/v1/transport/mtr/bus/getSchedule', {
           method: 'POST',
@@ -660,8 +660,40 @@
         });
         if (!res.ok) return [];
         const json = await res.json();
-        if (json.routeStatus === '3' || !(json.busStop || []).length) return [];
-        return [{ co: 'mtrbus', bound: 'O', serviceType: '1', label: '港鐵巴士 ' + route, sub: '', dest: route }];
+        const stops = json.busStop || [];
+        if (json.routeStatus === '3' || !stops.length) return [];
+
+        // 依 stopId 判斷去程(U) / 回程(D)；API 一次回傳雙向車站
+        const hasU = stops.some(s => /-U/i.test(s.busStopId || ''));
+        const hasD = stops.some(s => /-D/i.test(s.busStopId || ''));
+        const dirMeta = (MTR_ROUTE_DIRS[route] || MTR_ROUTE_DIRS[route.toUpperCase()] || {});
+        const out = [];
+
+        if (hasU) {
+          const meta = dirMeta.O || {};
+          out.push({
+            co: 'mtrbus', bound: 'O', serviceType: '1',
+            mtrDir: 'U',
+            label: meta.label || ((meta.orig || '') + ' → ' + (meta.dest || route)),
+            sub: '去程',
+            dest: meta.dest || route
+          });
+        }
+        if (hasD) {
+          const meta = dirMeta.I || {};
+          out.push({
+            co: 'mtrbus', bound: 'I', serviceType: '1',
+            mtrDir: 'D',
+            label: meta.label || ((meta.orig || '') + ' → ' + (meta.dest || route)),
+            sub: '回程',
+            dest: meta.dest || route
+          });
+        }
+        // 若只有單向或無法分辨，仍回傳一個結果
+        if (!out.length) {
+          out.push({ co: 'mtrbus', bound: 'O', serviceType: '1', mtrDir: '', label: '港鐵巴士 ' + route, sub: '', dest: route });
+        }
+        return out;
       } catch { return []; }
     }
 
@@ -675,6 +707,7 @@
       state.gmbRouteId = m.gmbRouteId || null;
       state.gmbRouteSeq = m.gmbRouteSeq || null;
       state.dirPath = m.dirPath || (m.bound === 'O' ? 'outbound' : 'inbound');
+      state.mtrDir = m.mtrDir || '';
 
       showPage('pageStops');
       document.getElementById('stopsTitle').textContent = route + ' · ' + (m.dest || m.label);
@@ -754,195 +787,4 @@
       return list.map(s => ({ seq: s.stop_seq, stopId: s.stop_id, name: s.name_tc || s.name_en || s.stop_id }));
     }
 
-    // 修正港鐵巴士站名讀取邏輯
-    async function loadStopsMTRBus() {
-      const res = await fetch('https://rt.data.gov.hk/v1/transport/mtr/bus/getSchedule', {
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ language: 'zh', routeName: state.route })
-      });
-      if (!res.ok) throw new Error('無法取得車站資料');
-      const json = await res.json();
-      if (json.routeStatus === '3' || !(json.busStop || []).length) {
-        throw new Error(json.routeStatusRemarkTitle || '此路線暫停服務');
-      }
-      
-      return (json.busStop || []).map((s, i) => {
-        const id = s.busStopId || String(i + 1);
-        // 正確解析港鐵 API 回傳的站名 (優先取 busStopNameName)
-        const name = s.busStopNameName || s.busStopName || s.busStopName_tc || s.nameName || ('車站 ' + (i + 1));
-        return { seq: i + 1, stopId: id, name: name, raw: s };
-      });
-    }
-
-    function renderStops(stops) {
-      const el = document.getElementById('stopList');
-      el.innerHTML = '';
-      if (!stops.length) { el.innerHTML = '<div class="error-state">沒有車站資料</div>'; return; }
-      stops.forEach(s => {
-        const div = document.createElement('div');
-        div.className = 'stop-item';
-        div.innerHTML = '<div class="stop-seq">' + s.seq + '</div><div class="stop-name">' + s.name + '</div><div class="stop-arrow">›</div>';
-        div.onclick = () => selectStop(s);
-        el.appendChild(div);
-      });
-    }
-
-    function selectStop(s) {
-      state.stopId = s.stopId;
-      state.stopName = s.name;
-      state.mtrRawStop = s.raw || null;
-      showPage('pageEta');
-      const etaRouteEl = document.getElementById('etaRoute');
-      etaRouteEl.textContent = state.route;
-      etaRouteEl.className = 'eta-route-num plate-' + (state.co || 'kmb');
-      document.getElementById('etaDest').textContent = state.directionLabel;
-      document.getElementById('etaStopName').textContent = s.name;
-      document.getElementById('etaCo').textContent = CO_NAMES[state.co] || state.co;
-      startAutoRefresh();
-    }
-
-    async function fetchETA() {
-      const rows = document.getElementById('etaRows');
-      rows.innerHTML = '<div class="eta-empty">載入中...</div>';
-      try {
-        let etas = [];
-        if (state.co === 'kmb' || state.co === 'lwb') etas = await etaKMB();
-        else if (state.co === 'ctb') etas = await etaCTB();
-        else if (state.co === 'nlb') etas = await etaNLB();
-        else if (state.co === 'gmb') etas = await etaGMB();
-        else if (state.co === 'mtrbus') etas = await etaMTR();
-        renderETA(etas);
-      } catch (e) {
-        rows.innerHTML = '<div class="eta-empty">' + (e.message || '載入失敗') + '</div>';
-      }
-    }
-
-    async function etaKMB() {
-      const res = await fetch('https://data.etabus.gov.hk/v1/transport/kmb/eta/' + state.stopId + '/' + state.route + '/' + state.serviceType);
-      if (!res.ok) throw new Error('無法取得到站時間');
-      return ((await res.json()).data || []).filter(e => e.dir === state.bound && e.eta)
-        .map(e => ({ eta: e.eta, rmk: e.rmk_tc || '' }))
-        .sort((a, b) => new Date(a.eta) - new Date(b.eta));
-    }
-
-    async function etaCTB() {
-      const res = await fetch('https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/' + state.stopId + '/' + state.route);
-      if (!res.ok) throw new Error('無法取得到站時間');
-      const dir = state.bound === 'O' ? 'O' : 'I';
-      return ((await res.json()).data || []).filter(e => e.dir === dir && e.eta)
-        .map(e => ({ eta: e.eta, rmk: e.rmk_tc || e.rmk || '' }))
-        .sort((a, b) => new Date(a.eta) - new Date(b.eta));
-    }
-
-    async function etaNLB() {
-      const res = await fetch('https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=estimatedArrivals&routeId=' + state.nlbRouteId + '&stopId=' + state.stopId + '&language=zh');
-      if (!res.ok) throw new Error('無法取得到站時間');
-      return ((await res.json()).estimatedArrivals || []).filter(e => e.estimatedArrivalTime)
-        .map(e => ({ eta: e.estimatedArrivalTime.replace(' ', 'T') + '+08:00', rmk: e.routeVariantName || '' }))
-        .sort((a, b) => new Date(a.eta) - new Date(b.eta));
-    }
-
-    async function etaGMB() {
-      const res = await fetch('https://data.etagmb.gov.hk/eta/stop/' + state.stopId);
-      if (!res.ok) throw new Error('無法取得到站時間');
-      const json = await res.json();
-      const list = json.data || [];
-      const etas = [];
-      list.forEach(item => {
-        if (String(item.route_id) !== String(state.gmbRouteId)) return;
-        if (state.gmbRouteSeq != null && String(item.route_seq) !== String(state.gmbRouteSeq)) return;
-        (item.eta || []).forEach(e => {
-          if (e.timestamp) etas.push({ eta: e.timestamp, rmk: e.remarks_tc || '' });
-        });
-      });
-      if (!etas.length) {
-        list.forEach(item => {
-          if (String(item.route_id) !== String(state.gmbRouteId)) return;
-          (item.eta || []).forEach(e => {
-            if (e.timestamp) etas.push({ eta: e.timestamp, rmk: e.remarks_tc || '' });
-          });
-        });
-      }
-      return etas.sort((a, b) => new Date(a.eta) - new Date(b.eta));
-    }
-
-    async function etaMTR() {
-      const res = await fetch('https://rt.data.gov.hk/v1/transport/mtr/bus/getSchedule', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ language: 'zh', routeName: state.route })
-      });
-      if (!res.ok) throw new Error('無法取得到站時間');
-      const json = await res.json();
-      const stop = (json.busStop || []).find(s => (s.busStopId || '') === state.stopId) || state.mtrRawStop;
-      if (!stop) return [];
-      return (stop.bus || []).map(b => {
-        const sec = parseInt(b.arrivalTimeInSecond, 10);
-        return { eta: new Date(Date.now() + (isNaN(sec) ? 0 : sec * 1000)).toISOString(), rmk: b.arrivalTimeText || '' };
-      });
-    }
-
-    function renderETA(etas) {
-      const rows = document.getElementById('etaRows');
-      if (!etas || !etas.length) {
-        rows.innerHTML = '<div class="eta-empty">暫無預計到站時間<br><small>可能是非服務時間或末班車已過</small></div>';
-        document.getElementById('etaInfo').textContent = '最後更新：' + new Date().toLocaleTimeString('zh-HK');
-        return;
-      }
-      rows.innerHTML = '';
-      const now = new Date();
-      etas.slice(0, 6).forEach(e => {
-        const d = new Date(e.eta);
-        if (isNaN(d.getTime())) return;
-        const mins = Math.round((d - now) / 60000);
-        let text, cls = '';
-        if (mins <= 0) { text = '即將到達'; cls = 'arrived'; }
-        else if (mins <= 2) { text = mins + ' 分鐘'; cls = 'soon'; }
-        else { text = mins + ' 分鐘'; }
-        const clock = d.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit', hour12: false });
-        const div = document.createElement('div');
-        div.className = 'eta-row';
-        div.innerHTML = '<div class="eta-mins ' + cls + '">' + text + '</div><div class="eta-clock">' + clock + (e.rmk ? '<br>' + e.rmk : '') + '</div>';
-        rows.appendChild(div);
-      });
-      document.getElementById('etaInfo').textContent = '資料時間：' + new Date().toLocaleTimeString('zh-HK');
-    }
-
-    function startAutoRefresh() {
-      stopAutoRefresh();
-      state.auto = true;
-      const btn = document.getElementById('btnAuto');
-      if (btn) {
-        btn.textContent = '⏸ 停止自動刷新';
-        btn.classList.add('active-refresh');
-      }
-      fetchETA();
-      state.timer = setInterval(fetchETA, 20000);
-    }
-
-    function stopAutoRefresh() {
-      state.auto = false;
-      if (state.timer) { clearInterval(state.timer); state.timer = null; }
-      const btn = document.getElementById('btnAuto');
-      if (btn) {
-        btn.textContent = '▶ 自動刷新';
-        btn.classList.remove('active-refresh');
-      }
-    }
-
-    function toggleAuto() {
-      if (state.auto) stopAutoRefresh();
-      else startAutoRefresh();
-    }
-
-    function showPage(id) {
-      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-      if (id !== 'pageEta') stopAutoRefresh();
-    }
-    function goSearch() { showPage('pageSearch'); }
-    function goStops() { showPage('pageStops'); }
-  </script>
-</body>
-</html>
-
+    // 港鐵巴士站名對照表與路線方向（內嵌自官方 CSV；getSchedule API 不回傳站名，且 CSV 有 CORS 限制）
