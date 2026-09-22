@@ -70,7 +70,7 @@
     .search-input:focus { border-color: var(--primary); background: white; }
     .search-input::placeholder { color: #c7c7cc; font-weight: 400; letter-spacing: 0; }
 
-    /* Keypad */
+    /* Keypad - 已修正樣式 */
     .keypad {
       flex-shrink: 0;
       background: #5a6570;
@@ -78,8 +78,6 @@
       user-select: none;
       position: relative;
       z-index: 10;
-      transform: translateY(-69px);
-      margin-bottom: -69px;
     }
     .key-row {
       display: flex;
@@ -361,6 +359,8 @@
       <div class="search-box">
         <input type="text" class="search-input" id="routeInput" placeholder="輸入路線號碼" readonly inputmode="none">
       </div>
+      
+      <!-- 自訂鍵盤（排列於輸入欄下方，不會遮擋） -->
       <div class="keypad" id="keypad">
         <div class="keypad-main">
           <div class="num-pad">
@@ -393,6 +393,8 @@
           </div>
         </div>
       </div>
+
+      <!-- 搜尋結果區塊 -->
       <div class="results" id="results">
         <div class="empty-state">輸入路線號碼開始搜尋</div>
       </div>
