@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>香港巴士到站時間</title>
+  <title>香港巴士到站時間 - 已修正港鐵巴士站名</title>
   <style>
     :root {
-      --primary: #0096E6; /* 多啦A夢藍色 */
-      --primary-dark: #007CC2;
+      --primary: #E60012; /* 依照附圖的主色紅色 */
+      --primary-dark: #C40010;
       --bg: #F2F2F7;
       --card: #ffffff;
       --text: #000000;
@@ -16,7 +16,7 @@
       --green: #34C759;
       --amber: #FF9500;
       --red: #FF3B30;
-      --keypad-bg: #4A789C; /* 搭配藍色主題的鍵盤背景色 */
+      --keypad-bg: #5B7B93; /* 鍵盤背景色 */
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     html, body {
@@ -26,7 +26,7 @@
       color: var(--text);
       overflow: hidden;
     }
-   .app {
+    .app {
       display: flex;
       flex-direction: column;
       height: 100%;
@@ -35,43 +35,46 @@
       background: var(--bg);
       position: relative;
     }
-   .header {
+    .header {
       background: var(--primary);
       color: white;
       text-align: center;
-      padding: 12px 16px;
-      font-size: 1.15rem;
+      padding: 14px 16px;
+      font-size: 1.2rem;
       font-weight: 700;
       flex-shrink: 0;
       letter-spacing: 1px;
     }
-   .search-box {
-      background: #EBF5FF;
+    /* 搜尋框調整為圖片樣式 */
+    .search-box {
+      background: #EFEFF4;
       padding: 8px 12px;
       flex-shrink: 0;
       border-bottom: 1px solid var(--border);
     }
-   .search-input {
+    .search-input {
       width: 100%;
       padding: 8px 12px;
-      font-size: 1.05rem;
-      border: 1px solid #BCE0FD;
+      font-size: 1rem;
+      border: none;
       border-radius: 6px;
       outline: none;
       background: white;
       font-family: inherit;
-      text-align: left;
+      text-align: center;
       font-weight: 500;
     }
-   .search-input:focus { background: white; border-color: var(--primary); }
-   .search-input::placeholder { color: #A0C4E2; font-weight: 400; text-align: left; }
-   .results {
+    .search-input:focus { background: white; }
+    .search-input::placeholder { color: #C7C7CC; font-weight: 400; text-align: center; }
+    
+    .results {
       flex: 1;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       background: white;
     }
-   .result-item {
+    /* 搜尋列表對照圖中格式 */
+    .result-item {
       display: flex;
       align-items: center;
       padding: 12px 16px;
@@ -80,67 +83,64 @@
       gap: 16px;
       transition: background 0.1s;
     }
-   .result-item:active { background: #f2f2f7; }
-   .result-num {
-      font-size: 1.1rem;
+    .result-item:active { background: #f2f2f7; }
+    .result-num {
+      font-size: 1.4rem;
       font-weight: 800;
-      min-width: 54px;
-      text-align: center;
-      color: #fff;
-      background: #8E8E93;
-      padding: 6px 8px;
-      border-radius: 8px;
-      display: inline-block;
+      min-width: 40px;
+      text-align: left;
+      color: #000;
       line-height: 1.2;
     }
-   .result-info { flex: 1; min-width: 0; }
-   .result-dest {
-      font-size: 1rem;
+    .result-info { flex: 1; min-width: 0; }
+    .result-dest {
+      font-size: 1.05rem;
       font-weight: 700;
       color: #000;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-   .result-co {
-      font-size: 0.72rem;
+    .result-co {
+      font-size: 0.75rem;
       color: #8E8E93;
       margin-top: 2px;
     }
-   .result-arrow {
-      color: #8E8E93;
+    .result-arrow {
+      color: #C7C7CC;
       font-size: 1.2rem;
-      font-weight: 300;
+      font-weight: 400;
       flex-shrink: 0;
     }
-   .empty-state,.loading-state {
+    .empty-state,.loading-state {
       text-align: center;
       padding: 40px 20px;
       color: var(--muted);
       font-size: 0.95rem;
     }
-   .error-state {
+    .error-state {
       text-align: center;
       padding: 24px 20px;
       color: var(--red);
       font-size: 0.9rem;
     }
-   /* 自訂鍵盤外觀修飾 */
-   .keypad {
+    
+    /* 鍵盤外觀修飾 */
+    .keypad {
       flex-shrink: 0;
       background: var(--keypad-bg);
-      padding: 8px 10px 12px;
+      padding: 10px 12px 14px;
       user-select: none;
     }
-   .key-row {
+    .key-row {
       display: flex;
       gap: 6px;
       margin-bottom: 6px;
       justify-content: center;
       align-items: center;
     }
-   .key-row:last-child { margin-bottom: 0; }
-   .key {
+    .key-row:last-child { margin-bottom: 0; }
+    .key {
       flex: 1;
       max-width: 72px;
       height: 48px;
@@ -158,51 +158,99 @@
       box-shadow: 0 1px 1px rgba(0,0,0,0.2);
       transition: background 0.08s, transform 0.05s;
     }
-   .key:active {
+    .key:active {
       background: #D1D1D6;
       transform: scale(0.96);
     }
-   /* 英文字鍵盤改為圓形 */
-   .key-letter {
+    .key-letter {
       flex: initial;
-      width: 42px;
-      height: 42px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
-      font-size: 1.1rem;
+      font-size: 1.2rem;
       font-weight: 700;
       background: #FFFFFF;
       color: #000000;
       box-shadow: 0 1px 2px rgba(0,0,0,0.25);
     }
-   .key-letter:active { background: #D1D1D6; }
-   .key-func {
+    .key-letter:active { background: #D1D1D6; }
+    .key-func {
       background: #FFFFFF;
       color: #83A1B9;
       font-size: 1.2rem;
       font-weight: bold;
     }
-   .key-func:active { background: #D1D1D6; }
-   .keypad-main {
+    .key-func:active { background: #D1D1D6; }
+    .keypad-main {
       display: flex;
-      gap: 10px;
+      gap: 12px;
       align-items: stretch;
     }
-   .num-pad {
+    .num-pad {
       flex: 1.2;
       display: flex;
       flex-direction: column;
       gap: 6px;
     }
-   .letter-pad {
-      flex: 1.2;
+    .letter-pad-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+    .scroll-arrow {
+      color: #FFFFFF;
+      font-size: 0.75rem;
+      text-align: center;
+      line-height: 1;
+      margin: 2px 0;
+    }
+    .letter-pad {
       display: flex;
       flex-direction: column;
       gap: 6px;
       justify-content: space-between;
+      width: 100%;
     }
-   .page { display: none; flex-direction: column; height: 100%; }
-   .page.active { display: flex; }
-   .page-header {
+
+    /* 底部 Tab 導航欄 */
+    .tab-bar {
+      display: flex;
+      background: #FFFFFF;
+      border-top: 1px solid var(--border);
+      padding: 6px 0 10px;
+      flex-shrink: 0;
+    }
+    .tab-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #8E8E93;
+      font-size: 0.68rem;
+      gap: 3px;
+      cursor: pointer;
+    }
+    .tab-item.active {
+      color: var(--primary);
+    }
+    .tab-icon {
+      width: 22px;
+      height: 22px;
+      border: 1.5px solid currentColor;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+
+    .page { display: none; flex-direction: column; height: 100%; }
+    .page.active { display: flex; }
+    .page-header {
       background: var(--primary);
       color: white;
       display: flex;
@@ -211,7 +259,7 @@
       flex-shrink: 0;
       gap: 4px;
     }
-   .back-btn {
+    .back-btn {
       background: none;
       border: none;
       color: white;
@@ -220,20 +268,20 @@
       cursor: pointer;
       line-height: 1;
     }
-   .page-title {
+    .page-title {
       flex: 1;
       text-align: center;
       font-size: 1.05rem;
       font-weight: 600;
       margin-right: 36px;
     }
-   .stop-list,.eta-area {
+    .stop-list,.eta-area {
       flex: 1;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       background: white;
     }
-   .stop-item {
+    .stop-item {
       padding: 14px 16px;
       border-bottom: 1px solid var(--border);
       cursor: pointer;
@@ -241,22 +289,22 @@
       align-items: center;
       gap: 12px;
     }
-   .stop-item:active { background: #f2f2f7; }
-   .stop-seq {
+    .stop-item:active { background: #f2f2f7; }
+    .stop-seq {
       font-size: 0.85rem;
       color: var(--muted);
       min-width: 28px;
       font-weight: 600;
     }
-   .stop-name { font-size: 0.98rem; font-weight: 500; flex: 1; }
-   .stop-id { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
-   .stop-arrow { color: #c7c7cc; }
-   .eta-header-info {
+    .stop-name { font-size: 0.98rem; font-weight: 500; flex: 1; }
+    .stop-id { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+    .stop-arrow { color: #c7c7cc; }
+    .eta-header-info {
       background: #1c1c1e;
       color: white;
       padding: 16px;
     }
-   .eta-route-num {
+    .eta-route-num {
       font-size: 1.4rem;
       font-weight: 700;
       display: inline-block;
@@ -264,9 +312,9 @@
       border-radius: 6px;
       letter-spacing: 0.5px;
     }
-   .eta-dest-text { font-size: 0.95rem; color: #aeaeb2; margin-top: 2px; }
-   .eta-stop-text { font-size: 0.9rem; margin-top: 8px; }
-   .eta-co-badge {
+    .eta-dest-text { font-size: 0.95rem; color: #aeaeb2; margin-top: 2px; }
+    .eta-stop-text { font-size: 0.9rem; margin-top: 8px; }
+    .eta-co-badge {
       display: inline-block;
       background: #3a3a3c;
       padding: 2px 8px;
@@ -274,33 +322,33 @@
       font-size: 0.72rem;
       margin-top: 6px;
     }
-   .eta-rows { padding: 8px 0; }
-   .eta-row {
+    .eta-rows { padding: 8px 0; }
+    .eta-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 14px 16px;
       border-bottom: 1px solid var(--border);
     }
-   .eta-mins {
+    .eta-mins {
       font-size: 1.4rem;
       font-weight: 700;
       color: var(--green);
       font-variant-numeric: tabular-nums;
     }
-   .eta-mins.soon { color: var(--amber); }
-   .eta-mins.arrived { color: var(--red); }
-   .eta-clock {
+    .eta-mins.soon { color: var(--amber); }
+    .eta-mins.arrived { color: var(--red); }
+    .eta-clock {
       font-size: 0.88rem;
       color: var(--muted);
       text-align: right;
     }
-   .eta-empty {
+    .eta-empty {
       text-align: center;
       padding: 40px 16px;
       color: var(--muted);
     }
-   .eta-toolbar {
+    .eta-toolbar {
       display: flex;
       gap: 8px;
       padding: 12px 16px;
@@ -308,7 +356,7 @@
       border-top: 1px solid var(--border);
       flex-shrink: 0;
     }
-   .eta-btn {
+    .eta-btn {
       flex: 1;
       padding: 11px;
       border: none;
@@ -319,12 +367,12 @@
       cursor: pointer;
       font-family: inherit;
     }
-   .eta-btn:active { background: #e5e5ea; }
-   .eta-btn.active-refresh {
+    .eta-btn:active { background: #e5e5ea; }
+    .eta-btn.active-refresh {
       background: var(--primary);
       color: white;
     }
-   .eta-refresh-info {
+    .eta-refresh-info {
       text-align: center;
       font-size: 0.75rem;
       color: var(--muted);
@@ -367,7 +415,35 @@
               <button class="key key-func" data-k="back">⌫</button>
             </div>
           </div>
-          <div class="letter-pad" id="letterKeys"></div>
+          <div class="letter-pad-wrapper">
+            <div class="scroll-arrow">▲</div>
+            <div class="letter-pad" id="letterKeys"></div>
+            <div class="scroll-arrow">▼</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 底部 Tab 欄 -->
+      <div class="tab-bar">
+        <div class="tab-item">
+          <div class="tab-icon">⌂</div>
+          <span>主頁</span>
+        </div>
+        <div class="tab-item">
+          <div class="tab-icon">☆</div>
+          <span>收藏</span>
+        </div>
+        <div class="tab-item active">
+          <div class="tab-icon">🔍</div>
+          <span>搜尋</span>
+        </div>
+        <div class="tab-item">
+          <div class="tab-icon">📍</div>
+          <span>鄰近</span>
+        </div>
+        <div class="tab-item">
+          <div class="tab-icon">⚄</div>
+          <span>遊戲</span>
         </div>
       </div>
     </div>
@@ -406,8 +482,8 @@
   </div>
 
   <script>
-    // 設定為 16 個常用巴士英文字母，剛好排列為 4 行 × 4 列
-    const LETTERS = ['A','B','C','D','E','F','H','K','M','N','P','R','S','T','W','X'];
+    // 設定為 16 個常用巴士英文字母，剛好排列為 4 行 × 2 列（每行 2 個，配合右側窄版箭頭標示）
+    const LETTERS = ['A','B','C','E','H','K','N','R','S','T','W','X','P','M','D','F'];
     const CO_NAMES = {
       kmb: '九巴',
       lwb: '龍運巴士',
@@ -427,12 +503,12 @@
       return false;
     }
 
-    // 動態生成 4 行 × 4 列的英文字鍵盤
+    // 動態生成英文字鍵盤 (2列排列)
     const letterBox = document.getElementById('letterKeys');
-    for (let i = 0; i < LETTERS.length; i += 4) {
+    for (let i = 0; i < LETTERS.length; i += 2) {
       const row = document.createElement('div');
       row.className = 'key-row';
-      LETTERS.slice(i, i + 4).forEach(L => {
+      LETTERS.slice(i, i + 2).forEach(L => {
         const b = document.createElement('button');
         b.className = 'key key-letter';
         b.dataset.k = L;
@@ -599,20 +675,14 @@
       }
     }
 
-    // 取得路線底色的輔助函式
+    // 保留原本公司顏色配置/特徵
     function getRouteBadgeStyle(m) {
-      if (m.co === 'kmb') return 'background-color: #E60012; color: #FFFFFF;'; // 九巴：紅色
-      if (m.co === 'lwb') return 'background-color: #FF6600; color: #FFFFFF;'; // 龍運：橙色
-      if (m.co === 'ctb') return 'background-color: #FFC600; color: #000000;'; // 城巴：黃色
-      if (m.co === 'nlb') return 'background-color: #009944; color: #FFFFFF;'; // 嶼巴：綠色
-      if (m.co === 'mtrbus') return 'background-color: #005A9C; color: #FFFFFF;'; // 港鐵巴士：藍色
-      if (m.co === 'gmb') {
-        if (m.region === 'KLN') return 'background-color: #00C853; color: #FFFFFF;'; // 九龍小巴：青綠色
-        if (m.region === 'NT') return 'background-color: #9C27B0; color: #FFFFFF;';  // 新界小巴：淺紫色
-        if (m.region === 'HKI') return 'background-color: #0288D1; color: #FFFFFF;'; // 香港小巴：淺藍色
-        return 'background-color: #00C853; color: #FFFFFF;';
-      }
-      return 'background-color: #8E8E93; color: #FFFFFF;';
+      if (m.co === 'kmb') return 'color: #000000;'; // 九巴
+      if (m.co === 'lwb') return 'color: #000000;'; // 龍運
+      if (m.co === 'ctb') return 'color: #000000;'; // 城巴
+      if (m.co === 'nlb') return 'color: #000000;'; // 嶼巴
+      if (m.co === 'mtrbus') return 'color: #000000;'; // 港鐵巴士
+      return 'color: #000000;';
     }
 
     function renderResults(list, route) {
@@ -622,13 +692,19 @@
         const div = document.createElement('div');
         div.className = 'result-item';
         const destText = m.label.replace(/^.*?→\s*/, '');
-        const coSubText = CO_NAMES[m.co] ? CO_NAMES[m.co] + ' (資料由 DATA.GOV.HK 提供)' : '資料由 DATA.GOV.HK 提供';
+        let coSubText = '資料由 DATA.GOV.HK 提供';
+        if (m.co === 'ctb') coSubText = '城巴 (資料由 DATA.GOV.HK 提供)';
+        else if (m.co === 'nlb') coSubText = '大嶼山巴士 (資料由 DATA.GOV.HK 提供)';
+        else if (m.co === 'kmb') coSubText = '九巴 (資料由 DATA.GOV.HK 提供)';
+        else if (m.co === 'lwb') coSubText = '龍運巴士 (資料由 DATA.GOV.HK 提供)';
+        else if (m.co === 'mtrbus') coSubText = '港鐵巴士 (資料由 DATA.GOV.HK 提供)';
+
         const badgeStyle = getRouteBadgeStyle(m);
         
         div.innerHTML =
           '<div class="result-num" style="' + badgeStyle + '">' + route + '</div>' +
           '<div class="result-info">' +
-            '<div class="result-dest">往 ' + destText + '</div>' +
+            '<div class="result-dest">往 ' + destText + (m.co === 'nlb' ? ' - 嶼巴' : m.co === 'ctb' ? ' - 城巴' : '') + '</div>' +
             '<div class="result-co">' + coSubText + '</div>' +
           '</div>' +
           '<div class="result-arrow">›</div>';
