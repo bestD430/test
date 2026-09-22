@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>香港巴士到站時間 - 已修正港鐵巴士站名</title>
+  <title>香港巴士到站時間 - 多啦A夢風格</title>
   <style>
     :root {
-      --primary: #E60012;
-      --primary-dark: #C40010;
+      /* 頂部改為多啦A夢藍色 */
+      --primary: #00A0E9;
+      --primary-dark: #0080C0;
       --bg: #F2F2F7;
       --card: #ffffff;
       --text: #000000;
@@ -15,7 +16,7 @@
       --border: #E5E5EA;
       --green: #34C759;
       --amber: #FF9500;
-      --red: #FF3B30;
+      --red: #E60012;
       --keypad-bg: #5B7B93;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -35,6 +36,8 @@
       background: var(--bg);
       position: relative;
     }
+
+    /* 頂部 Header 改為多啦A夢藍 */
     .header {
       background: var(--primary);
       color: white;
@@ -44,6 +47,7 @@
       font-weight: 700;
       flex-shrink: 0;
       letter-spacing: 1px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     .search-box {
       background: #EFEFF4;
@@ -63,7 +67,6 @@
       text-align: center;
       font-weight: 500;
     }
-    .search-input:focus { background: white; }
     .search-input::placeholder { color: #C7C7CC; font-weight: 400; text-align: center; }
     
     .results {
@@ -83,7 +86,6 @@
     }
     .result-item:active { background: #f2f2f7; }
     
-    /* 路線號碼底色圖塊 */
     .result-num {
       font-size: 1.1rem;
       font-weight: 800;
@@ -114,7 +116,7 @@
       font-weight: 400;
       flex-shrink: 0;
     }
-    .empty-state,.loading-state {
+    .empty-state, .loading-state {
       text-align: center;
       padding: 40px 20px;
       color: var(--muted);
@@ -127,16 +129,16 @@
       font-size: 0.9rem;
     }
     
-    /* 鍵盤樣式調整 */
+    /* 鍵盤區域 */
     .keypad {
       flex-shrink: 0;
       background: var(--keypad-bg);
-      padding: 10px 10px 14px;
+      padding: 10px;
       user-select: none;
     }
     .key-row {
       display: flex;
-      gap: 5px;
+      gap: 6px;
       margin-bottom: 6px;
       justify-content: center;
       align-items: center;
@@ -156,18 +158,22 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
       transition: background 0.08s, transform 0.05s;
     }
     .key:active {
       background: #D1D1D6;
-      transform: scale(0.96);
+      transform: scale(0.95);
     }
+    
+    /* 英文字母鍵盤改為正圓形 */
     .key-letter {
+      width: 44px;
+      height: 44px;
+      flex: none;
+      border-radius: 50% !important;
       font-size: 1.15rem;
       font-weight: 700;
-      border-radius: 6px;
-      height: 46px;
     }
     .key-func {
       background: #FFFFFF;
@@ -177,8 +183,8 @@
     }
     .keypad-main {
       display: flex;
-      gap: 8px;
-      align-items: stretch;
+      gap: 10px;
+      align-items: center;
     }
     .num-pad {
       flex: 1.1;
@@ -191,6 +197,55 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
+      align-items: center;
+    }
+
+    /* 鍵盤下方的天氣與警告資訊欄 */
+    .weather-bar {
+      background: #1C1C1E;
+      color: #FFFFFF;
+      padding: 8px 14px;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      flex-shrink: 0;
+    }
+    .weather-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .weather-temp {
+      font-weight: 700;
+      color: #FFD60A;
+    }
+    .weather-humidity {
+      color: #64D2FF;
+    }
+    .weather-warnings {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .warning-badge {
+      background: #FF3B30;
+      color: white;
+      font-size: 0.72rem;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 4px;
+      animation: pulse 2s infinite;
+    }
+    .warning-badge.none {
+      background: #34C759;
+      animation: none;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.6; }
+      100% { opacity: 1; }
     }
 
     /* 底部 Tab 導航欄 */
@@ -227,6 +282,8 @@
 
     .page { display: none; flex-direction: column; height: 100%; }
     .page.active { display: flex; }
+    
+    /* 頁面頂部 Header 同步改為多啦A夢藍 */
     .page-header {
       background: var(--primary);
       color: white;
@@ -252,7 +309,7 @@
       font-weight: 600;
       margin-right: 36px;
     }
-    .stop-list,.eta-area {
+    .stop-list, .eta-area {
       flex: 1;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
@@ -366,8 +423,10 @@
         <input type="text" class="search-input" id="routeInput" placeholder="輸入路線號碼" readonly inputmode="none">
       </div>
       <div class="results" id="results">
-        <div class="empty-state">輸入路線號碼開始搜尋<br><small>已修正港鐵巴士站名顯示</small></div>
+        <div class="empty-state">輸入路線號碼開始搜尋<br><small>已修復站名對照與即時天氣</small></div>
       </div>
+      
+      <!-- 鍵盤區域 -->
       <div class="keypad" id="keypad">
         <div class="keypad-main">
           <!-- 左側數字鍵盤 -->
@@ -393,8 +452,20 @@
               <button class="key key-func" data-k="back">⌫</button>
             </div>
           </div>
-          <!-- 右側字母鍵盤：4行 × 4列 -->
+          <!-- 右側字母鍵盤：4行 × 4列 (正圓形鍵盤) -->
           <div class="letter-pad" id="letterKeys"></div>
+        </div>
+      </div>
+
+      <!-- 鍵盤下方的天氣與警告資訊欄 -->
+      <div class="weather-bar">
+        <div class="weather-info">
+          <span>🌤️</span>
+          <span class="weather-temp" id="weatherTemp">--°C</span>
+          <span class="weather-humidity" id="weatherHumidity">濕度 --%</span>
+        </div>
+        <div class="weather-warnings" id="weatherWarnings">
+          <span class="warning-badge none">現無警告</span>
         </div>
       </div>
 
@@ -457,7 +528,7 @@
   </div>
 
   <script>
-    // 16個常用英文字母，剛好排列為 4 行 × 4 列
+    // 16個常用英文字母
     const LETTERS = ['A','B','C','E','H','K','N','R','S','T','W','X','P','M','D','F'];
     const CO_NAMES = {
       kmb: '九巴',
@@ -478,7 +549,7 @@
       return false;
     }
 
-    // 動態生成 4行 × 4列 英文字母鍵盤
+    // 動態生成 4行 × 4列 圓形字母鍵盤
     const letterBox = document.getElementById('letterKeys');
     for (let i = 0; i < LETTERS.length; i += 4) {
       const row = document.createElement('div');
@@ -511,6 +582,51 @@
       mtrStopsAt: 0
     };
     const TTL = 30 * 60 * 1000;
+
+    // ===== 香港天文台 Open API 整合 =====
+    async function fetchHKOWeather() {
+      try {
+        // 1. 取得實時天氣報告（氣溫與濕度）
+        const rReport = await fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=tc');
+        if (rReport.ok) {
+          const weatherData = await rReport.json();
+          if (weatherData.temperature && weatherData.temperature.data.length > 0) {
+            const hkoTemp = weatherData.temperature.data.find(t => t.place === '香港天文台') || weatherData.temperature.data[0];
+            document.getElementById('weatherTemp').textContent = hkoTemp.value + '°C';
+          }
+          if (weatherData.humidity && weatherData.humidity.data.length > 0) {
+            document.getElementById('weatherHumidity').textContent = '濕度 ' + weatherData.humidity.data[0].value + '%';
+          }
+        }
+
+        // 2. 取得生效中天氣警告
+        const rWarn = await fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=tc');
+        if (rWarn.ok) {
+          const warnData = await rWarn.json();
+          const warnContainer = document.getElementById('weatherWarnings');
+          warnContainer.innerHTML = '';
+
+          const warnKeys = Object.keys(warnData);
+          if (warnKeys.length === 0) {
+            warnContainer.innerHTML = '<span class="warning-badge none">現無警告</span>';
+          } else {
+            warnKeys.forEach(key => {
+              const w = warnData[key];
+              const span = document.createElement('span');
+              span.className = 'warning-badge';
+              span.textContent = w.name || key;
+              warnContainer.appendChild(span);
+            });
+          }
+        }
+      } catch (e) {
+        console.error('Weather update error:', e);
+      }
+    }
+
+    // 啟動時讀取天氣，其後每 5 分鐘自動刷新
+    fetchHKOWeather();
+    setInterval(fetchHKOWeather, 5 * 60 * 1000);
 
     // ===== 港鐵巴士站名對照表 =====
     const EMBEDDED_MTR_STOP_NAMES = {
@@ -553,9 +669,7 @@
       } catch(e) {}
       const onlineSources = [
         'https://hkbus.github.io/hk-bus-crawling/routeStops/lrtfeeder.json',
-        'https://raw.githubusercontent.com/hkbus/hk-bus-crawling/gh-pages/routeStops/lrtfeeder.json',
-        'https://open-data-hk.github.io/hk-bus-crawling/routeStops/lrtfeeder.json',
-        'https://raw.githubusercontent.com/open-data-hk/hk-bus-crawling/gh-pages/routeStops/lrtfeeder.json'
+        'https://raw.githubusercontent.com/hkbus/hk-bus-crawling/gh-pages/routeStops/lrtfeeder.json'
       ];
       for (const url of onlineSources) {
         try {
@@ -618,7 +732,7 @@
     function scheduleSearch() {
       clearTimeout(searchTimer);
       if (!inputVal) {
-        document.getElementById('results').innerHTML = '<div class="empty-state">輸入路線號碼開始搜尋<br><small>已修正港鐵巴士站名顯示</small></div>';
+        document.getElementById('results').innerHTML = '<div class="empty-state">輸入路線號碼開始搜尋<br><small>已修復站名對照與即時天氣</small></div>';
         return;
       }
       document.getElementById('results').innerHTML = '<div class="loading-state">搜尋中...</div>';
@@ -637,7 +751,7 @@
         ]);
         let all = [];
         results.forEach(r => { if (r.status === 'fulfilled') all = all.concat(r.value || []); });
-        if (inputVal.toUpperCase()!== route) return;
+        if (inputVal.toUpperCase() !== route) return;
         if (all.length === 0) {
           document.getElementById('results').innerHTML = '<div class="error-state">找不到路線「' + route + '」</div>';
           return;
@@ -648,17 +762,16 @@
       }
     }
 
-    // 根據需求配置動態底色與字體顏色
     function getRouteBadgeStyle(m) {
-      if (m.co === 'kmb') return 'background-color: #E60012; color: #FFFFFF;'; // 九巴：紅色
-      if (m.co === 'lwb') return 'background-color: #FF7300; color: #FFFFFF;'; // 龍運：橙色
-      if (m.co === 'ctb') return 'background-color: #FFD100; color: #000000;'; // 城巴：黃色
-      if (m.co === 'nlb') return 'background-color: #00A651; color: #FFFFFF;'; // 嶼巴：綠色
-      if (m.co === 'mtrbus') return 'background-color: #0072C6; color: #FFFFFF;'; // 港鐵巴士：藍色
+      if (m.co === 'kmb') return 'background-color: #E60012; color: #FFFFFF;';
+      if (m.co === 'lwb') return 'background-color: #FF7300; color: #FFFFFF;';
+      if (m.co === 'ctb') return 'background-color: #FFD100; color: #000000;';
+      if (m.co === 'nlb') return 'background-color: #00A651; color: #FFFFFF;';
+      if (m.co === 'mtrbus') return 'background-color: #0072C6; color: #FFFFFF;';
       if (m.co === 'gmb') {
-        if (m.region === 'KLN') return 'background-color: #00FF66; color: #000000;'; // 九龍區小巴：青綠色
-        if (m.region === 'NT') return 'background-color: #B388FF; color: #FFFFFF;';  // 新界區小巴：淺紫色
-        if (m.region === 'HKI') return 'background-color: #80D8FF; color: #000000;'; // 香港區小巴：淺藍色
+        if (m.region === 'KLN') return 'background-color: #00FF66; color: #000000;';
+        if (m.region === 'NT') return 'background-color: #B388FF; color: #FFFFFF;';
+        if (m.region === 'HKI') return 'background-color: #80D8FF; color: #000000;';
       }
       return 'background-color: #8E8E93; color: #FFFFFF;';
     }
@@ -792,7 +905,7 @@
         });
         if (!res.ok) return [];
         const json = await res.json();
-        if (json.routeStatus === '3' ||!(json.busStop || []).length) return [];
+        if (json.routeStatus === '3' || !(json.busStop || []).length) return [];
         return [{ co: 'mtrbus', bound: 'O', serviceType: '1', label: '港鐵巴士 ' + route, sub: '', dest: route }];
       } catch { return []; }
     }
@@ -892,7 +1005,7 @@
       });
       if (!scheduleRes.ok) throw new Error('無法取得車站資料');
       const json = await scheduleRes.json();
-      if (json.routeStatus === '3' ||!(json.busStop || []).length) {
+      if (json.routeStatus === '3' || !(json.busStop || []).length) {
         throw new Error(json.routeStatusRemarkTitle || '此路線暫停服務');
       }
       const stopNameMap = await getMTRStopNameMap();
@@ -913,7 +1026,7 @@
         const div = document.createElement('div');
         div.className = 'stop-item';
         const isMTR = state.co === 'mtrbus';
-        const subId = isMTR && EMBEDDED_MTR_STOP_NAMES[s.stopId]? '' : (s.stopId && s.name!== s.stopId? '<div class="stop-id">' + s.stopId + '</div>' : '');
+        const subId = isMTR && EMBEDDED_MTR_STOP_NAMES[s.stopId]? '' : (s.stopId && s.name !== s.stopId? '<div class="stop-id">' + s.stopId + '</div>' : '');
         div.innerHTML = '<div class="stop-seq">' + s.seq + '</div><div class="stop-name">' + s.name + subId + '</div><div class="stop-arrow">›</div>';
         div.onclick = () => selectStop(s);
         el.appendChild(div);
@@ -982,15 +1095,15 @@
       const list = json.data || [];
       const etas = [];
       list.forEach(item => {
-        if (String(item.route_id)!== String(state.gmbRouteId)) return;
-        if (state.gmbRouteSeq!= null && String(item.route_seq)!== String(state.gmbRouteSeq)) return;
+        if (String(item.route_id) !== String(state.gmbRouteId)) return;
+        if (state.gmbRouteSeq != null && String(item.route_seq) !== String(state.gmbRouteSeq)) return;
         (item.eta || []).forEach(e => {
           if (e.timestamp) etas.push({ eta: e.timestamp, rmk: e.remarks_tc || '' });
         });
       });
       if (!etas.length) {
         list.forEach(item => {
-          if (String(item.route_id)!== String(state.gmbRouteId)) return;
+          if (String(item.route_id) !== String(state.gmbRouteId)) return;
           (item.eta || []).forEach(e => {
             if (e.timestamp) etas.push({ eta: e.timestamp, rmk: e.remarks_tc || '' });
           });
@@ -1016,7 +1129,7 @@
 
     function renderETA(etas) {
       const rows = document.getElementById('etaRows');
-      if (!etas ||!etas.length) {
+      if (!etas || !etas.length) {
         rows.innerHTML = '<div class="eta-empty">暫無預計到站時間<br><small>可能是非服務時間或末班車已過</small></div>';
         document.getElementById('etaInfo').textContent = '最後更新：' + new Date().toLocaleTimeString('zh-HK');
         return;
@@ -1070,13 +1183,12 @@
     function showPage(id) {
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       document.getElementById(id).classList.add('active');
-      if (id!== 'pageEta') stopAutoRefresh();
+      if (id !== 'pageEta') stopAutoRefresh();
     }
     function goSearch() { showPage('pageSearch'); }
     function goStops() { showPage('pageStops'); }
 
-    getMTRStopNameMap().then(m=>console.log('MTR stop map ready', Object.keys(m).length));
+    getMTRStopNameMap();
   </script>
 </body>
 </html>
-
