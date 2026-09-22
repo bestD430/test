@@ -6,7 +6,7 @@
   <title>香港巴士到站時間 - 已修正港鐵巴士站名</title>
   <style>
     :root {
-      --primary: #E60012; /* 依照附圖的主色紅色 */
+      --primary: #E60012;
       --primary-dark: #C40010;
       --bg: #F2F2F7;
       --card: #ffffff;
@@ -16,7 +16,7 @@
       --green: #34C759;
       --amber: #FF9500;
       --red: #FF3B30;
-      --keypad-bg: #5B7B93; /* 鍵盤背景色 */
+      --keypad-bg: #5B7B93;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     html, body {
@@ -45,7 +45,6 @@
       flex-shrink: 0;
       letter-spacing: 1px;
     }
-    /* 搜尋框調整為圖片樣式 */
     .search-box {
       background: #EFEFF4;
       padding: 8px 12px;
@@ -73,24 +72,27 @@
       -webkit-overflow-scrolling: touch;
       background: white;
     }
-    /* 搜尋列表對照圖中格式 */
     .result-item {
       display: flex;
       align-items: center;
       padding: 12px 16px;
       border-bottom: 1px solid #EFEFF4;
       cursor: pointer;
-      gap: 16px;
+      gap: 12px;
       transition: background 0.1s;
     }
     .result-item:active { background: #f2f2f7; }
+    
+    /* 路線號碼底色圖塊 */
     .result-num {
-      font-size: 1.4rem;
+      font-size: 1.1rem;
       font-weight: 800;
-      min-width: 40px;
-      text-align: left;
-      color: #000;
-      line-height: 1.2;
+      min-width: 58px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      text-align: center;
+      line-height: 1.1;
+      flex-shrink: 0;
     }
     .result-info { flex: 1; min-width: 0; }
     .result-dest {
@@ -125,16 +127,16 @@
       font-size: 0.9rem;
     }
     
-    /* 鍵盤外觀修飾 */
+    /* 鍵盤樣式調整 */
     .keypad {
       flex-shrink: 0;
       background: var(--keypad-bg);
-      padding: 10px 12px 14px;
+      padding: 10px 10px 14px;
       user-select: none;
     }
     .key-row {
       display: flex;
-      gap: 6px;
+      gap: 5px;
       margin-bottom: 6px;
       justify-content: center;
       align-items: center;
@@ -142,12 +144,11 @@
     .key-row:last-child { margin-bottom: 0; }
     .key {
       flex: 1;
-      max-width: 72px;
-      height: 48px;
+      height: 46px;
       border: none;
       border-radius: 6px;
       background: #FFFFFF;
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       font-weight: 700;
       color: #000000;
       cursor: pointer;
@@ -163,55 +164,33 @@
       transform: scale(0.96);
     }
     .key-letter {
-      flex: initial;
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      font-size: 1.2rem;
+      font-size: 1.15rem;
       font-weight: 700;
-      background: #FFFFFF;
-      color: #000000;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+      border-radius: 6px;
+      height: 46px;
     }
-    .key-letter:active { background: #D1D1D6; }
     .key-func {
       background: #FFFFFF;
       color: #83A1B9;
       font-size: 1.2rem;
       font-weight: bold;
     }
-    .key-func:active { background: #D1D1D6; }
     .keypad-main {
       display: flex;
-      gap: 12px;
+      gap: 8px;
       align-items: stretch;
     }
     .num-pad {
-      flex: 1.2;
+      flex: 1.1;
       display: flex;
       flex-direction: column;
       gap: 6px;
-    }
-    .letter-pad-wrapper {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      position: relative;
-    }
-    .scroll-arrow {
-      color: #FFFFFF;
-      font-size: 0.75rem;
-      text-align: center;
-      line-height: 1;
-      margin: 2px 0;
     }
     .letter-pad {
+      flex: 1.3;
       display: flex;
       flex-direction: column;
       gap: 6px;
-      justify-content: space-between;
-      width: 100%;
     }
 
     /* 底部 Tab 導航欄 */
@@ -233,9 +212,7 @@
       gap: 3px;
       cursor: pointer;
     }
-    .tab-item.active {
-      color: var(--primary);
-    }
+    .tab-item.active { color: var(--primary); }
     .tab-icon {
       width: 22px;
       height: 22px;
@@ -393,6 +370,7 @@
       </div>
       <div class="keypad" id="keypad">
         <div class="keypad-main">
+          <!-- 左側數字鍵盤 -->
           <div class="num-pad">
             <div class="key-row">
               <button class="key" data-k="1">1</button>
@@ -415,11 +393,8 @@
               <button class="key key-func" data-k="back">⌫</button>
             </div>
           </div>
-          <div class="letter-pad-wrapper">
-            <div class="scroll-arrow">▲</div>
-            <div class="letter-pad" id="letterKeys"></div>
-            <div class="scroll-arrow">▼</div>
-          </div>
+          <!-- 右側字母鍵盤：4行 × 4列 -->
+          <div class="letter-pad" id="letterKeys"></div>
         </div>
       </div>
 
@@ -482,7 +457,7 @@
   </div>
 
   <script>
-    // 設定為 16 個常用巴士英文字母，剛好排列為 4 行 × 2 列（每行 2 個，配合右側窄版箭頭標示）
+    // 16個常用英文字母，剛好排列為 4 行 × 4 列
     const LETTERS = ['A','B','C','E','H','K','N','R','S','T','W','X','P','M','D','F'];
     const CO_NAMES = {
       kmb: '九巴',
@@ -503,12 +478,12 @@
       return false;
     }
 
-    // 動態生成英文字鍵盤 (2列排列)
+    // 動態生成 4行 × 4列 英文字母鍵盤
     const letterBox = document.getElementById('letterKeys');
-    for (let i = 0; i < LETTERS.length; i += 2) {
+    for (let i = 0; i < LETTERS.length; i += 4) {
       const row = document.createElement('div');
       row.className = 'key-row';
-      LETTERS.slice(i, i + 2).forEach(L => {
+      LETTERS.slice(i, i + 4).forEach(L => {
         const b = document.createElement('button');
         b.className = 'key key-letter';
         b.dataset.k = L;
@@ -580,9 +555,7 @@
         'https://hkbus.github.io/hk-bus-crawling/routeStops/lrtfeeder.json',
         'https://raw.githubusercontent.com/hkbus/hk-bus-crawling/gh-pages/routeStops/lrtfeeder.json',
         'https://open-data-hk.github.io/hk-bus-crawling/routeStops/lrtfeeder.json',
-        'https://raw.githubusercontent.com/open-data-hk/hk-bus-crawling/gh-pages/routeStops/lrtfeeder.json',
-        'https://hkbus.github.io/hk-bus-crawling/stopList/lrtfeeder.json',
-        'https://raw.githubusercontent.com/hkbus/hk-bus-crawling/gh-pages/stopList/lrtfeeder.json'
+        'https://raw.githubusercontent.com/open-data-hk/hk-bus-crawling/gh-pages/routeStops/lrtfeeder.json'
       ];
       for (const url of onlineSources) {
         try {
@@ -600,7 +573,7 @@
               const id = node.stopId || node.stop_id || node.busStopId || node.id;
               let name = null;
               if (node.name) {
-                if (typeof node.name === 'object') name = node.name.zh || node.name.zh_hant || node.name.hant || node.name.tc || node.name.zh_Hant || node.name.en;
+                if (typeof node.name === 'object') name = node.name.zh || node.name.zh_hant || node.name.hant || node.name.tc || node.name.en;
                 else name = node.name;
               }
               if (!name) name = node.stopName_c || node.name_tc || node.name_zh || node.name_hant || node.nameZh;
@@ -675,14 +648,19 @@
       }
     }
 
-    // 保留原本公司顏色配置/特徵
+    // 根據需求配置動態底色與字體顏色
     function getRouteBadgeStyle(m) {
-      if (m.co === 'kmb') return 'color: #000000;'; // 九巴
-      if (m.co === 'lwb') return 'color: #000000;'; // 龍運
-      if (m.co === 'ctb') return 'color: #000000;'; // 城巴
-      if (m.co === 'nlb') return 'color: #000000;'; // 嶼巴
-      if (m.co === 'mtrbus') return 'color: #000000;'; // 港鐵巴士
-      return 'color: #000000;';
+      if (m.co === 'kmb') return 'background-color: #E60012; color: #FFFFFF;'; // 九巴：紅色
+      if (m.co === 'lwb') return 'background-color: #FF7300; color: #FFFFFF;'; // 龍運：橙色
+      if (m.co === 'ctb') return 'background-color: #FFD100; color: #000000;'; // 城巴：黃色
+      if (m.co === 'nlb') return 'background-color: #00A651; color: #FFFFFF;'; // 嶼巴：綠色
+      if (m.co === 'mtrbus') return 'background-color: #0072C6; color: #FFFFFF;'; // 港鐵巴士：藍色
+      if (m.co === 'gmb') {
+        if (m.region === 'KLN') return 'background-color: #00FF66; color: #000000;'; // 九龍區小巴：青綠色
+        if (m.region === 'NT') return 'background-color: #B388FF; color: #FFFFFF;';  // 新界區小巴：淺紫色
+        if (m.region === 'HKI') return 'background-color: #80D8FF; color: #000000;'; // 香港區小巴：淺藍色
+      }
+      return 'background-color: #8E8E93; color: #FFFFFF;';
     }
 
     function renderResults(list, route) {
@@ -692,19 +670,21 @@
         const div = document.createElement('div');
         div.className = 'result-item';
         const destText = m.label.replace(/^.*?→\s*/, '');
+        
         let coSubText = '資料由 DATA.GOV.HK 提供';
         if (m.co === 'ctb') coSubText = '城巴 (資料由 DATA.GOV.HK 提供)';
         else if (m.co === 'nlb') coSubText = '大嶼山巴士 (資料由 DATA.GOV.HK 提供)';
         else if (m.co === 'kmb') coSubText = '九巴 (資料由 DATA.GOV.HK 提供)';
         else if (m.co === 'lwb') coSubText = '龍運巴士 (資料由 DATA.GOV.HK 提供)';
         else if (m.co === 'mtrbus') coSubText = '港鐵巴士 (資料由 DATA.GOV.HK 提供)';
+        else if (m.co === 'gmb') coSubText = '綠色專線小巴 (資料由 DATA.GOV.HK 提供)';
 
         const badgeStyle = getRouteBadgeStyle(m);
         
         div.innerHTML =
           '<div class="result-num" style="' + badgeStyle + '">' + route + '</div>' +
           '<div class="result-info">' +
-            '<div class="result-dest">往 ' + destText + (m.co === 'nlb' ? ' - 嶼巴' : m.co === 'ctb' ? ' - 城巴' : '') + '</div>' +
+            '<div class="result-dest">往 ' + destText + '</div>' +
             '<div class="result-co">' + coSubText + '</div>' +
           '</div>' +
           '<div class="result-arrow">›</div>';
