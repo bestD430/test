@@ -96,9 +96,9 @@
     .plate-ctb { background: #FFD100; color: #1a1a1a; }
     .plate-nlb { background: #007A3D; color: #fff; }
     .plate-gmb { background: #00A651; color: #fff; }
-    .plate-gmb-hki { background: #00A651; color: #fff; }
-    .plate-gmb-kln { background: #00A651; color: #fff; }
-    .plate-gmb-nt  { background: #00A651; color: #fff; }
+    .plate-gmb-hki { background: #5AC8FA; color: #1a1a1a; }
+    .plate-gmb-kln { background: #39FF14; color: #1a1a1a; }
+    .plate-gmb-nt  { background: #C5A3FF; color: #1a1a1a; }
     .plate-mtrbus { background: #0077C8; color: #fff; }
     .result-info { flex: 1; min-width: 0; }
     .result-dest {
@@ -138,6 +138,69 @@
       font-size: 0.78rem;
       border-top: 1px solid #3a3a3c;
     }
+    .weather-main {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .weather-icon {
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      object-fit: contain;
+    }
+    .weather-temp {
+      font-size: 1.35rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.1;
+    }
+    .weather-meta {
+      flex: 1;
+      min-width: 0;
+      line-height: 1.35;
+    }
+    .weather-meta .wx-line {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #aeaeb2;
+    }
+    .weather-meta .wx-line strong {
+      color: #f2f2f7;
+      font-weight: 600;
+    }
+    .weather-warns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 6px;
+    }
+    .wx-warn-badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: #ff3b30;
+      color: #fff;
+    }
+    .wx-warn-badge.yellow { background: #ffcc00; color: #1a1a1a; }
+    .wx-warn-badge.amber { background: #ff9500; color: #1a1a1a; }
+    .wx-warn-badge.red { background: #ff3b30; color: #fff; }
+    .wx-warn-badge.black { background: #1c1c1e; color: #fff; border: 1px solid #aeaeb2; }
+    .wx-warn-badge.blue { background: #007aff; color: #fff; }
+    .wx-forecast {
+      margin-top: 5px;
+      color: #8e8e93;
+      font-size: 0.72rem;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .weather-bar.wx-loading { color: #8e8e93; text-align: center; padding: 12px; }
     .key-row {
       display: flex;
       gap: 5px;
@@ -331,6 +394,28 @@
       padding: 6px 16px 10px;
       background: white;
     }
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+      background: #fafafa;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-title .clear-link {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      padding: 2px 4px;
+    }
     .fav-btn {
       background: none;
       border: none;
@@ -345,12 +430,24 @@
     .fav-btn.on { color: #ff9500; }
     .fav-btn:active { transform: scale(0.9); }
     .result-item .fav-btn { margin-left: auto; }
+    .home-hint {
+      text-align: center;
+      padding: 28px 20px 12px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
     .page-header .fav-btn {
       color: rgba(255,255,255,0.7);
       font-size: 1.3rem;
       margin-right: 4px;
     }
     .page-header .fav-btn.on { color: #ffd60a; }
+    .no-eta {
+      text-align: center;
+      padding: 30px 16px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
   </style>
 </head>
 <body>
@@ -393,7 +490,7 @@
           </div>
         </div>
       </div>
-      <div class="weather-bar" id="weatherBar">載入天氣資料...</div>
+      <div class="weather-bar wx-loading" id="weatherBar">載入天氣資料...</div>
     </div>
 
     <div class="page" id="pageStops">
@@ -431,53 +528,67 @@
   </div>
 
   <script>
-    const REGION_NAMES = { HKI: '港島', KLN: '九龍', NT: '新界' };
     const CO_NAMES = {
       kmb: '九巴', lwb: '龍運巴士', ctb: '城巴', nlb: '嶼巴',
       gmb: '專線小巴', mtrbus: '港鐵巴士'
     };
 
-    // 1. 內建 GMB_INDEX（確保即使 API 失敗，輸入 26、46 等熱門路線仍能離線搜尋）
-    const GMB_INDEX = [
-      { route: '26', region: 'HKI', orig: '銅鑼灣', dest: '港島民政事務處' },
-      { route: '26', region: 'KLN', orig: '土瓜灣', dest: '九龍站' },
-      { route: '26', region: 'NT', orig: '馬鞍山', dest: '香港教育大學' },
-      { route: '46', region: 'HKI', orig: '灣仔', dest: '蒲飛路' },
-      { route: '46', region: 'KLN', orig: '麗晶花園', dest: '大角咀' },
-      { route: '46', region: 'NT', orig: '富東邨', dest: '機場' }
-    ];
-
-    let ALL_ROUTES = [];
-    let routesLoaded = false;
-    let gmbDetailsCache = new Map(); // 用於暫存小巴詳細資訊
-
     function plateClass(item) {
-      if (item.co === 'gmb') return 'plate-gmb';
+      if (item.co === 'gmb' && item.region) {
+        const r = (item.region || '').toUpperCase();
+        if (r === 'HKI') return 'plate-gmb-hki';
+        if (r === 'KLN') return 'plate-gmb-kln';
+        if (r === 'NT')  return 'plate-gmb-nt';
+      }
       return 'plate-' + (item.co || 'kmb');
     }
 
-    async function fetchJSON(url, options = {}, timeoutMs = 8000) {
+    let ALL_ROUTES = [];
+    let routesLoaded = false;
+
+    const LOCAL_FALLBACK = [
+      { route: '1A', co: 'kmb', bound: 'out', orig: '中秀茂坪', dest: '尖沙咀碼頭', service_type: '1' },
+      { route: '1A', co: 'kmb', bound: 'in', orig: '尖沙咀碼頭', dest: '中秀茂坪', service_type: '1' },
+      { route: '16', co: 'kmb', bound: 'out', orig: '藍田(廣田邨)', dest: '旺角(柏景灣)', service_type: '1' },
+      { route: '16', co: 'kmb', bound: 'in', orig: '旺角(柏景灣)', dest: '藍田(廣田邨)', service_type: '1' },
+      { route: '101', co: 'kmb', bound: 'out', orig: '堅尼地城', dest: '觀塘(裕民坊)', service_type: '1' },
+      { route: 'E31', co: 'lwb', bound: 'out', orig: '荃灣(愉景新城)', dest: '逸東邨', service_type: '1' },
+      { route: 'A11', co: 'ctb', orig: '北角碼頭', dest: '機場' }
+    ];
+
+    async function fetchJSON(url, options = {}, timeoutMs = 12000) {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeoutMs);
       try {
         const res = await fetch(url, { ...options, signal: controller.signal });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) {
+          const err = new Error(`HTTP ${res.status}`);
+          err.status = res.status;
+          throw err;
+        }
         return await res.json();
       } finally {
         clearTimeout(timer);
       }
     }
 
+    // 龍運巴士路線辨識（KMB API 多數不帶 co 欄位）
     function isLwbRoute(route) {
       const r = String(route || '').toUpperCase();
+      // 機場 A 線（龍運營運，不含城巴 A10–A29 等）
       if (/^A(3[0-9]|4[0-9]|5[0-9])/.test(r)) return true;
+      // 北大嶼山對外 E 線
       if (/^E(3[1-9]|4[0-9])/.test(r)) return true;
+      // 機場穿梭 S 線
       if (/^S(1|64|65)/.test(r)) return true;
+      // 通宵機場 NA 線
       if (/^NA(3[0-9]|4[0-9])/.test(r)) return true;
+      // 其他龍運：R8、X1 等
       if (r === 'R8' || r === 'X1') return true;
       return false;
     }
 
+    // ========== 路線載入（修正：保留 KMB 雙方向） ==========
     async function loadKmbRoutes() {
       try {
         const json = await fetchJSON('https://data.etabus.gov.hk/v1/transport/kmb/route/');
@@ -488,10 +599,13 @@
           const co = (apiCo === 'lwb' || isLwbRoute(r.route)) ? 'lwb' : 'kmb';
           const bound = (r.bound === 'I' || r.bound === 'i') ? 'in' : 'out';
           const st = String(r.service_type || '1');
+          // 以 route + co + bound + service_type 作為唯一鍵，保留雙方向
           const key = r.route + '_' + co + '_' + bound + '_' + st;
           if (!map.has(key)) {
             map.set(key, {
-              route: r.route, co, bound,
+              route: r.route,
+              co,
+              bound,
               orig: r.orig_tc || r.orig_en || '',
               dest: r.dest_tc || r.dest_en || '',
               service_type: st
@@ -500,7 +614,7 @@
         });
         return Array.from(map.values());
       } catch (e) {
-        console.warn('KMB load failed', e);
+        console.warn('KMB route load failed', e);
         return [];
       }
     }
@@ -521,183 +635,1270 @@
           seen.add(r.route);
           const orig = r.orig_tc || r.orig_en || '';
           const dest = r.dest_tc || r.dest_en || '';
-          list.push({ route: r.route, co: 'ctb', bound: 'out', orig, dest });
+          // 直接產生來回兩個方向，搜尋結果無需再選方向
+          list.push({
+            route: r.route, co: 'ctb', bound: 'out',
+            orig, dest
+          });
           if (orig || dest) {
-            list.push({ route: r.route, co: 'ctb', bound: 'in', orig: dest, dest: orig });
+            list.push({
+              route: r.route, co: 'ctb', bound: 'in',
+              orig: dest, dest: orig
+            });
           }
         });
         return list;
       } catch (e) {
-        console.warn('CTB load failed', e);
+        console.warn('CTB route load failed', e);
         return [];
       }
     }
 
     async function loadGmbRoutes() {
+      // 使用內建靜態資料（避免 CORS／本機 file:// 無法連 API）
       try {
-        const json = await fetchJSON('https://data.etagmb.gov.hk/route');
-        if (!json.data || !json.data.routes) return [];
+        if (typeof GMB_STATIC === 'undefined' || !GMB_STATIC.length) return [];
         const routes = [];
-        for (const [region, codes] of Object.entries(json.data.routes)) {
-          codes.forEach(code => {
-            routes.push({
-              route: code, co: 'gmb', region,
-              orig: '', dest: '', needsDetail: true
+        GMB_STATIC.forEach(rd => {
+          const dirs = rd.dirs || [];
+          if (dirs.length) {
+            dirs.forEach(d => {
+              routes.push({
+                route: String(rd.r),
+                co: 'gmb',
+                region: rd.g,
+                bound: d.s === 1 ? 'out' : 'in',
+                gmbRouteId: rd.id,
+                gmbRouteSeq: d.s || 1,
+                orig: d.o || '',
+                dest: d.d || '',
+                needsDetail: false,
+                gmbDesc: rd.desc || ''
+              });
             });
-          });
-        }
-        return routes;
-      } catch (e) {
-        console.warn('GMB load failed, fallback to GMB_INDEX', e);
-        return GMB_INDEX.map(r => ({ ...r, co: 'gmb', needsDetail: true }));
-      }
-    }
-
-    async function initAllRoutes() {
-      const [kmb, ctb, gmb] = await Promise.all([
-        loadKmbRoutes(),
-        loadCtbRoutes(),
-        loadGmbRoutes()
-      ]);
-      ALL_ROUTES = [...gmb, ...kmb, ...ctb];
-      routesLoaded = true;
-    }
-
-    // 3. 只向有該線的區域查詢 (GMB)，加快速度並降低 API 失敗率
-    async function fetchGmbDetailForRegion(routeCode, region) {
-      const cacheKey = `${routeCode}_${region}`;
-      if (gmbDetailsCache.has(cacheKey)) return gmbDetailsCache.get(cacheKey);
-
-      try {
-        const json = await fetchJSON(`https://data.etagmb.gov.hk/route/${region}/${routeCode}`);
-        if (json.data && json.data.length > 0) {
-          const details = json.data.map(d => ({
-            route: routeCode,
-            co: 'gmb',
-            region: region,
-            route_id: d.route_id,
-            orig: d.orig_tc || '',
-            dest: d.dest_tc || '',
-            description: d.description_tc || ''
-          }));
-          gmbDetailsCache.set(cacheKey, details);
-          return details;
-        }
-      } catch (e) {
-        console.warn(`GMB detail request failed for ${routeCode} [${region}]`, e);
-      }
-      // 2. 修正空結果被快取：失敗時不鎖死，直接傳回空陣列不存入 Cache，下次搜尋可再試
-      return [];
-    }
-
-    // 搜尋與結果顯示
-    async function searchRoutes(input) {
-      const resultsEl = document.getElementById('results');
-      if (!input) {
-        resultsEl.innerHTML = '';
-        return;
-      }
-
-      const q = input.trim().toUpperCase();
-      let matches = ALL_ROUTES.filter(r => r.route.toUpperCase() === q || r.route.toUpperCase().startsWith(q));
-
-      if (matches.length === 0) {
-        resultsEl.innerHTML = '<div class="empty-state">未有找到相關路線</div>';
-        return;
-      }
-
-      resultsEl.innerHTML = '<div class="loading-state">搜尋中...</div>';
-
-      // 提取該搜尋結果中包含的小巴項目
-      const gmbMatches = matches.filter(r => r.co === 'gmb');
-      const otherMatches = matches.filter(r => r.co !== 'gmb');
-
-      let resolvedGmbList = [];
-
-      if (gmbMatches.length > 0) {
-        // 並行查詢精準地區的小巴詳細資訊
-        const promises = gmbMatches.map(item => fetchGmbDetailForRegion(item.route, item.region));
-        const resultsArray = await Promise.all(promises);
-        
-        resultsArray.forEach((arr, idx) => {
-          if (arr && arr.length > 0) {
-            resolvedGmbList.push(...arr);
           } else {
-            // 若 API 失敗，退回使用基本資訊或 GMB_INDEX 資訊
-            const fallback = GMB_INDEX.find(g => g.route === gmbMatches[idx].route && g.region === gmbMatches[idx].region);
-            resolvedGmbList.push({
-              route: gmbMatches[idx].route,
-              co: 'gmb',
-              region: gmbMatches[idx].region,
-              orig: fallback ? fallback.orig : '專線小巴',
-              dest: fallback ? fallback.dest : '詳細路線資訊'
+            routes.push({
+              route: String(rd.r), co: 'gmb', region: rd.g,
+              gmbRouteId: rd.id, orig: '', dest: '', needsDetail: false
             });
           }
         });
+        return routes;
+      } catch (e) {
+        console.warn('GMB static load failed', e);
+        return [];
       }
-
-      // 4. 置頂專線小巴結果，並標示專線小巴與區域
-      const finalResults = [...resolvedGmbList, ...otherMatches];
-
-      let html = '';
-      finalResults.slice(0, 40).forEach(item => {
-        let labelCo = CO_NAMES[item.co] || item.co;
-        if (item.co === 'gmb') {
-          const regionText = REGION_NAMES[item.region] || item.region;
-          labelCo = `專線小巴 (${regionText})`;
-        }
-
-        const destText = (item.orig && item.dest) ? `${item.orig} ➔ ${item.dest}` : (item.dest || item.orig || '路線詳情');
-
-        html += `
-          <div class="result-item" onclick="selectRoute('${item.route}', '${item.co}', '${item.region || ''}', '${item.bound || ''}')">
-            <div class="result-num ${plateClass(item)}">${item.route}</div>
-            <div class="result-info">
-              <div class="result-dest">${destText}</div>
-              <div class="result-co">${labelCo}</div>
-            </div>
-            <div class="result-arrow">›</div>
-          </div>
-        `;
-      });
-
-      resultsEl.innerHTML = html;
     }
 
-    // 鍵盤與輸入控制
-    let currentInput = '';
-    const routeInput = document.getElementById('routeInput');
+    // 港鐵巴士路線（opendata.mtr.com.hk CSV 無 CORS，改用內建清單）
+    const MTR_BUS_STATIC = [
+{ route: 'K12', co: 'mtrbus', bound: 'out', orig: '大埔墟站', dest: '八號花園' },
+      { route: 'K12', co: 'mtrbus', bound: 'in', orig: '八號花園', dest: '大埔墟站' },
+      { route: 'K14', co: 'mtrbus', bound: 'out', orig: '大埔超級城', dest: '大埔墟站' },
+      { route: 'K17', co: 'mtrbus', bound: 'out', orig: '大埔墟站', dest: '富善' },
+      { route: 'K17', co: 'mtrbus', bound: 'in', orig: '富善', dest: '大埔墟站' },
+      { route: 'K18', co: 'mtrbus', bound: 'out', orig: '大埔墟站', dest: '廣福' },
+      { route: 'K18', co: 'mtrbus', bound: 'in', orig: '廣福', dest: '大埔墟站' },
+      { route: 'K51', co: 'mtrbus', bound: 'out', orig: '富泰', dest: '大欖' },
+      { route: 'K51', co: 'mtrbus', bound: 'in', orig: '大欖', dest: '富泰' },
+      { route: 'K51A', co: 'mtrbus', bound: 'out', orig: '富泰', dest: '掃管笏村' },
+      { route: 'K51A', co: 'mtrbus', bound: 'in', orig: '掃管笏村', dest: '富泰' },
+      { route: 'K52', co: 'mtrbus', bound: 'out', orig: '悅湖山莊', dest: '龍鼓灘' },
+      { route: 'K52', co: 'mtrbus', bound: 'in', orig: '龍鼓灘', dest: '悅湖山莊' },
+      { route: 'K52A', co: 'mtrbus', bound: 'out', orig: '屯門站 (輕鐵屯門站)', dest: '曾咀 (曾咀靈灰安置所)' },
+      { route: 'K52A', co: 'mtrbus', bound: 'in', orig: '曾咀 (曾咀靈灰安置所)', dest: '屯門站 (輕鐵屯門站)' },
+      { route: 'K52P', co: 'mtrbus', bound: 'out', orig: '龍鼓灘', dest: '屯門站' },
+      { route: 'K53', co: 'mtrbus', bound: 'out', orig: '屯門站 (輕鐵屯門站)', dest: '屯門站 (輕鐵屯門站)' },
+      { route: 'K53S', co: 'mtrbus', bound: 'out', orig: '屯門站', dest: '屯門站' },
+      { route: 'K54', co: 'mtrbus', bound: 'out', orig: '和田邨', dest: '和田邨' },
+      { route: 'K54A', co: 'mtrbus', bound: 'out', orig: '和田邨', dest: '港鐵兆康站 (北) (輕鐵兆康站)' },
+      { route: 'K54A', co: 'mtrbus', bound: 'in', orig: '港鐵兆康站 (北) (輕鐵兆康站)', dest: '和田邨' },
+      { route: 'K58', co: 'mtrbus', bound: 'out', orig: '富泰', dest: '管翠路' },
+      { route: 'K58', co: 'mtrbus', bound: 'in', orig: '掃管笏村', dest: '富泰' },
+      { route: 'K65', co: 'mtrbus', bound: 'out', orig: '元朗站 (輕鐵元朗站) (港鐵元朗站)', dest: '流浮山' },
+      { route: 'K65', co: 'mtrbus', bound: 'in', orig: '流浮山', dest: '元朗站 (輕鐵元朗站, 港鐵元朗站)' },
+      { route: 'K65A', co: 'mtrbus', bound: 'out', orig: '天水圍站 (輕鐵天水圍站)', dest: '流浮山' },
+      { route: 'K65A', co: 'mtrbus', bound: 'in', orig: '流浮山', dest: '天水圍站 (輕鐵天水圍站)' },
+      { route: 'K66', co: 'mtrbus', bound: 'out', orig: '朗屏', dest: '大棠黃泥墩村' },
+      { route: 'K66', co: 'mtrbus', bound: 'in', orig: '大棠黃泥墩村', dest: '朗屏' },
+      { route: 'K68', co: 'mtrbus', bound: 'out', orig: '元朗工業邨', dest: '元朗工業邨' },
+      { route: 'K73', co: 'mtrbus', bound: 'out', orig: '天恆', dest: '元朗西 (輕鐵豐年路站)' },
+      { route: 'K73', co: 'mtrbus', bound: 'in', orig: '元朗西 (輕鐵豐年路站)', dest: '天恆' },
+      { route: 'K74', co: 'mtrbus', bound: 'out', orig: '天水圍市中心', dest: '天水圍市中心' },
+      { route: 'K75A', co: 'mtrbus', bound: 'out', orig: '天水圍站 (輕鐵天水圍站)', dest: '天水圍站 (輕鐵天水圍站)' },
+      { route: 'K75P', co: 'mtrbus', bound: 'out', orig: '天瑞', dest: '天瑞' },
+      { route: 'K75S', co: 'mtrbus', bound: 'out', orig: '洪水橋巴士廠', dest: '天水圍站' },
+      { route: 'K76', co: 'mtrbus', bound: 'out', orig: '天恆', dest: '天水圍站 (港鐵天水圍站)' },
+      { route: 'K76', co: 'mtrbus', bound: 'in', orig: '天水圍站 (港鐵天水圍站)', dest: '天恆' },
+      { route: 'K76S', co: 'mtrbus', bound: 'out', orig: '濕地公園路(近天葵路)', dest: '天盛苑' },
+      { route: 'K76S', co: 'mtrbus', bound: 'in', orig: '天水圍站', dest: '濕地公園路(近天葵路)' },
+      { route: '506', co: 'mtrbus', bound: 'out', orig: '屯門碼頭', dest: '兆麟' },
+      { route: '506', co: 'mtrbus', bound: 'in', orig: '兆麟', dest: '屯門碼頭' },
+    ];
+
+    async function loadMtrBusRoutes() {
+      // 優先嘗試線上 CSV（若未來開放 CORS），失敗則用內建清單
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 6000);
+        const res = await fetch('https://opendata.mtr.com.hk/data/mtr_bus_routes.csv', { signal: controller.signal });
+        clearTimeout(timer);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const text = (await res.text()).replace(/^\uFEFF/, '');
+        const lines = text.trim().split('\n');
+        if (lines.length < 2) throw new Error('empty');
+        const map = new Map();
+        for (let i = 1; i < lines.length; i++) {
+          const cols = parseCSVLine(lines[i]);
+          if (cols.length < 3) continue;
+          const routeId = cols[0].trim();
+          const nameChi = cols[1].trim();
+          if (!map.has(routeId)) {
+            let orig = '', dest = '';
+            const parts = nameChi.split('至');
+            if (parts.length >= 2) {
+              orig = parts[0].trim();
+              dest = parts.slice(1).join('至').replace(/\(循環線\)/g, '').trim();
+            } else dest = nameChi;
+            map.set(routeId, { route: routeId, co: 'mtrbus', orig, dest });
+          }
+        }
+        const list = Array.from(map.values());
+        if (list.length > 0) return list;
+      } catch (e) {
+        console.warn('MTR Bus online load failed, using static list', e);
+      }
+      return MTR_BUS_STATIC.slice();
+    }
+
+const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s": 2, "i": "K12-U020", "n": "大埔超級城"}, {"s": 3, "i": "K12-U030", "n": "八號花園"}], "K12_I": [{"s": 1, "i": "K12-D010", "n": "八號花園"}, {"s": 2, "i": "K12-D020", "n": "大埔超級城"}, {"s": 3, "i": "K12-D030", "n": "新達廣場"}, {"s": 4, "i": "K12-D040", "n": "大埔墟站"}], "K14_O": [{"s": 1, "i": "K14-D010", "n": "大埔超級城"}, {"s": 2, "i": "K14-D020", "n": "新達廣場"}, {"s": 3, "i": "K14-D030", "n": "大埔墟站"}], "K17_O": [{"s": 1, "i": "K17-U010", "n": "大埔墟站"}, {"s": 2, "i": "K17-U020", "n": "大埔中心第五期"}, {"s": 3, "i": "K17-U030", "n": "怡雅苑"}, {"s": 4, "i": "K17-U040", "n": "富善"}], "K17_I": [{"s": 1, "i": "K17-D010", "n": "富善"}, {"s": 2, "i": "K17-D020", "n": "新達廣場"}, {"s": 3, "i": "K17-D030", "n": "大埔墟站"}], "K18_O": [{"s": 1, "i": "K18-U010", "n": "大埔墟站"}, {"s": 2, "i": "K18-U020", "n": "宏福苑"}, {"s": 3, "i": "K18-U030", "n": "廣福"}], "K18_I": [{"s": 1, "i": "K18-D010", "n": "廣福"}, {"s": 2, "i": "K18-D020", "n": "新達廣場"}, {"s": 3, "i": "K18-D030", "n": "大埔墟站"}], "506_O": [{"s": 1, "i": "506-U010", "n": "屯門碼頭"}, {"s": 1, "i": "506-U045", "n": "富健花園"}, {"s": 2, "i": "506-U020", "n": "美樂花園"}, {"s": 2, "i": "506-U050", "n": "輕鐵龍門站"}, {"s": 3, "i": "506-U030", "n": "輕鐵蝴蝶站"}, {"s": 3, "i": "506-U060", "n": "輕鐵青雲站"}, {"s": 4, "i": "506-U040", "n": "輕鐵車廠站"}, {"s": 4, "i": "506-U070", "n": "輕鐵建安站"}, {"s": 5, "i": "506-U050", "n": "輕鐵龍門站"}, {"s": 5, "i": "506-U075", "n": "屯門站"}, {"s": 6, "i": "506-U060", "n": "輕鐵青雲站"}, {"s": 7, "i": "506-U070", "n": "輕鐵建安站"}, {"s": 8, "i": "506-U080", "n": "港鐵屯門站"}, {"s": 9, "i": "506-U090", "n": "屯門市中心"}, {"s": 10, "i": "506-U100", "n": "安定邨"}, {"s": 11, "i": "506-U110", "n": "輕鐵三聖站"}, {"s": 12, "i": "506-U120", "n": "兆麟"}], "506_I": [{"s": 1, "i": "506-D010", "n": "兆麟"}, {"s": 2, "i": "506-D020", "n": "友愛邨"}, {"s": 3, "i": "506-D030", "n": "輕鐵市中心站"}, {"s": 4, "i": "506-D040", "n": "輕鐵屯門站"}, {"s": 5, "i": "506-D050", "n": "輕鐵建安站"}, {"s": 6, "i": "506-D060", "n": "輕鐵青雲站"}, {"s": 7, "i": "506-D070", "n": "聖彼得堂"}, {"s": 8, "i": "506-D080", "n": "富健花園"}, {"s": 9, "i": "506-D090", "n": "新屯門中心"}, {"s": 10, "i": "506-D100", "n": "輕鐵蝴蝶站"}, {"s": 11, "i": "506-D110", "n": "蝴蝶邨蝶心樓"}, {"s": 12, "i": "506-D120", "n": "湖景邨湖碧樓"}, {"s": 13, "i": "506-D130", "n": "海翠花園"}, {"s": 14, "i": "506-D140", "n": "屯門碼頭"}], "K51_O": [{"s": 1, "i": "K51-U010", "n": "富泰"}, {"s": 1, "i": "K51-U010", "n": "富泰"}, {"s": 1, "i": "K51-D250", "n": "港鐵兆康站 (南)"}, {"s": 2, "i": "K51-U020", "n": "聚康山莊"}, {"s": 2, "i": "K51-U020", "n": "聚康山莊"}, {"s": 2, "i": "K51-D260", "n": "彩暉花園"}, {"s": 3, "i": "K51-U030", "n": "嶺南大學"}, {"s": 3, "i": "K51-U030", "n": "嶺南大學"}, {"s": 3, "i": "K51-D270", "n": "嶺南大學"}, {"s": 4, "i": "K51-U040", "n": "彩暉花園"}, {"s": 4, "i": "K51-U040", "n": "彩暉花園"}, {"s": 4, "i": "K51-D280", "n": "倚嶺南庭"}, {"s": 5, "i": "K51-U050", "n": "港鐵兆康站 (南) (輕鐵兆康站)"}, {"s": 5, "i": "K51-U050", "n": "港鐵兆康站 (南)"}, {"s": 5, "i": "K51-D290", "n": "富泰"}, {"s": 6, "i": "K51-U060", "n": "井財街"}, {"s": 7, "i": "K51-U070", "n": "雅都商場"}, {"s": 8, "i": "K51-U080", "n": "德政圍 (港鐵屯門站)"}, {"s": 9, "i": "K51-U090", "n": "屯門市中心 (輕鐵市中心站)"}, {"s": 10, "i": "K51-U100", "n": "屯門官立中學"}, {"s": 11, "i": "K51-U110", "n": "恒順園"}, {"s": 12, "i": "K51-U120", "n": "恒豐園"}, {"s": 13, "i": "K51-U130", "n": "三聖邨"}, {"s": 14, "i": "K51-U140", "n": "青山灣"}, {"s": 15, "i": "K51-U150", "n": "海景花園"}, {"s": 16, "i": "K51-U160", "n": "咖啡灣"}, {"s": 17, "i": "K51-U170", "n": "黃金泳灘"}, {"s": 18, "i": "K51-U180", "n": "香港黃金海岸"}, {"s": 19, "i": "K51-U190", "n": "嘉禾里村"}, {"s": 20, "i": "K51-U200", "n": "小秀村"}, {"s": 21, "i": "K51-U210", "n": "愛琴灣"}, {"s": 22, "i": "K51-U220", "n": "小欖新村"}, {"s": 23, "i": "K51-U230", "n": "小欖村"}, {"s": 24, "i": "K51-U240", "n": "小欖澄麗路"}, {"s": 25, "i": "K51-U250", "n": "大欖"}], "K51_I": [{"s": 1, "i": "K51-D010", "n": "大欖"}, {"s": 2, "i": "K51-D020", "n": "小欖"}, {"s": 3, "i": "K51-D030", "n": "小欖澄麗路"}, {"s": 4, "i": "K51-D040", "n": "小欖村"}, {"s": 5, "i": "K51-D050", "n": "小欖新村"}, {"s": 6, "i": "K51-D060", "n": "愛琴灣"}, {"s": 7, "i": "K51-D070", "n": "小秀上村"}, {"s": 8, "i": "K51-D080", "n": "龍珠島"}, {"s": 9, "i": "K51-D090", "n": "香港黃金海岸"}, {"s": 10, "i": "K51-D100", "n": "黃金泳灘"}, {"s": 11, "i": "K51-D110", "n": "咖啡灣"}, {"s": 12, "i": "K51-D120", "n": "碧翠花園"}, {"s": 13, "i": "K51-D130", "n": "青山灣碼頭"}, {"s": 14, "i": "K51-D140", "n": "三聖邨"}, {"s": 15, "i": "K51-D150", "n": "恆福花園 (輕鐵三聖站)"}, {"s": 16, "i": "K51-D160", "n": "胡陳金枝中學"}, {"s": 17, "i": "K51-D170", "n": "青善遊樂場"}, {"s": 18, "i": "K51-D180", "n": "置樂花園"}, {"s": 19, "i": "K51-D190", "n": "屯門官立中學"}, {"s": 20, "i": "K51-D200", "n": "輕鐵市中心站"}, {"s": 21, "i": "K51-D210", "n": "港鐵屯門站 (輕鐵屯門站)"}, {"s": 22, "i": "K51-D220", "n": "聖公會聖西門呂明才中學"}, {"s": 23, "i": "K51-D230", "n": "景峰花園"}, {"s": 24, "i": "K51-D240", "n": "輕鐵鳳地站"}, {"s": 25, "i": "K51-D250", "n": "港鐵兆康站 (南) (輕鐵兆康站)"}, {"s": 26, "i": "K51-D260", "n": "彩暉花園"}, {"s": 27, "i": "K51-D270", "n": "嶺南大學"}, {"s": 28, "i": "K51-D280", "n": "倚嶺南庭"}, {"s": 29, "i": "K51-D290", "n": "富泰"}], "K51A_O": [{"s": 1, "i": "K51A-U010", "n": "富泰"}, {"s": 2, "i": "K51A-U020", "n": "聚康山莊"}, {"s": 3, "i": "K51A-U030", "n": "嶺南大學"}, {"s": 4, "i": "K51A-U040", "n": "彩暉花園"}, {"s": 5, "i": "K51A-U050", "n": "港鐵兆康站 (南) (輕鐵兆康站)"}, {"s": 6, "i": "K51A-U060", "n": "井財街"}, {"s": 7, "i": "K51A-U070", "n": "雅都商場"}, {"s": 8, "i": "K51A-U080", "n": "德政圍 (港鐵屯門站)"}, {"s": 9, "i": "K51A-U090", "n": "屯門市中心 (輕鐵市中心站)"}, {"s": 10, "i": "K51A-U100", "n": "屯門官立中學"}, {"s": 11, "i": "K51A-U110", "n": "恒順園"}, {"s": 12, "i": "K51A-U120", "n": "恒豐園"}, {"s": 13, "i": "K51A-U130", "n": "三聖邨"}, {"s": 14, "i": "K51A-U140", "n": "青山灣"}, {"s": 15, "i": "K51A-U150", "n": "海景花園"}, {"s": 16, "i": "K51A-U160", "n": "咖啡灣"}, {"s": 17, "i": "K51A-U170", "n": "黃金泳灘"}, {"s": 18, "i": "K51A-U180", "n": "香港黃金海岸"}, {"s": 19, "i": "K51A-U190", "n": "愛琴海岸"}, {"s": 20, "i": "K51A-U200", "n": "掃管笏變電站"}, {"s": 21, "i": "K51A-U210", "n": "掃管笏村"}, {"s": 22, "i": "K51A-U220", "n": "掃管笏 (鄭任安夫人千禧小學)"}, {"s": 23, "i": "K51A-U230", "n": "掃管笏路"}, {"s": 24, "i": "K51A-U240", "n": "管翠路8號"}, {"s": 25, "i": "K51A-U250", "n": "掃管笏村"}], "K51A_I": [{"s": 1, "i": "K51A-D010", "n": "掃管笏村"}, {"s": 2, "i": "K51A-D020", "n": "掃管笏 (鄭任安夫人千禧小學)"}, {"s": 3, "i": "K51A-D030", "n": "掃管笏路"}, {"s": 4, "i": "K51A-D040", "n": "管翠路8號"}, {"s": 5, "i": "K51A-D050", "n": "管翠路"}, {"s": 6, "i": "K51A-D060", "n": "愛琴海岸"}, {"s": 7, "i": "K51A-D070", "n": "香港黃金海岸"}, {"s": 8, "i": "K51A-D080", "n": "黃金泳灘"}, {"s": 9, "i": "K51A-D090", "n": "咖啡灣"}, {"s": 10, "i": "K51A-D100", "n": "碧翠花園"}, {"s": 11, "i": "K51A-D110", "n": "青山灣碼頭"}, {"s": 12, "i": "K51A-D120", "n": "三聖邨"}, {"s": 13, "i": "K51A-D140", "n": "胡陳金枝中學"}, {"s": 14, "i": "K51A-D150", "n": "青善遊樂場"}, {"s": 15, "i": "K51A-D160", "n": "置樂花園"}, {"s": 16, "i": "K51A-D170", "n": "屯門官立中學"}, {"s": 17, "i": "K51A-D180", "n": "輕鐵市中心站"}, {"s": 18, "i": "K51A-D190", "n": "港鐵屯門站 (輕鐵屯門站)"}, {"s": 19, "i": "K51A-D200", "n": "聖公會聖西門呂明才中學"}, {"s": 20, "i": "K51A-D210", "n": "景峰花園"}, {"s": 21, "i": "K51A-D220", "n": "輕鐵鳳地站"}, {"s": 22, "i": "K51A-D230", "n": "港鐵兆康站 (南) (輕鐵兆康站)"}, {"s": 23, "i": "K51A-D240", "n": "彩暉花園"}, {"s": 24, "i": "K51A-D250", "n": "嶺南大學"}, {"s": 25, "i": "K51A-D260", "n": "倚嶺南庭"}, {"s": 26, "i": "K51A-D270", "n": "富泰"}], "K52_O": [{"s": 1, "i": "K52-nU010", "n": "悅湖山莊"}, {"s": 1, "i": "K52-nU140", "n": "輕鐵屯門站"}, {"s": 2, "i": "K52-nU020", "n": "邁亞美海灣"}, {"s": 2, "i": "K52-nU150", "n": "輕鐵建安站"}, {"s": 3, "i": "K52-nU030", "n": "屯門碼頭"}, {"s": 3, "i": "K52-nU160", "n": "輕鐵青雲站"}, {"s": 4, "i": "K52-nU040", "n": "湖景邨湖畔樓"}, {"s": 4, "i": "K52-nU170", "n": "聖彼得堂"}, {"s": 5, "i": "K52-nU050", "n": "湖景邨湖翠樓"}, {"s": 5, "i": "K52-nU180", "n": "富健花園"}, {"s": 6, "i": "K52-nU060", "n": "屯門中央廣場"}, {"s": 6, "i": "K52-nU190", "n": "新屯門中心"}, {"s": 7, "i": "K52-nU070", "n": "輕鐵三聖站"}, {"s": 7, "i": "K52-nU200", "n": "輕鐵蝴蝶站"}, {"s": 8, "i": "K52-nU080", "n": "胡陳金枝中學"}, {"s": 8, "i": "K52-nU210", "n": "屯門公眾騎術學校"}, {"s": 9, "i": "K52-nU090", "n": "青善遊樂場"}, {"s": 9, "i": "K52-nU220", "n": "蝴蝶灣公園"}, {"s": 10, "i": "K52-nU100", "n": "置樂花園"}, {"s": 10, "i": "K52-nU230", "n": "望后石"}, {"s": 11, "i": "K52-nU110", "n": "屯門官立中學"}, {"s": 11, "i": "K52-nU240", "n": "政府車場"}, {"s": 12, "i": "K52-nU120", "n": "輕鐵市中心站"}, {"s": 12, "i": "K52-nU250", "n": "內河碼頭"}, {"s": 13, "i": "K52-nU140", "n": "輕鐵屯門站 (港鐵屯門站)"}, {"s": 13, "i": "K52-nU260", "n": "環保園"}, {"s": 14, "i": "K52-nU150", "n": "輕鐵建安站"}, {"s": 14, "i": "K52-nU270", "n": "紹榮鋼鐵"}, {"s": 15, "i": "K52-nU160", "n": "輕鐵青雲站"}, {"s": 15, "i": "K52-nU280", "n": "沙埔崗312號"}, {"s": 16, "i": "K52-nU170", "n": "聖彼得堂"}, {"s": 16, "i": "K52-nU290", "n": "沙埔崗177號"}, {"s": 17, "i": "K52-nU180", "n": "富健花園"}, {"s": 17, "i": "K52-nU300", "n": "沙埔崗127號"}, {"s": 18, "i": "K52-nU190", "n": "新屯門中心"}, {"s": 18, "i": "K52-nU310", "n": "龍鼓灘"}, {"s": 19, "i": "K52-nU200", "n": "輕鐵蝴蝶站"}, {"s": 20, "i": "K52-nU210", "n": "屯門公眾騎術學校"}, {"s": 21, "i": "K52-nU220", "n": "蝴蝶灣公園"}, {"s": 22, "i": "K52-nU230", "n": "望后石"}, {"s": 23, "i": "K52-nU240", "n": "政府車場"}, {"s": 24, "i": "K52-nU250", "n": "內河碼頭"}, {"s": 25, "i": "K52-nU260", "n": "環保園"}, {"s": 26, "i": "K52-nU270", "n": "紹榮鋼鐵"}, {"s": 27, "i": "K52-nU280", "n": "沙埔崗312號"}, {"s": 28, "i": "K52-nU290", "n": "沙埔崗177號"}, {"s": 29, "i": "K52-nU300", "n": "沙埔崗127號"}, {"s": 30, "i": "K52-nU310", "n": "龍鼓灘"}], "K52_I": [{"s": 1, "i": "K52-nD010", "n": "龍鼓灘"}, {"s": 2, "i": "K52-nD020", "n": "沙埔崗127號"}, {"s": 3, "i": "K52-nD030", "n": "沙埔崗177號"}, {"s": 4, "i": "K52-nD040", "n": "沙埔崗288號"}, {"s": 5, "i": "K52-nD050", "n": "沙埔崗351號"}, {"s": 6, "i": "K52-nD060", "n": "中電 A廠"}, {"s": 7, "i": "K52-nD070", "n": "紹榮鋼鐵"}, {"s": 8, "i": "K52-nD080", "n": "環保園"}, {"s": 9, "i": "K52-nD090", "n": "內河碼頭"}, {"s": 10, "i": "K52-nD100", "n": "政府車場"}, {"s": 11, "i": "K52-nD110", "n": "望后石"}, {"s": 12, "i": "K52-nD120", "n": "蝴蝶灣公園"}, {"s": 13, "i": "K52-nD130", "n": "屯門公眾騎術學校"}, {"s": 14, "i": "K52-nD140", "n": "輕鐵蝴蝶站"}, {"s": 15, "i": "K52-nD150", "n": "輕鐵車廠站"}, {"s": 16, "i": "K52-nD160", "n": "輕鐵龍門站"}, {"s": 17, "i": "K52-nD170", "n": "輕鐵青雲站"}, {"s": 18, "i": "K52-nD180", "n": "輕鐵建安站"}, {"s": 19, "i": "K52-nD190", "n": "屯門站"}, {"s": 20, "i": "K52-nD200", "n": "屯門市中心"}, {"s": 21, "i": "K52-nD210", "n": "屯門官立中學"}, {"s": 22, "i": "K52-nD220", "n": "恒順園"}, {"s": 23, "i": "K52-nD230", "n": "恒豐園"}, {"s": 24, "i": "K52-nD240", "n": "輕鐵三聖站"}, {"s": 25, "i": "K52-nD250", "n": "屯門中央廣場"}, {"s": 26, "i": "K52-nD260", "n": "湖景邨湖翠樓"}, {"s": 27, "i": "K52-nD270", "n": "兆禧苑"}, {"s": 28, "i": "K52-nD280", "n": "海翠花園"}, {"s": 29, "i": "K52-nD290", "n": "邁亞美海灣"}, {"s": 30, "i": "K52-nD300", "n": "悅湖山莊"}], "K52P_O": [{"s": 1, "i": "K52P-D010", "n": "龍鼓灘"}, {"s": 2, "i": "K52P-D020", "n": "沙埔崗127號"}, {"s": 3, "i": "K52P-D030", "n": "沙埔崗177號"}, {"s": 4, "i": "K52P-D040", "n": "沙埔崗288號"}, {"s": 5, "i": "K52P-D050", "n": "沙埔崗351號"}, {"s": 6, "i": "K52P-D060", "n": "中電 A廠"}, {"s": 7, "i": "K52P-D070", "n": "紹榮鋼鐵"}, {"s": 8, "i": "K52P-D080", "n": "環保園"}, {"s": 9, "i": "K52P-D090", "n": "內河碼頭"}, {"s": 10, "i": "K52P-D100", "n": "政府車場"}, {"s": 11, "i": "K52P-D110", "n": "望后石"}, {"s": 12, "i": "K52P-D120", "n": "蝴蝶灣公園"}, {"s": 13, "i": "K52P-D130", "n": "屯門公眾騎術學校"}, {"s": 14, "i": "K52P-D140", "n": "輕鐵蝴蝶站"}, {"s": 15, "i": "K52P-D150", "n": "悅湖山莊"}, {"s": 16, "i": "K52P-D160", "n": "邁亞美海灣"}, {"s": 17, "i": "K52P-D170", "n": "屯門碼頭"}, {"s": 18, "i": "K52P-D180", "n": "湖景邨湖畔樓"}, {"s": 19, "i": "K52P-D190", "n": "湖景邨湖翠樓"}, {"s": 20, "i": "K52P-D200", "n": "兆山苑"}, {"s": 21, "i": "K52P-D210", "n": "輕鐵車廠站"}, {"s": 22, "i": "K52P-D220", "n": "輕鐵龍門站"}, {"s": 23, "i": "K52P-D230", "n": "輕鐵青雲站"}, {"s": 24, "i": "K52P-D240", "n": "輕鐵建安站"}, {"s": 25, "i": "K52P-D250", "n": "屯門站"}], "K52A_O": [{"s": 1, "i": "K52A-U010", "n": "屯門站 (輕鐵屯門站)"}, {"s": 2, "i": "K52A-U015", "n": "輕鐵屯門站 (請留意服務時間)*"}, {"s": 3, "i": "K52A-U020", "n": "輕鐵建安站"}, {"s": 4, "i": "K52A-U030", "n": "輕鐵青雲站"}, {"s": 5, "i": "K52A-U040", "n": "聖彼得堂"}, {"s": 6, "i": "K52A-U050", "n": "富健花園"}, {"s": 7, "i": "K52A-U060", "n": "新屯門中心"}, {"s": 8, "i": "K52A-U070", "n": "輕鐵蝴蝶站"}, {"s": 9, "i": "K52A-U080", "n": "屯門公眾騎術學校"}, {"s": 10, "i": "K52A-U090", "n": "蝴蝶灣公園"}, {"s": 11, "i": "K52A-U100", "n": "望后石"}, {"s": 12, "i": "K52A-U110", "n": "政府車場"}, {"s": 13, "i": "K52A-U120", "n": "內河碼頭"}, {"s": 14, "i": "K52A-U130", "n": "環保園"}, {"s": 15, "i": "K52A-U140", "n": "紹榮鋼鐵"}, {"s": 16, "i": "K52A-U150", "n": "沙埔崗312號"}, {"s": 17, "i": "K52A-U160", "n": "沙埔崗177號"}, {"s": 18, "i": "K52A-U170", "n": "沙埔崗127號"}, {"s": 19, "i": "K52A-U180", "n": "曾咀 (曾咀靈灰安置所)"}], "K52A_I": [{"s": 1, "i": "K52A-D010", "n": "曾咀 (曾咀靈灰安置所)"}, {"s": 2, "i": "K52A-D020", "n": "沙埔崗127號"}, {"s": 3, "i": "K52A-D030", "n": "沙埔崗177號"}, {"s": 4, "i": "K52A-D040", "n": "沙埔崗288號"}, {"s": 5, "i": "K52A-D050", "n": "沙埔崗351號"}, {"s": 6, "i": "K52A-D060", "n": "中電 A廠"}, {"s": 7, "i": "K52A-D070", "n": "紹榮鋼鐵"}, {"s": 8, "i": "K52A-D080", "n": "環保園"}, {"s": 9, "i": "K52A-D090", "n": "內河碼頭"}, {"s": 10, "i": "K52A-D100", "n": "政府車場"}, {"s": 11, "i": "K52A-D110", "n": "望后石"}, {"s": 12, "i": "K52A-D120", "n": "蝴蝶灣公園"}, {"s": 13, "i": "K52A-D130", "n": "屯門公眾騎術學校"}, {"s": 14, "i": "K52A-D140", "n": "輕鐵蝴蝶站"}, {"s": 15, "i": "K52A-D150", "n": "輕鐵車廠站"}, {"s": 16, "i": "K52A-D160", "n": "輕鐵龍門站"}, {"s": 17, "i": "K52A-D170", "n": "輕鐵青雲站"}, {"s": 18, "i": "K52A-D180", "n": "輕鐵建安站"}, {"s": 19, "i": "K52A-D190", "n": "屯門站 (輕鐵屯門站)"}], "K53_O": [{"s": 1, "i": "K53-U010", "n": "屯門站 (輕鐵屯門站)"}, {"s": 2, "i": "K53-U020", "n": "屯門市中心"}, {"s": 3, "i": "K53-U030", "n": "屯門官立中學"}, {"s": 4, "i": "K53-U040", "n": "恒順園"}, {"s": 5, "i": "K53-U050", "n": "恒豐園"}, {"s": 6, "i": "K53-U060", "n": "三聖邨"}, {"s": 7, "i": "K53-U070", "n": "青山灣"}, {"s": 8, "i": "K53-U080", "n": "海景花園"}, {"s": 9, "i": "K53-U090", "n": "咖啡灣"}, {"s": 10, "i": "K53-U100", "n": "黃金泳灘"}, {"s": 11, "i": "K53-U110", "n": "香港黃金海岸"}, {"s": 12, "i": "K53-U120", "n": "愛琴海岸"}, {"s": 13, "i": "K53-U130", "n": "掃管笏變電站"}, {"s": 14, "i": "K53-U140", "n": "掃管笏村"}, {"s": 15, "i": "K53-D010", "n": "掃管笏 (鄭任安夫人千禧小學)"}, {"s": 16, "i": "K53-D015", "n": "掃管笏路"}, {"s": 17, "i": "K53-D020", "n": "管翠路8號"}, {"s": 18, "i": "K53-D030", "n": "管翠路"}, {"s": 19, "i": "K53-D040", "n": "愛琴海岸"}, {"s": 20, "i": "K53-D050", "n": "香港黃金海岸"}, {"s": 21, "i": "K53-D060", "n": "黃金泳灘"}, {"s": 22, "i": "K53-D070", "n": "咖啡灣"}, {"s": 23, "i": "K53-D080", "n": "碧翠花園"}, {"s": 24, "i": "K53-D090", "n": "青山灣碼頭"}, {"s": 25, "i": "K53-D100", "n": "三聖邨"}, {"s": 26, "i": "K53-D110", "n": "恆福花園 (輕鐵三聖站)"}, {"s": 27, "i": "K53-D120", "n": "胡陳金枝中學"}, {"s": 28, "i": "K53-D130", "n": "青善遊樂場"}, {"s": 29, "i": "K53-D140", "n": "置樂花園"}, {"s": 30, "i": "K53-D150", "n": "屯門官立中學"}, {"s": 31, "i": "K53-D160", "n": "輕鐵市中心站"}, {"s": 32, "i": "K53-U011", "n": "屯門站 (輕鐵屯門站)"}], "K53S_O": [{"s": 1, "i": "K53S-U010", "n": "屯門站"}, {"s": 2, "i": "K53S-U020", "n": "天后路"}, {"s": 3, "i": "K53S-U030", "n": "業旺邨"}, {"s": 4, "i": "K53S-U040", "n": "屯門站"}], "K54_O": [{"s": 1, "i": "K54-U010", "n": "和田邨"}, {"s": 2, "i": "K54-U020", "n": "菁田邨"}, {"s": 3, "i": "K54-U030", "n": "紫田村"}, {"s": 4, "i": "K54-U040", "n": "欣田邨"}, {"s": 5, "i": "K54-U050", "n": "港鐵兆康站 (北) (輕鐵兆康站)"}, {"s": 6, "i": "K54-U060", "n": "紅橋"}, {"s": 7, "i": "K54-U070", "n": "屯門市中心"}, {"s": 8, "i": "K54-D010", "n": "屯門市廣場"}, {"s": 9, "i": "K54-D020", "n": "新墟街市"}, {"s": 10, "i": "K54-D030", "n": "港鐵兆康站 (北) (輕鐵兆康站)"}, {"s": 11, "i": "K54-D040", "n": "兆康苑"}, {"s": 12, "i": "K54-D050", "n": "欣寶路公共運輸交匯處"}, {"s": 13, "i": "K54-D060", "n": "菁田邨"}, {"s": 14, "i": "K54-D070", "n": "和田邨"}], "K54A_O": [{"s": 1, "i": "K54A-U010", "n": "和田邨"}, {"s": 2, "i": "K54A-U020", "n": "菁田邨"}, {"s": 3, "i": "K54A-U030", "n": "紫田村"}, {"s": 4, "i": "K54A-U040", "n": "欣田邨"}, {"s": 5, "i": "K54A-U050", "n": "港鐵兆康站 (北) (輕鐵兆康站)"}], "K54A_I": [{"s": 1, "i": "K54A-D010", "n": "港鐵兆康站 (北) (輕鐵兆康站)"}, {"s": 2, "i": "K54A-D020", "n": "兆康苑"}, {"s": 3, "i": "K54A-D030", "n": "欣寶路公共運輸交匯處"}, {"s": 4, "i": "K54A-D040", "n": "菁田邨"}, {"s": 5, "i": "K54A-D050", "n": "和田邨"}], "K58_O": [{"s": 1, "i": "K58-U010", "n": "富泰"}, {"s": 2, "i": "K58-U020", "n": "聚康山莊"}, {"s": 3, "i": "K58-U023", "n": "嶺南大學"}, {"s": 4, "i": "K58-U026", "n": "彩暉花園"}, {"s": 5, "i": "K58-U030", "n": "港鐵兆康站 (南) (輕鐵兆康站)"}, {"s": 6, "i": "K58-U040", "n": "兆康苑"}, {"s": 7, "i": "K58-U050", "n": "輕鐵麒麟站"}, {"s": 8, "i": "K58-U060", "n": "屯門醫院"}, {"s": 9, "i": "K58-U070", "n": "青松觀"}, {"s": 10, "i": "K58-U080", "n": "保良局莊啟程第二小學"}, {"s": 11, "i": "K58-U090", "n": "何壽基小學"}, {"s": 12, "i": "K58-U100", "n": "良景邨"}, {"s": 13, "i": "K58-U110", "n": "輕鐵新圍站"}, {"s": 14, "i": "K58-U120", "n": "輕鐵石排站"}, {"s": 15, "i": "K58-U130", "n": "輕鐵鳴琴站"}, {"s": 16, "i": "K58-U140", "n": "輕鐵建安站"}, {"s": 17, "i": "K58-U150", "n": "港鐵屯門站"}, {"s": 18, "i": "K58-U160", "n": "屯門市中心"}, {"s": 19, "i": "K58-U170", "n": "屯門官立中學"}, {"s": 20, "i": "K58-U180", "n": "恒順園"}, {"s": 21, "i": "K58-U190", "n": "恒豐園"}, {"s": 22, "i": "K58-U200", "n": "三聖邨"}, {"s": 23, "i": "K58-U215", "n": "青山灣"}, {"s": 24, "i": "K58-U220", "n": "海景花園"}, {"s": 25, "i": "K58-U230", "n": "咖啡灣"}, {"s": 26, "i": "K58-U240", "n": "黃金泳灘"}, {"s": 27, "i": "K58-U250", "n": "香港黃金海岸"}, {"s": 28, "i": "K58-U260", "n": "愛琴海岸"}, {"s": 29, "i": "K58-U270", "n": "掃管笏變電站"}, {"s": 30, "i": "K58-U280", "n": "掃管笏村"}, {"s": 31, "i": "K58-U290", "n": "掃管笏 (鄭任安夫人千禧小學)"}, {"s": 32, "i": "K58-U300", "n": "掃管笏路"}, {"s": 33, "i": "K58-U310", "n": "管翠路8號"}, {"s": 34, "i": "K58-U320", "n": "管翠路"}], "K58_I": [{"s": 1, "i": "K58-D001", "n": "掃管笏村"}, {"s": 2, "i": "K58-D002", "n": "掃管笏  (鄭任安夫人千禧小學)"}, {"s": 3, "i": "K58-D003", "n": "掃管笏路"}, {"s": 4, "i": "K58-D004", "n": "管翠路8號"}, {"s": 5, "i": "K58-D005", "n": "管翠路"}, {"s": 6, "i": "K58-D006", "n": "愛琴海岸"}, {"s": 7, "i": "K58-D007", "n": "香港黃金海岸"}, {"s": 8, "i": "K58-D008", "n": "黃金泳灘"}, {"s": 9, "i": "K58-D009", "n": "咖啡灣"}, {"s": 10, "i": "K58-D011", "n": "碧翠花園"}, {"s": 11, "i": "K58-D012", "n": "青山灣碼頭"}, {"s": 12, "i": "K58-D020", "n": "三聖邨"}, {"s": 13, "i": "K58-D030", "n": "胡陳金枝中學"}, {"s": 14, "i": "K58-D040", "n": "青善遊樂場"}, {"s": 15, "i": "K58-D050", "n": "置樂花園"}, {"s": 16, "i": "K58-D060", "n": "屯門官立中學"}, {"s": 17, "i": "K58-D070", "n": "輕鐵市中心站"}, {"s": 18, "i": "K58-D080", "n": "輕鐵屯門站 (港鐵屯門站)"}, {"s": 19, "i": "K58-D090", "n": "輕鐵建安站"}, {"s": 20, "i": "K58-D100", "n": "輕鐵鳴琴站"}, {"s": 21, "i": "K58-D110", "n": "輕鐵石排站"}, {"s": 22, "i": "K58-D120", "n": "輕鐵新圍站"}, {"s": 23, "i": "K58-D130", "n": "輕鐵田景站"}, {"s": 24, "i": "K58-D140", "n": "青田遊樂場"}, {"s": 25, "i": "K58-D150", "n": "建生邨樂生樓"}, {"s": 26, "i": "K58-D160", "n": "建生邨泰生樓"}, {"s": 27, "i": "K58-D170", "n": "輕鐵麒麟站"}, {"s": 28, "i": "K58-D180", "n": "欣田邨"}, {"s": 29, "i": "K58-D190", "n": "港鐵兆康站 (南) (輕鐵兆康站)"}, {"s": 30, "i": "K58-D193", "n": "彩暉花園"}, {"s": 31, "i": "K58-D196", "n": "嶺南大學"}, {"s": 32, "i": "K58-D200", "n": "倚嶺南庭"}, {"s": 33, "i": "K58-D210", "n": "富泰"}], "K65_O": [{"s": 1, "i": "K65-U010", "n": "元朗站 (輕鐵元朗站) (港鐵元朗站)"}, {"s": 2, "i": "K65-U020", "n": "又新街"}, {"s": 3, "i": "K65-U030", "n": "大棠路"}, {"s": 4, "i": "K65-U040", "n": "康樂路"}, {"s": 5, "i": "K65-U050", "n": "元朗警署"}, {"s": 6, "i": "K65-U060", "n": "輕鐵水邊圍站"}, {"s": 7, "i": "K65-U070", "n": "元朗公園"}, {"s": 8, "i": "K65-U080", "n": "朗邊"}, {"s": 9, "i": "K65-U090", "n": "屏山屏興里"}, {"s": 10, "i": "K65-U100", "n": "坑尾村"}, {"s": 11, "i": "K65-U110", "n": "輕鐵坑尾村站"}, {"s": 12, "i": "K65-U120", "n": "天盛苑 (港鐵天水圍站)"}, {"s": 13, "i": "K65-U130", "n": "石埗路"}, {"s": 14, "i": "K65-U140", "n": "沙洲里村"}, {"s": 15, "i": "K65-U150", "n": "廈村"}, {"s": 16, "i": "K65-U160", "n": "錫降圍"}, {"s": 17, "i": "K65-U170", "n": "羅屋村"}, {"s": 18, "i": "K65-U180", "n": "東頭村 (南)"}, {"s": 19, "i": "K65-U190", "n": "東頭村 (北)"}, {"s": 20, "i": "K65-U200", "n": "鳳降村"}, {"s": 21, "i": "K65-U210", "n": "沙江圍"}, {"s": 22, "i": "K65-U220", "n": "新慶村"}, {"s": 23, "i": "K65-U230", "n": "流浮山"}], "K65_I": [{"s": 1, "i": "K65-D010", "n": "流浮山"}, {"s": 2, "i": "K65-D020", "n": "新慶村"}, {"s": 3, "i": "K65-D030", "n": "沙江圍"}, {"s": 4, "i": "K65-D040", "n": "鳳降村"}, {"s": 5, "i": "K65-D050", "n": "東頭村"}, {"s": 6, "i": "K65-D060", "n": "羅屋村"}, {"s": 7, "i": "K65-D070", "n": "錫降圍"}, {"s": 8, "i": "K65-D080", "n": "廈村"}, {"s": 9, "i": "K65-D090", "n": "沙洲里村"}, {"s": 10, "i": "K65-D100", "n": "天盛苑 (港鐵天水圍站)"}, {"s": 11, "i": "K65-D110", "n": "輕鐵坑尾村站"}, {"s": 12, "i": "K65-D120", "n": "坑尾村"}, {"s": 13, "i": "K65-D130", "n": "屏山屏興里"}, {"s": 14, "i": "K65-D140", "n": "輕鐵屏山站"}, {"s": 15, "i": "K65-D150", "n": "輕鐵水邊圍站"}, {"s": 16, "i": "K65-D160", "n": "元朗廣場"}, {"s": 17, "i": "K65-D170", "n": "開心廣場"}, {"s": 18, "i": "K65-D180", "n": "谷亭街"}, {"s": 19, "i": "K65-D190", "n": "元朗站 (輕鐵元朗站, 港鐵元朗站)"}], "K65A_O": [{"s": 1, "i": "K65A-U010", "n": "天水圍站 (輕鐵天水圍站)"}, {"s": 2, "i": "K65A-U020", "n": "天盛苑 (港鐵天水圍站)"}, {"s": 3, "i": "K65A-U030", "n": "石埗路"}, {"s": 4, "i": "K65A-U040", "n": "沙洲里村"}, {"s": 5, "i": "K65A-U050", "n": "廈村"}, {"s": 6, "i": "K65A-U060", "n": "錫降圍"}, {"s": 7, "i": "K65A-U070", "n": "羅屋村"}, {"s": 8, "i": "K65A-U080", "n": "東頭村 (南)"}, {"s": 9, "i": "K65A-U090", "n": "東頭村 (北)"}, {"s": 10, "i": "K65A-U100", "n": "鳳降村"}, {"s": 11, "i": "K65A-U110", "n": "沙江圍"}, {"s": 12, "i": "K65A-U120", "n": "新慶村"}, {"s": 13, "i": "K65A-U130", "n": "流浮山"}], "K65A_I": [{"s": 1, "i": "K65A-D010", "n": "流浮山"}, {"s": 2, "i": "K65A-D020", "n": "新慶村"}, {"s": 3, "i": "K65A-D030", "n": "沙江圍"}, {"s": 4, "i": "K65A-D040", "n": "鳳降村"}, {"s": 5, "i": "K65A-D050", "n": "東頭村"}, {"s": 6, "i": "K65A-D060", "n": "羅屋村"}, {"s": 7, "i": "K65A-D070", "n": "錫降圍"}, {"s": 8, "i": "K65A-D080", "n": "廈村"}, {"s": 9, "i": "K65A-D090", "n": "沙洲里村"}, {"s": 10, "i": "K65A-D100", "n": "天盛苑 (港鐵天水圍站)"}, {"s": 11, "i": "K65A-D110", "n": "天水圍站 (輕鐵天水圍站)"}], "K66_O": [{"s": 1, "i": "K66-U010", "n": "朗屏"}, {"s": 1, "i": "K66-D010", "n": "大棠黃泥墩村"}, {"s": 1, "i": "K66-D010", "n": "大棠黃泥墩村"}, {"s": 1, "i": "K66-D060", "n": "南坑排"}, {"s": 2, "i": "K66-U020", "n": "楊屋村"}, {"s": 2, "i": "K66-D020", "n": "大棠山路"}, {"s": 2, "i": "K66-D020", "n": "大棠山路"}, {"s": 2, "i": "K66-D070", "n": "南坑村"}, {"s": 3, "i": "K66-U030", "n": "屏昌徑 (港鐵朗屏站)"}, {"s": 3, "i": "K66-D030", "n": "大棠迴旋處"}, {"s": 3, "i": "K66-D030", "n": "大棠迴旋處"}, {"s": 3, "i": "K66-D080", "n": "紅棗田村"}, {"s": 4, "i": "K66-U040", "n": "元朗盲人安老院"}, {"s": 4, "i": "K66-D040", "n": "華苑"}, {"s": 4, "i": "K66-D040", "n": "華苑"}, {"s": 4, "i": "K66-D090", "n": "普盛圍"}, {"s": 5, "i": "K66-U050", "n": "元朗大會堂 (輕鐵豐年路站)"}, {"s": 5, "i": "K66-D050", "n": "水蕉新村"}, {"s": 5, "i": "K66-D050", "n": "水蕉新村"}, {"s": 5, "i": "K66-D100", "n": "崇正公立學校"}, {"s": 6, "i": "K66-U060", "n": "安康路"}, {"s": 6, "i": "K66-D060", "n": "南坑排"}, {"s": 6, "i": "K66-D060", "n": "南坑排"}, {"s": 6, "i": "K66-D110", "n": "羅家園"}, {"s": 7, "i": "K66-U070", "n": "元朗商業中心"}, {"s": 7, "i": "K66-D070", "n": "南坑村"}, {"s": 7, "i": "K66-D070", "n": "南坑村"}, {"s": 7, "i": "K66-D120", "n": "深涌村"}, {"s": 8, "i": "K66-U080", "n": "富達廣場"}, {"s": 8, "i": "K66-D080", "n": "紅棗田村"}, {"s": 8, "i": "K66-D080", "n": "紅棗田村"}, {"s": 8, "i": "K66-D130", "n": "禮修村"}, {"s": 9, "i": "K66-U090", "n": "蝶翠峰"}, {"s": 9, "i": "K66-D090", "n": "普盛圍"}, {"s": 9, "i": "K66-D090", "n": "普盛圍"}, {"s": 9, "i": "K66-D140", "n": "蝶翠峰"}, {"s": 10, "i": "K66-U100", "n": "禮修村"}, {"s": 10, "i": "K66-D100", "n": "崇正公立學校"}, {"s": 10, "i": "K66-D100", "n": "崇正公立學校"}, {"s": 10, "i": "K66-D150", "n": "恆香製餅廠"}, {"s": 11, "i": "K66-U110", "n": "深涌村"}, {"s": 11, "i": "K66-D110", "n": "羅家園"}, {"s": 11, "i": "K66-D110", "n": "羅家園"}, {"s": 11, "i": "K66-D160", "n": "富達廣場"}, {"s": 12, "i": "K66-U120", "n": "羅家園"}, {"s": 12, "i": "K66-D120", "n": "深涌村"}, {"s": 12, "i": "K66-D120", "n": "深涌村"}, {"s": 12, "i": "K66-D170", "n": "千色廣場"}, {"s": 13, "i": "K66-U130", "n": "崇正公立學校"}, {"s": 13, "i": "K66-D130", "n": "禮修村"}, {"s": 13, "i": "K66-D130", "n": "禮修村"}, {"s": 13, "i": "K66-D180", "n": "安康路"}, {"s": 14, "i": "K66-U140", "n": "崇正菜站"}, {"s": 14, "i": "K66-D140", "n": "蝶翠峰"}, {"s": 14, "i": "K66-D140", "n": "蝶翠峰"}, {"s": 14, "i": "K66-D190", "n": "元朗大會堂"}, {"s": 15, "i": "K66-U150", "n": "老圍"}, {"s": 15, "i": "K66-D150", "n": "恆香製餅廠"}, {"s": 15, "i": "K66-D150", "n": "恆香製餅廠"}, {"s": 15, "i": "K66-D200", "n": "水邊圍邨康水樓"}, {"s": 16, "i": "K66-U160", "n": "振華花園"}, {"s": 16, "i": "K66-D160", "n": "富達廣場"}, {"s": 16, "i": "K66-D160", "n": "富達廣場"}, {"s": 16, "i": "K66-D210", "n": "朗屏邨悅屏樓"}, {"s": 17, "i": "K66-U170", "n": "南坑排"}, {"s": 17, "i": "K66-D170", "n": "千色廣場"}, {"s": 17, "i": "K66-D170", "n": "千色廣場"}, {"s": 17, "i": "K66-D220", "n": "惠州學校"}, {"s": 18, "i": "K66-U180", "n": "水蕉新村"}, {"s": 18, "i": "K66-D180", "n": "安康路"}, {"s": 18, "i": "K66-D180", "n": "安康路"}, {"s": 18, "i": "K66-D230", "n": "朗屏邨珠屏樓"}, {"s": 19, "i": "K66-U190", "n": "華苑"}, {"s": 19, "i": "K66-D190", "n": "元朗大會堂"}, {"s": 19, "i": "K66-D240", "n": "朗屏"}, {"s": 20, "i": "K66-U200", "n": "大棠迴旋處"}, {"s": 20, "i": "K66-D200", "n": "水邊圍邨康水樓"}, {"s": 21, "i": "K66-U210", "n": "大棠山路"}, {"s": 21, "i": "K66-D210", "n": "朗屏邨悅屏樓"}, {"s": 22, "i": "K66-U220", "n": "大棠黃泥墩村"}], "K66_I": [{"s": 1, "i": "K66-D010", "n": "大棠黃泥墩村"}, {"s": 2, "i": "K66-D020", "n": "大棠山路"}, {"s": 3, "i": "K66-D030", "n": "大棠迴旋處"}, {"s": 4, "i": "K66-D040", "n": "華苑"}, {"s": 5, "i": "K66-D050", "n": "水蕉新村"}, {"s": 6, "i": "K66-D060", "n": "南坑排"}, {"s": 7, "i": "K66-D070", "n": "南坑村"}, {"s": 8, "i": "K66-D080", "n": "紅棗田村"}, {"s": 9, "i": "K66-D090", "n": "普盛圍"}, {"s": 10, "i": "K66-D100", "n": "崇正公立學校"}, {"s": 11, "i": "K66-D110", "n": "羅家園"}, {"s": 12, "i": "K66-D120", "n": "深涌村"}, {"s": 13, "i": "K66-D130", "n": "禮修村"}, {"s": 14, "i": "K66-D140", "n": "蝶翠峰"}, {"s": 15, "i": "K66-D150", "n": "恆香製餅廠"}, {"s": 16, "i": "K66-D160", "n": "富達廣場"}, {"s": 17, "i": "K66-D170", "n": "千色廣場"}, {"s": 18, "i": "K66-D180", "n": "安康路"}, {"s": 19, "i": "K66-D190", "n": "元朗大會堂 (輕鐵豐年路站)"}, {"s": 20, "i": "K66-D200", "n": "水邊圍邨康水樓"}, {"s": 21, "i": "K66-D210", "n": "朗屏邨悅屏樓 (港鐵朗屏站)"}, {"s": 22, "i": "K66-D220", "n": "惠州學校"}, {"s": 23, "i": "K66-D230", "n": "朗屏邨珠屏樓"}, {"s": 24, "i": "K66-D240", "n": "朗屏"}], "K68_O": [{"s": 1, "i": "K68-U010", "n": "元朗工業邨"}, {"s": 1, "i": "K68-U160", "n": "銀田花園"}, {"s": 1, "i": "K68-D070", "n": "元朗廣場"}, {"s": 1, "i": "K68-D090", "n": "大橋村"}, {"s": 1, "i": "K68-U010", "n": "元朗工業邨"}, {"s": 2, "i": "K68-U020", "n": "凸版資訊卡"}, {"s": 2, "i": "K68-U170", "n": "南元朗官立小學"}, {"s": 2, "i": "K68-D080", "n": "元朗安寧路"}, {"s": 2, "i": "K68-D100", "n": "惠州學校"}, {"s": 2, "i": "K68-U020", "n": "凸版資訊卡"}, {"s": 3, "i": "K68-U030", "n": "雀巢"}, {"s": 3, "i": "K68-D010", "n": "元朗公園"}, {"s": 3, "i": "K68-D090", "n": "大橋村"}, {"s": 3, "i": "K68-D110", "n": "朗屏邨珠屏樓"}, {"s": 3, "i": "K68-U030", "n": "雀巢"}, {"s": 4, "i": "K68-U040", "n": "元朗污水處理廠"}, {"s": 4, "i": "K68-D020", "n": "御豪山莊"}, {"s": 4, "i": "K68-D100", "n": "惠州學校"}, {"s": 4, "i": "K68-D120", "n": "朗屏"}, {"s": 4, "i": "K68-U040", "n": "元朗污水處理廠"}, {"s": 5, "i": "K68-U050", "n": "位元堂藥業大廈"}, {"s": 5, "i": "K68-D030", "n": "藝典居"}, {"s": 5, "i": "K68-D110", "n": "朗屏邨珠屏樓"}, {"s": 5, "i": "K68-D130", "n": "橫洲福慶村"}, {"s": 5, "i": "K68-U050", "n": "位元堂藥業大廈"}, {"s": 6, "i": "K68-U060", "n": "東電化電子零件"}, {"s": 6, "i": "K68-D040", "n": "御庭居"}, {"s": 6, "i": "K68-D120", "n": "朗屏"}, {"s": 6, "i": "K68-D140", "n": "元朗紡織品"}, {"s": 6, "i": "K68-U060", "n": "東電化電子零件"}, {"s": 7, "i": "K68-U070", "n": "凸版印刷"}, {"s": 7, "i": "K68-D050", "n": "元朗游泳池"}, {"s": 7, "i": "K68-D130", "n": "橫洲福慶村"}, {"s": 7, "i": "K68-D150", "n": "大昌行食品加工及物流中心"}, {"s": 7, "i": "K68-U070", "n": "凸版印刷"}, {"s": 8, "i": "K68-U080", "n": "匯泉國際實業"}, {"s": 8, "i": "K68-D060", "n": "元朗大會堂"}, {"s": 8, "i": "K68-D140", "n": "元朗紡織品"}, {"s": 8, "i": "K68-D160", "n": "有生鉛水(熱浸鋅)"}, {"s": 8, "i": "K68-U080", "n": "匯泉國際實業"}, {"s": 9, "i": "K68-U090", "n": "橫洲福慶村"}, {"s": 9, "i": "K68-D070", "n": "元朗廣場"}, {"s": 9, "i": "K68-D150", "n": "大昌行食品加工及物流中心"}, {"s": 9, "i": "K68-D170", "n": "余仁生中心"}, {"s": 9, "i": "K68-U090", "n": "橫洲福慶村"}, {"s": 10, "i": "K68-U100", "n": "朗屏 (巴士總站)"}, {"s": 10, "i": "K68-D080", "n": "元朗安寧路"}, {"s": 10, "i": "K68-D160", "n": "有生鉛水(熱浸鋅)"}, {"s": 10, "i": "K68-D180", "n": "元朗污水處理廠"}, {"s": 10, "i": "K68-U100", "n": "朗屏"}, {"s": 11, "i": "K68-U110", "n": "楊屋村"}, {"s": 11, "i": "K68-D090", "n": "大橋村"}, {"s": 11, "i": "K68-D170", "n": "余仁生中心"}, {"s": 11, "i": "K68-D190", "n": "雀巢"}, {"s": 11, "i": "K68-U110", "n": "楊屋村"}, {"s": 12, "i": "K68-U120", "n": "屏昌徑 (港鐵朗屏站)"}, {"s": 12, "i": "K68-D100", "n": "惠州學校"}, {"s": 12, "i": "K68-D180", "n": "元朗污水處理廠"}, {"s": 12, "i": "K68-D200", "n": "牛尾香港"}, {"s": 12, "i": "K68-D090", "n": "大橋村"}, {"s": 13, "i": "K68-U130", "n": "元朗盲人安老院"}, {"s": 13, "i": "K68-D110", "n": "朗屏邨珠屏樓"}, {"s": 13, "i": "K68-D190", "n": "雀巢"}, {"s": 13, "i": "K68-U011", "n": "元朗工業邨"}, {"s": 14, "i": "K68-U140", "n": "聿修堂 (輕鐵豐年路站)"}, {"s": 14, "i": "K68-D120", "n": "朗屏"}, {"s": 14, "i": "K68-D200", "n": "牛尾香港"}, {"s": 15, "i": "K68-U150", "n": "元朗劇院"}, {"s": 15, "i": "K68-D130", "n": "橫洲福慶村"}, {"s": 15, "i": "K68-U011", "n": "元朗工業邨"}, {"s": 16, "i": "K68-U160", "n": "銀田花園"}, {"s": 16, "i": "K68-D140", "n": "元朗紡織品"}, {"s": 17, "i": "K68-U170", "n": "南元朗官立小學"}, {"s": 17, "i": "K68-D150", "n": "大昌行食品加工及物流中心"}, {"s": 18, "i": "K68-D010", "n": "元朗公園"}, {"s": 18, "i": "K68-D160", "n": "有生鉛水(熱浸鋅)"}, {"s": 19, "i": "K68-D020", "n": "御豪山莊"}, {"s": 19, "i": "K68-D170", "n": "余仁生中心"}, {"s": 20, "i": "K68-D030", "n": "藝典居"}, {"s": 20, "i": "K68-D180", "n": "元朗污水處理廠"}, {"s": 21, "i": "K68-D040", "n": "御庭居"}, {"s": 21, "i": "K68-D190", "n": "雀巢"}, {"s": 22, "i": "K68-D050", "n": "元朗游泳池"}, {"s": 22, "i": "K68-D200", "n": "牛尾香港"}, {"s": 23, "i": "K68-D060", "n": "元朗大會堂"}, {"s": 23, "i": "K68-U011", "n": "元朗工業邨"}, {"s": 24, "i": "K68-D070", "n": "元朗廣場 (輕鐵豐年路站)"}, {"s": 25, "i": "K68-D080", "n": "元朗安寧路"}, {"s": 26, "i": "K68-D090", "n": "大橋村 (港鐵朗屏站)"}, {"s": 27, "i": "K68-D100", "n": "惠州學校"}, {"s": 28, "i": "K68-D110", "n": "朗屏邨珠屏樓"}, {"s": 29, "i": "K68-D120", "n": "朗屏 (巴士總站)"}, {"s": 30, "i": "K68-D130", "n": "橫洲福慶村"}, {"s": 31, "i": "K68-D140", "n": "元朗紡織品"}, {"s": 32, "i": "K68-D150", "n": "大昌行食品加工及物流中心"}, {"s": 33, "i": "K68-D160", "n": "有生鉛水(熱浸鋅)"}, {"s": 34, "i": "K68-D170", "n": "余仁生中心"}, {"s": 35, "i": "K68-D180", "n": "元朗污水處理廠"}, {"s": 36, "i": "K68-D190", "n": "雀巢"}, {"s": 37, "i": "K68-D200", "n": "牛尾香港"}, {"s": 38, "i": "K68-U011", "n": "元朗工業邨"}], "K73_O": [{"s": 1, "i": "K73-U010", "n": "天恆"}, {"s": 1, "i": "K73-U025", "n": "天恩"}, {"s": 1, "i": "K73-U050", "n": "香港青年協會李兆基書院"}, {"s": 2, "i": "K73-U020", "n": "天逸邨逸潭樓"}, {"s": 2, "i": "K73-U045", "n": "天悅邨"}, {"s": 2, "i": "K73-U060", "n": "天葵路美湖居"}, {"s": 3, "i": "K73-U030", "n": "天逸邨逸洋樓"}, {"s": 3, "i": "K73-U060", "n": "天葵路美湖居"}, {"s": 3, "i": "K73-U070", "n": "天城路景湖居"}, {"s": 4, "i": "K73-U040", "n": "天晴邨晴碧樓"}, {"s": 4, "i": "K73-U070", "n": "天城路景湖居"}, {"s": 4, "i": "K73-U080", "n": "天慈邨"}, {"s": 5, "i": "K73-U050", "n": "香港青年協會李兆基書院"}, {"s": 5, "i": "K73-U080", "n": "天慈邨"}, {"s": 5, "i": "K73-U090", "n": "鳳池村"}, {"s": 6, "i": "K73-U060", "n": "天葵路美湖居"}, {"s": 6, "i": "K73-U090", "n": "鳳池村"}, {"s": 6, "i": "K73-U100", "n": "朗屏"}, {"s": 7, "i": "K73-U070", "n": "天城路景湖居"}, {"s": 7, "i": "K73-U100", "n": "朗屏"}, {"s": 7, "i": "K73-U110", "n": "元朗盲人安老院"}, {"s": 8, "i": "K73-U080", "n": "天慈邨"}, {"s": 8, "i": "K73-U110", "n": "元朗盲人安老院"}, {"s": 8, "i": "K73-U120", "n": "元朗西"}, {"s": 9, "i": "K73-U090", "n": "鳳池村"}, {"s": 9, "i": "K73-U120", "n": "元朗西"}, {"s": 10, "i": "K73-U100", "n": "朗屏 (巴士總站)"}, {"s": 11, "i": "K73-U110", "n": "元朗盲人安老院"}, {"s": 12, "i": "K73-U120", "n": "元朗西 (輕鐵豐年路站)"}], "K73_I": [{"s": 1, "i": "K73-D010", "n": "元朗西 (輕鐵豐年路站)"}, {"s": 2, "i": "K73-D020", "n": "元朗安寧路"}, {"s": 3, "i": "K73-D030", "n": "大橋村 (港鐵朗屏站)"}, {"s": 4, "i": "K73-D040", "n": "惠州學校"}, {"s": 5, "i": "K73-D050", "n": "朗屏邨珠屏樓"}, {"s": 7, "i": "K73-D070", "n": "朗屏 (巴士總站)"}, {"s": 8, "i": "K73-D080", "n": "鳳池村"}, {"s": 9, "i": "K73-D090", "n": "輕鐵天慈站"}, {"s": 10, "i": "K73-D100", "n": "天水圍游泳池"}, {"s": 11, "i": "K73-D110", "n": "天龍路景湖居"}, {"s": 12, "i": "K73-D120", "n": "天葵路麗湖居"}, {"s": 13, "i": "K73-D130", "n": "天晴邨晴雲樓"}, {"s": 14, "i": "K73-D140", "n": "天富苑能富閣"}, {"s": 15, "i": "K73-D150", "n": "天澤邨"}, {"s": 16, "i": "K73-D160", "n": "天恆"}], "K74_O": [{"s": 1, "i": "K74-U001", "n": "天水圍市中心"}, {"s": 2, "i": "K74-U004", "n": "天頌苑頌棋閣"}, {"s": 3, "i": "K74-U007", "n": "天頌苑"}, {"s": 4, "i": "K74-U010", "n": "天瑞"}, {"s": 5, "i": "K74-U020", "n": "天水圍公園"}, {"s": 6, "i": "K74-U030", "n": "天慈邨"}, {"s": 7, "i": "K74-U040", "n": "鳳池村"}, {"s": 8, "i": "K74-U050", "n": "朗屏 (巴士總站)"}, {"s": 9, "i": "K74-U060", "n": "元朗盲人安老院"}, {"s": 10, "i": "K74-U070", "n": "元朗廣場 (輕鐵豐年路站)"}, {"s": 11, "i": "K74-U080", "n": "開心廣場"}, {"s": 12, "i": "K74-U090", "n": "港鐵元朗站(朗日路)  (港鐵元朗站)"}, {"s": 13, "i": "K74-U100", "n": "博愛醫院"}, {"s": 14, "i": "K74-D010", "n": "東成里"}, {"s": 15, "i": "K74-D020", "n": "東華三院馬振玉中學(近朗善邨)"}, {"s": 16, "i": "K74-D030", "n": "大橋村 (港鐵朗屏站)"}, {"s": 17, "i": "K74-D040", "n": "惠州學校"}, {"s": 18, "i": "K74-D050", "n": "朗屏邨珠屏樓"}, {"s": 19, "i": "K74-D060", "n": "朗屏 (巴士總站)"}, {"s": 20, "i": "K74-D070", "n": "鳳池村"}, {"s": 21, "i": "K74-D080", "n": "輕鐵天慈站"}, {"s": 22, "i": "K74-D090", "n": "天水圍公園"}, {"s": 23, "i": "K74-U011", "n": "天瑞"}, {"s": 24, "i": "K74-D100", "n": "天華邨"}, {"s": 25, "i": "K74-D110", "n": "天悅邨"}, {"s": 26, "i": "K74-U002", "n": "天水圍市中心"}], "K75A_O": [{"s": 1, "i": "K75A-U010", "n": "天水圍站 (輕鐵天水圍站)"}, {"s": 2, "i": "K75A-U020", "n": "天盛苑 (港鐵天水圍站)"}, {"s": 3, "i": "K75A-U030", "n": "石埗村"}, {"s": 4, "i": "K75A-D010", "n": "輕鐵洪水橋站"}, {"s": 5, "i": "K75A-D020", "n": "鄉事委員會"}, {"s": 6, "i": "K75A-D030", "n": "田心"}, {"s": 7, "i": "K75A-D040", "n": "新李屋村"}, {"s": 8, "i": "K75A-D050", "n": "新生村"}, {"s": 9, "i": "K75A-D060", "n": "李屋村"}, {"s": 10, "i": "K75A-D070", "n": "新屋村"}, {"s": 11, "i": "K75A-D080", "n": "廈村市"}, {"s": 12, "i": "K75A-D090", "n": "廈村"}, {"s": 13, "i": "K75A-D100", "n": "沙洲里村"}, {"s": 14, "i": "K75A-D110", "n": "天盛苑 (港鐵天水圍站)"}, {"s": 15, "i": "K75A-U011", "n": "天水圍站 (輕鐵天水圍站)"}], "K75P_O": [{"s": 1, "i": "K75P-U010", "n": "天瑞"}, {"s": 1, "i": "K75P-D020", "n": "洪水橋巴士廠"}, {"s": 2, "i": "K75P-U020", "n": "天水圍公園"}, {"s": 2, "i": "K75P-D030", "n": "洪福邨"}, {"s": 3, "i": "K75P-U030", "n": "天耀邨耀盛樓"}, {"s": 3, "i": "K75P-D040", "n": "石埗村"}, {"s": 4, "i": "K75P-U040", "n": "輕鐵天耀站"}, {"s": 4, "i": "K75P-D050", "n": "天盛苑"}, {"s": 5, "i": "K75P-U050", "n": "天盛苑 (港鐵天水圍站)"}, {"s": 5, "i": "K75P-D060", "n": "天水圍警署"}, {"s": 6, "i": "K75P-U060", "n": "石埗路"}, {"s": 6, "i": "K75P-D070", "n": "賞湖居"}, {"s": 7, "i": "K75P-U070", "n": "沙洲里村"}, {"s": 7, "i": "K75P-D080", "n": "天水圍公園"}, {"s": 8, "i": "K75P-U080", "n": "廈村市"}, {"s": 8, "i": "K75P-U011", "n": "天瑞"}, {"s": 9, "i": "K75P-U090", "n": "新屋村"}, {"s": 10, "i": "K75P-U100", "n": "李屋村"}, {"s": 11, "i": "K75P-U110", "n": "新生村"}, {"s": 12, "i": "K75P-U120", "n": "新李屋村"}, {"s": 13, "i": "K75P-U130", "n": "田心"}, {"s": 14, "i": "K75P-U140", "n": "鄉事委員會"}, {"s": 15, "i": "K75P-D010", "n": "輕鐵洪水橋站"}, {"s": 16, "i": "K75P-D020", "n": "洪水橋巴士廠"}, {"s": 17, "i": "K75P-D030", "n": "洪福邨"}, {"s": 18, "i": "K75P-D040", "n": "石埗村"}, {"s": 19, "i": "K75P-D050", "n": "天盛苑 (港鐵天水圍站)"}, {"s": 20, "i": "K75P-D060", "n": "天水圍警署"}, {"s": 21, "i": "K75P-D070", "n": "賞湖居"}, {"s": 22, "i": "K75P-D080", "n": "天水圍公園"}, {"s": 23, "i": "K75P-U011", "n": "天瑞"}], "K75S_O": [{"s": 1, "i": "K75S-U040", "n": "洪水橋巴士廠"}, {"s": 1, "i": "K75S-U010", "n": "天水圍站"}, {"s": 2, "i": "K75S-D010", "n": "洪福邨"}, {"s": 2, "i": "K75S-U020", "n": "天盛苑"}, {"s": 3, "i": "K75S-D020", "n": "石埗村"}, {"s": 3, "i": "K75S-U030", "n": "石埗村"}, {"s": 4, "i": "K75S-D030", "n": "天盛苑"}, {"s": 4, "i": "K75S-U040", "n": "洪水橋巴士廠"}, {"s": 5, "i": "K75S-U011", "n": "天水圍站"}, {"s": 5, "i": "K75S-D010", "n": "洪福邨"}, {"s": 6, "i": "K75S-D020", "n": "石埗村"}, {"s": 7, "i": "K75S-D030", "n": "天盛苑"}, {"s": 8, "i": "K75S-U011", "n": "天水圍站"}], "K76_O": [{"s": 1, "i": "K76-U010", "n": "天恆"}, {"s": 2, "i": "K76-U020", "n": "天逸邨逸潭樓"}, {"s": 3, "i": "K76-U030", "n": "天富苑欣富閣"}, {"s": 4, "i": "K76-U040", "n": "天盛苑 (港鐵天水圍站)"}, {"s": 5, "i": "K76-U050", "n": "天水圍站 (港鐵天水圍站)"}], "K76_I": [{"s": 1, "i": "K76-D010", "n": "天水圍站 (港鐵天水圍站)"}, {"s": 2, "i": "K76-D020", "n": "天恩邨"}, {"s": 3, "i": "K76-D030", "n": "天澤邨"}, {"s": 4, "i": "K76-D040", "n": "天恆"}], "K76S_O": [{"s": 1, "i": "K76S-U010", "n": "濕地公園路(近天葵路)"}, {"s": 2, "i": "K76S-U015", "n": "輕鐵濕地公園站"}, {"s": 3, "i": "K76S-U020", "n": "天逸邨逸潭樓"}, {"s": 4, "i": "K76S-U030", "n": "天富苑欣富閣"}, {"s": 5, "i": "K76S-U040", "n": "天盛苑"}], "K76S_I": [{"s": 1, "i": "K76S-D010", "n": "天水圍站"}, {"s": 2, "i": "K76S-D020", "n": "天恩邨"}, {"s": 3, "i": "K76S-D030", "n": "天澤邨"}, {"s": 4, "i": "K76S-D040", "n": "輕鐵濕地公園站"}, {"s": 5, "i": "K76S-D050", "n": "濕地公園路(近天葵路)"}]};
+
+    async function loadNlbRoutes() {
+      try {
+        const json = await fetchJSON('https://rt.data.gov.hk/v2/transport/nlb/route.php?action=list');
+        if (!json.routes) return [];
+        return json.routes.map(r => {
+          const name = r.routeName_c || r.routeName_e || '';
+          let orig = '', dest = '';
+          const parts = name.split(/\s*>\s*/);
+          if (parts.length >= 2) {
+            orig = parts[0].trim();
+            dest = parts[1].trim();
+          } else {
+            dest = name;
+          }
+          return {
+            route: r.routeNo,
+            co: 'nlb',
+            orig,
+            dest,
+            nlbRouteId: r.routeId
+          };
+        });
+      } catch (e) {
+        console.warn('NLB route load failed', e);
+        return [];
+      }
+    }
+
+    function parseCSVLine(line) {
+      const result = [];
+      let current = '', inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"') inQuotes = !inQuotes;
+        else if (c === ',' && !inQuotes) { result.push(current); current = ''; }
+        else current += c;
+      }
+      result.push(current);
+      return result;
+    }
+
+    async function loadAllRoutes() {
+      const el = document.getElementById('results');
+      el.innerHTML = '<div class="loading-state">正在載入路線資料...</div>';
+      const results = await Promise.allSettled([
+        loadKmbRoutes(), loadCtbRoutes(), loadGmbRoutes(), loadMtrBusRoutes(), loadNlbRoutes()
+      ]);
+      const labels = ['九巴/龍運', '城巴', '專線小巴', '港鐵巴士', '嶼巴'];
+      const failed = [];
+      const arrays = results.map((r, i) => {
+        if (r.status === 'fulfilled') return r.value || [];
+        failed.push(labels[i]);
+        return [];
+      });
+      const [kmb, ctb, gmb, mtrbus, nlb] = arrays;
+      ALL_ROUTES = [...kmb, ...ctb, ...gmb, ...mtrbus, ...nlb];
+      if (ALL_ROUTES.length === 0) {
+        ALL_ROUTES = LOCAL_FALLBACK.slice();
+        console.warn('Using local fallback routes');
+        el.innerHTML = '<div class="empty-state">無法載入路線資料<br><small style="opacity:.7">請檢查網絡後重新整理頁面<br>目前使用備用路線</small></div>';
+        setTimeout(() => { routesLoaded = true; renderHome(); }, 1500);
+        routesLoaded = true;
+        return;
+      }
+      if (failed.length) {
+        console.warn('部分資料來源載入失敗:', failed.join(', '));
+      }
+      const seen = new Set();
+      ALL_ROUTES = ALL_ROUTES.filter(r => {
+        const k = r.route + '_' + r.co + (r.bound ? '_' + r.bound : '') + (r.service_type ? '_' + r.service_type : '') + (r.region ? '_' + r.region : '') + (r.nlbRouteId ? '_' + r.nlbRouteId : '');
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
+      ALL_ROUTES.sort((a, b) => {
+        const cmp = a.route.localeCompare(b.route, 'en', { numeric: true });
+        if (cmp !== 0) return cmp;
+        // 同一路線：out 在前、in 在後
+        if (a.bound === 'out' && b.bound === 'in') return -1;
+        if (a.bound === 'in' && b.bound === 'out') return 1;
+        return (a.service_type || '1').localeCompare(b.service_type || '1');
+      });
+      routesLoaded = true;
+      console.log('Loaded routes:', ALL_ROUTES.length);
+      renderHome();
+    }
+
+    // ========== 收藏 & 歷史 ==========
+    const LS_FAV = 'hkbus_fav_v1', LS_HIST = 'hkbus_hist_v1';
+    const HIST_MAX = 20, FAV_MAX = 30;
+
+    function loadJSON(key, fallback) {
+      try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : fallback; }
+      catch { return fallback; }
+    }
+    function saveJSON(key, val) {
+      try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+    }
+    function routeKey(m) {
+      return `${m.route}_${m.co}_${m.bound || 'out'}${m.region ? '_' + m.region : ''}${m.service_type ? '_' + m.service_type : ''}`;
+    }
+    function getFavs() { return loadJSON(LS_FAV, []); }
+    function getHist() { return loadJSON(LS_HIST, []); }
+    function isFav(m) {
+      const k = routeKey(m);
+      return getFavs().some(f => routeKey(f) === k);
+    }
+    function toggleFav(m) {
+      let list = getFavs();
+      const k = routeKey(m);
+      const idx = list.findIndex(f => routeKey(f) === k);
+      if (idx >= 0) list.splice(idx, 1);
+      else { list.unshift(m); if (list.length > FAV_MAX) list = list.slice(0, FAV_MAX); }
+      saveJSON(LS_FAV, list);
+    }
+    function addHistory(m) {
+      let list = getHist();
+      const k = routeKey(m);
+      list = list.filter(f => routeKey(f) !== k);
+      list.unshift(m);
+      if (list.length > HIST_MAX) list = list.slice(0, HIST_MAX);
+      saveJSON(LS_HIST, list);
+    }
+    function clearHistory() { saveJSON(LS_HIST, []); if (!inputVal) renderHome(); }
+    function clearFavs() {
+      if (!confirm('確定清除全部收藏？')) return;
+      saveJSON(LS_FAV, []);
+      if (!inputVal) renderHome();
+      updateHeaderFavBtns();
+    }
+    function updateHeaderFavBtns() {
+      if (!state.route || !state.co) return;
+      const on = isFav(state);
+      ['stopsFavBtn', 'etaFavBtn'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) { btn.textContent = on ? '★' : '☆'; btn.classList.toggle('on', on); }
+      });
+    }
+    function toggleFavFromStops() {
+      if (!state.route) return;
+      toggleFav({
+        route: state.route, co: state.co, bound: state.bound,
+        dest: state.directionLabel, region: state.region,
+        service_type: state.service_type
+      });
+      updateHeaderFavBtns();
+    }
+
+    function renderSavedItem(item, el) {
+      const div = document.createElement('div');
+      div.className = 'result-item';
+      const plate = plateClass(item);
+      const starOn = isFav(item);
+      div.innerHTML = `
+        <div class="result-num ${plate}">${item.route}</div>
+        <div class="result-info">
+          <div class="result-dest">往 ${item.dest || '未知目的地'}</div>
+          <div class="result-co">${CO_NAMES[item.co] || item.co}${item.region ? ' (' + item.region + ')' : ''}</div>
+        </div>
+        <button class="fav-btn${starOn ? ' on' : ''}" data-fav="1">${starOn ? '★' : '☆'}</button>
+        <div class="result-arrow">›</div>
+      `;
+      div.addEventListener('click', e => {
+        if (e.target.closest('[data-fav]')) {
+          e.stopPropagation();
+          toggleFav(item);
+          if (!inputVal) renderHome();
+          return;
+        }
+        selectRouteDirection(item.route, item.co, item.bound || 'out', item.dest, item.region, item.gmbRouteId, item.gmbRouteSeq, item.service_type, item.nlbRouteId);
+      });
+      el.appendChild(div);
+    }
+
+    function renderHome() {
+      const el = document.getElementById('results');
+      const favs = getFavs(), hist = getHist();
+      el.innerHTML = '';
+      if (!favs.length && !hist.length) {
+        el.innerHTML = '<div class="home-hint">輸入路線號碼開始搜尋<br><small style="opacity:.7">支援九巴、城巴、嶼巴、專線小巴、港鐵巴士<br>真實到站時間已啟用</small></div>';
+        return;
+      }
+      if (favs.length) {
+        const t = document.createElement('div');
+        t.className = 'section-title';
+        t.innerHTML = '<span>★ 收藏路線</span><button class="clear-link" type="button">清除</button>';
+        t.querySelector('.clear-link').onclick = clearFavs;
+        el.appendChild(t);
+        favs.forEach(item => renderSavedItem(item, el));
+      }
+      if (hist.length) {
+        const t = document.createElement('div');
+        t.className = 'section-title';
+        t.innerHTML = '<span>最近搜尋</span><button class="clear-link" type="button">清除</button>';
+        t.querySelector('.clear-link').onclick = clearHistory;
+        el.appendChild(t);
+        hist.forEach(item => renderSavedItem(item, el));
+      }
+    }
+
+    // ========== 主狀態 ==========
+    let inputVal = '';
+    let state = {
+      co: null, route: null, bound: null, region: null,
+      directionLabel: null, stopId: null, stopName: null,
+      service_type: '1', gmbRouteId: null, gmbRouteSeq: null,
+      nlbRouteId: null,
+      auto: false, timer: null
+    };
 
     document.getElementById('keypad').addEventListener('click', e => {
       const btn = e.target.closest('button');
       if (!btn) return;
       const k = btn.dataset.k;
+      if (k === 'clear') inputVal = '';
+      else if (k === 'back') inputVal = inputVal.slice(0, -1);
+      else if (k) inputVal += k;
+      document.getElementById('routeInput').value = inputVal;
+      if (inputVal) searchRoute(inputVal);
+      else renderHome();
+    });
 
-      if (k === 'clear') {
-        currentInput = '';
-      } else if (k === 'back') {
-        currentInput = currentInput.slice(0, -1);
+    
+
+    // 即時查詢小巴（依路線號向三區 API 查詢）
+    const GMB_STATIC = [{"id":2002285,"r":"12","g":"HKI","desc":null,"dirs":[{"s":1,"o":"觀龍樓","d":"西營盤(循環線)"}]},{"id":2002319,"r":"20","g":"HKI","desc":null,"dirs":[{"s":1,"o":"西灣河(嘉亨灣)公共交通總站","d":"柴灣工業城(循環線)"}]},{"id":2002320,"r":"20","g":"HKI","desc":"短程班次","dirs":[{"s":1,"o":"西灣河(嘉亨灣)公共交通總站","d":"柴灣 (豐業街)(循環線)"}]},{"id":2003048,"r":"22X","g":"HKI","desc":"特快班次","dirs":[{"s":1,"o":"薄扶林花園","d":"中環(中環碼頭)"},{"s":2,"o":"中環(中環碼頭)","d":"薄扶林花園"}]},{"id":2003075,"r":"22X","g":"HKI","desc":"特快班次(經雅緻洋房)","dirs":[{"s":1,"o":"薄扶林花園","d":"中環(中環碼頭)"}]},{"id":2006706,"r":"10","g":"HKI","desc":null,"dirs":[{"s":1,"o":"銅鑼灣(謝斐道)","d":"數碼港公共運輸交匯處"},{"s":2,"o":"數碼港巴士總站","d":"謝斐道, 近兆安廣場"}]},{"id":2006739,"r":"10P","g":"HKI","desc":null,"dirs":[{"s":1,"o":"謝斐道, 近兆安廣場","d":"數碼港巴士總站"},{"s":2,"o":"數碼港巴士總站","d":"謝斐道, 近兆安廣場"}]},{"id":2000967,"r":"21A","g":"HKI","desc":null,"dirs":[{"s":1,"o":"銅鑼灣（蘭芳道）","d":"勵德邨 (循環線)"}]},{"id":2006441,"r":"1A","g":"HKI","desc":null,"dirs":[{"s":1,"o":"中環(香港站公共運輸交匯處)","d":"麥當奴道(循環線)"}]},{"id":2002317,"r":"18M","g":"HKI","desc":"正常班次 ","dirs":[{"s":1,"o":"柴灣站","d":"歌連臣角(懲教所)"},{"s":2,"o":"歌連臣角(懲教所)","d":"柴灣站"}]},{"id":2000997,"r":"22","g":"HKI","desc":"特別班次(不經雅緻洋房)","dirs":[{"s":1,"o":"薄扶林花園","d":"中環(交易廣場)"},{"s":2,"o":"中環(交易廣場)","d":"薄扶林花園"}]},{"id":2003045,"r":"22","g":"HKI","desc":null,"dirs":[{"s":1,"o":"薄扶林花園","d":"中環(交易廣場)"},{"s":2,"o":"中環(交易廣場)","d":"薄扶林花園"}]},{"id":2002289,"r":"16M","g":"HKI","desc":null,"dirs":[{"s":1,"o":"柴灣站","d":"舂坎角"},{"s":2,"o":"舂坎角","d":"柴灣站"}]},{"id":2002287,"r":"16A","g":"HKI","desc":null,"dirs":[{"s":1,"o":"柴灣站","d":"舂坎角(慈氏護養院)"},{"s":2,"o":"舂坎角(慈氏護養院)","d":"柴灣站"}]},{"id":2000999,"r":"22S","g":"HKI","desc":"特別班次(不經雅緻洋房)","dirs":[{"s":1,"o":"薄扶林花園","d":"中環(中環碼頭)"},{"s":2,"o":"中環(中環碼頭)","d":"薄扶林花園"}]},{"id":2001004,"r":"22S","g":"HKI","desc":"特別班次(經港景街)","dirs":[{"s":1,"o":"中環(中環碼頭)","d":"薄扶林花園"}]},{"id":2003050,"r":"22S","g":"HKI","desc":"特別班次","dirs":[{"s":1,"o":"薄扶林花園","d":"中環(中環碼頭)"}]},{"id":2003051,"r":"22S","g":"HKI","desc":"特别班次","dirs":[{"s":1,"o":"中環(中環碼頭)","d":"薄扶林花園"}]},{"id":2006476,"r":"28","g":"HKI","desc":null,"dirs":[{"s":1,"o":"碧瑤灣(上)","d":"銅鑼灣(新會道)"},{"s":2,"o":"銅鑼灣(新會道)","d":"碧瑤灣(上)"}]},{"id":2006507,"r":"28","g":"HKI","desc":"特快班次(不經般咸道)","dirs":[{"s":1,"o":"碧瑤灣(上)","d":"銅鑼灣(新會道)"}]},{"id":2002021,"r":"24A","g":"HKI","desc":null,"dirs":[{"s":1,"o":"金鐘站(德立街)","d":"肇輝台(循環線)"}]},{"id":2006509,"r":"28M","g":"HKI","desc":"短程班次","dirs":[{"s":1,"o":"碧瑤灣(上)","d":"香港大學站(循環線)"}]},{"id":2003043,"r":"23M","g":"HKI","desc":"特別班次","dirs":[{"s":1,"o":"堅尼地城站","d":"置富花園"},{"s":2,"o":"置富花園","d":"堅尼地城站"}]},{"id":2007498,"r":"27","g":"HKI","desc":null,"dirs":[{"s":1,"o":"鴨脷洲 (惠風街)","d":"香港仔 (西安街)"},{"s":2,"o":"香港仔 (西安街)","d":"鴨脷洲 (惠風街)"}]},{"id":2006508,"r":"28S","g":"HKI","desc":"短程班次","dirs":[{"s":1,"o":"碧瑤灣(上)","d":"銅鑼灣(新會道)"}]},{"id":2007530,"r":"29A","g":"HKI","desc":null,"dirs":[{"s":1,"o":"鴨脷洲邨","d":"海洋公園 (水上樂園)"},{"s":2,"o":"海洋公園 (水上樂園)","d":"鴨脷洲邨"}]},{"id":2007499,"r":"29","g":"HKI","desc":null,"dirs":[{"s":1,"o":"鴨脷洲邨","d":"深灣道公共交通總站(循環線)"}]},{"id":2006738,"r":"31","g":"HKI","desc":null,"dirs":[{"s":1,"o":"田灣邨","d":"銅鑼灣(謝斐道)"},{"s":2,"o":"銅鑼灣(謝斐道)","d":"田灣邨"}]},{"id":2005684,"r":"33M","g":"HKI","desc":null,"dirs":[{"s":1,"o":"康山","d":"太古站(循環線)"}]},{"id":2004092,"r":"35M","g":"HKI","desc":null,"dirs":[{"s":1,"o":"香港仔(石排灣)","d":"灣仔(莊士敦道)"},{"s":2,"o":"灣仔(莊士敦道)","d":"香港仔(石排湾)"}]},{"id":2005688,"r":"32A","g":"HKI","desc":"正常班次 ","dirs":[{"s":1,"o":"康景花園","d":"英皇道(太古城中心)(循環線)"}]},{"id":2005685,"r":"33","g":"HKI","desc":"正常班次 ","dirs":[{"s":1,"o":"康山","d":"北角(馬寶道)"},{"s":2,"o":"北角(馬寶道)","d":"康山"}]},{"id":2005289,"r":"37","g":"HKI","desc":null,"dirs":[{"s":1,"o":"鴨脷洲 (平瀾街)","d":"利東邨(循環線)"}]},{"id":2001261,"r":"39M","g":"HKI","desc":null,"dirs":[{"s":1,"o":"鴨脷洲漁安苑","d":"天后公共運輸交匯處"},{"s":2,"o":"天后公共運輸交匯處","d":"鴨脷洲漁安苑"}]},{"id":2002415,"r":"20M","g":"HKI","desc":null,"dirs":[{"s":1,"o":"興民邨","d":"柴灣工業城(循環線)"}]},{"id":2002448,"r":"20M","g":"HKI","desc":"短程班次","dirs":[{"s":1,"o":"興民邨","d":"柴灣 (豐業街)(循環線)"}]},{"id":2002286,"r":"13","g":"HKI","desc":null,"dirs":[{"s":1,"o":"西環邨","d":"西營盤(循環線)"}]},{"id":2003042,"r":"23","g":"HKI","desc":null,"dirs":[{"s":1,"o":"堅尼地城站","d":"薄扶林(循環線)"}]},{"id":2006408,"r":"1","g":"HKI","desc":null,"dirs":[{"s":1,"o":"山頂(公共交通總站)","d":"中環(香港站公共運輸交匯處)"},{"s":2,"o":"中環(香港站公共運輸交匯處)","d":"山頂(公共交通總站)"}]},{"id":2007501,"r":"27A","g":"HKI","desc":"額外班次","dirs":[{"s":1,"o":"香港仔 (西安街)","d":"鴨脷洲 (循環線)"}]},{"id":2000970,"r":"14M","g":"HKI","desc":"特別班次, 經谷柏道","dirs":[{"s":1,"o":"蘭芳道","d":"睦誠道"}]},{"id":2000971,"r":"14M","g":"HKI","desc":null,"dirs":[{"s":1,"o":"蘭芳道","d":"睦誠道"}]},{"id":2000972,"r":"14M","g":"HKI","desc":"樂陶苑特別班次","dirs":[{"s":1,"o":"利園山道","d":"樂陶苑"}]},{"id":2000973,"r":"14M","g":"HKI","desc":"樂翠台特別班次","dirs":[{"s":1,"o":"利園山道","d":"樂翠台"}]},{"id":2000968,"r":"21M","g":"HKI","desc":null,"dirs":[{"s":1,"o":"銅鑼灣（蘭芳道）","d":"大坑徑 (循環線)"}]},{"id":2002291,"r":"16X","g":"HKI","desc":"短程班次","dirs":[{"s":1,"o":"柴灣站","d":"赤柱灘道"},{"s":2,"o":"赤柱灘道","d":"柴灣站"}]},{"id":2006474,"r":"2","g":"HKI","desc":null,"dirs":[{"s":1,"o":"中環(香港站)","d":"舊山頂道(循環線)"}]},{"id":2006475,"r":"2","g":"HKI","desc":"早上班次(不經梅道)","dirs":[{"s":1,"o":"中環(香港站)","d":"舊山頂道(循環線)"}]},{"id":2009741,"r":"31X","g":"HKI","desc":"特快班次","dirs":[{"s":1,"o":"田灣邨","d":"銅鑼灣(謝斐道)"}]},{"id":2004527,"r":"26","g":"HKI","desc":null,"dirs":[{"s":1,"o":"利園山道, 鳳鳴大廈外","d":"香港港安醫院 (循環線)"}]},{"id":2001262,"r":"40","g":"HKI","desc":null,"dirs":[{"s":1,"o":"赤柱村","d":"渣甸街"},{"s":2,"o":"渣甸街","d":"赤柱村"}]},{"id":2001263,"r":"40","g":"HKI","desc":"額外班次","dirs":[{"s":1,"o":"馬坑邨 ","d":"渣甸街"}]},{"id":2001260,"r":"39C","g":"HKI","desc":null,"dirs":[{"s":1,"o":"鴨脷洲漁安苑","d":"香港仔(循環線) "}]},{"id":2002250,"r":"43M","g":"HKI","desc":null,"dirs":[{"s":1,"o":"峰華邨","d":"柴灣站(循環線)"}]},{"id":2002020,"r":"25","g":"HKI","desc":null,"dirs":[{"s":1,"o":"上寶馬山","d":"銅鑼灣(循環線)"}]},{"id":2003472,"r":"30","g":"HKI","desc":null,"dirs":[{"s":1,"o":"銅鑼灣(蘭芳道)","d":"跑馬地(冬青道)"},{"s":2,"o":"跑馬地(冬青道)","d":"銅鑼灣(蘭芳道)"}]},{"id":2002052,"r":"24M","g":"HKI","desc":null,"dirs":[{"s":1,"o":"畢拉山","d":"金鐘站(德立街)"},{"s":2,"o":"金鐘站(德立街)","d":"畢拉山"}]},{"id":2002053,"r":"24M","g":"HKI","desc":"特別班次(不經肇輝台)","dirs":[{"s":1,"o":"畢拉山","d":"金鐘站(德立街)"},{"s":2,"o":"金鐘站(德立街)","d":"畢拉山"}]},{"id":2005292,"r":"45S","g":"HKI","desc":"短程班次","dirs":[{"s":1,"o":"西區(第一街)","d":"干德道(循環線)"}]},{"id":2004076,"r":"47E","g":"HKI","desc":"短程班次 ","dirs":[{"s":1,"o":"東區尤德夫人那打素醫院","d":"小西灣邨"}]},{"id":2004088,"r":"47E","g":"HKI","desc":"特別班次 ","dirs":[{"s":1,"o":"小西灣第三期","d":"東區尤德夫人那打素醫院(循環線)"}]},{"id":2006510,"r":"3","g":"HKI","desc":null,"dirs":[{"s":1,"o":"中環(香港站公共運輸交匯處)","d":"寶珊道"},{"s":2,"o":"寶珊道","d":"中環(香港站公共運輸交匯處)"}]},{"id":2006511,"r":"3","g":"HKI","desc":"繁忙時段班次(不經大會堂) ","dirs":[{"s":1,"o":"中環(香港站公共運輸交匯處)","d":"寶珊道"}]},{"id":2004068,"r":"47M","g":"HKI","desc":null,"dirs":[{"s":1,"o":"柴灣站","d":"小西灣第三期(循環線)"}]},{"id":2004071,"r":"47M","g":"HKI","desc":"短程班次  ","dirs":[{"s":1,"o":"柴灣站","d":"柴灣(曉翠街)(循環線)"}]},{"id":2004072,"r":"47M","g":"HKI","desc":"短程班次 ","dirs":[{"s":1,"o":"柴灣站","d":"柴灣(永平街)(循環線)"}]},{"id":2000988,"r":"49M","g":"HKI","desc":null,"dirs":[{"s":1,"o":"天后站","d":"寶馬山 (循環線)"}]},{"id":2000989,"r":"49M","g":"HKI","desc":"特別班次繞經寶聯徑","dirs":[{"s":1,"o":"天后站","d":"寶馬山 (循環線)"}]},{"id":2004095,"r":"4A","g":"HKI","desc":null,"dirs":[{"s":1,"o":"香港仔(石排灣)","d":"銅鑼灣(景隆街)"},{"s":2,"o":"銅鑼灣(景隆街)","d":"香港仔(石排灣)"}]},{"id":2004097,"r":"4C","g":"HKI","desc":null,"dirs":[{"s":1,"o":"香港仔(石排灣)","d":"銅鑼灣(景隆街)"},{"s":2,"o":"銅鑼灣(景隆街)","d":"香港仔(石排灣)"}]},{"id":2002812,"r":"51A","g":"HKI","desc":"額外班次","dirs":[{"s":1,"o":"華貴邨","d":"田灣邨(循環線)"}]},{"id":2000990,"r":"50","g":"HKI","desc":null,"dirs":[{"s":1,"o":"耀東邨","d":"西灣河 (循環線)"}]},{"id":2004099,"r":"4S","g":"HKI","desc":null,"dirs":[{"s":1,"o":"石排灣","d":"香港仔(循環線)"}]},{"id":2003735,"r":"54S","g":"HKI","desc":"早晨特別班次","dirs":[{"s":1,"o":"摩星嶺道, 怡林閣對面","d":"堅尼地城站"}]},{"id":2003768,"r":"54S","g":"HKI","desc":"黃昏特別班次 ","dirs":[{"s":1,"o":"堅尼地城站","d":"瑪麗醫院"}]},{"id":2003685,"r":"54M","g":"HKI","desc":"額外班次","dirs":[{"s":1,"o":"堅尼地城站","d":"瑪麗醫院"},{"s":2,"o":"瑪麗醫院","d":"堅尼地城站"}]},{"id":2003771,"r":"55","g":"HKI","desc":null,"dirs":[{"s":1,"o":"瑪麗醫院","d":"中環站(干諾道中)(循環線)"}]},{"id":2001130,"r":"56A","g":"HKI","desc":null,"dirs":[{"s":1,"o":"羅便臣道","d":"天后站"},{"s":2,"o":"天后站","d":"羅便臣道"}]},{"id":2001131,"r":"56A","g":"HKI","desc":"邊寧頓街特別班次","dirs":[{"s":1,"o":"羅便臣道","d":"邊寧頓街"}]},{"id":2001133,"r":"56A","g":"HKI","desc":"灣仔特別班次","dirs":[{"s":1,"o":"羅便臣道","d":"灣仔"}]},{"id":2001129,"r":"56","g":"HKI","desc":null,"dirs":[{"s":1,"o":"羅便臣道","d":"馬寶道"},{"s":2,"o":"馬寶道","d":"羅便臣道"}]},{"id":2002580,"r":"58","g":"HKI","desc":null,"dirs":[{"s":1,"o":"香港仔(湖南街)","d":"堅尼地城站"},{"s":2,"o":"堅尼地城站","d":"香港仔(湖南街)"}]},{"id":2002646,"r":"58","g":"HKI","desc":"特別班次","dirs":[{"s":1,"o":"沙灣徑","d":"堅尼地城站"}]},{"id":2002679,"r":"58","g":"HKI","desc":"特別班次","dirs":[{"s":1,"o":"大口環道","d":"香港仔"}]},{"id":2002582,"r":"58A","g":"HKI","desc":"特別班次","dirs":[{"s":1,"o":"香港仔(湖南街)","d":"堅尼地城站"},{"s":2,"o":"堅尼地城站","d":"香港仔(湖南街)"}]},{"id":2002614,"r":"58M","g":"HKI","desc":"特别班次","dirs":[{"s":1,"o":"貝沙灣","d":"堅尼地城站"},{"s":2,"o":"堅尼地城站","d":"貝沙灣"}]},{"id":2011523,"r":"56B","g":"HKI","desc":null,"dirs":[{"s":1,"o":"羅便臣道","d":"天后公共運輸交匯處"}]},{"id":2002746,"r":"59A","g":"HKI","desc":"短程班次","dirs":[{"s":1,"o":"香港仔(東勝道)","d":"深灣道公共交通總站"},{"s":2,"o":"深灣道公共交通總站","d":"香港仔(東勝道)"}]},{"id":2002748,"r":"59A","g":"HKI","desc":"短程班次","dirs":[{"s":1,"o":"香港仔(東勝道)","d":"南濤閣"},{"s":2,"o":"南濤閣","d":"香港仔(東勝道)"}]},{"id":2002745,"r":"59X","g":"HKI","desc":"特別班次","dirs":[{"s":1,"o":"堅尼地城站","d":"葛量洪醫院"}]},{"id":2004090,"r":"62","g":"HKI","desc":null,"dirs":[{"s":1,"o":"杏花邨公共交通交匯處","d":"小西灣(富怡花園)(循環線)"}]},{"id":2005290,"r":"36X","g":"HKI","desc":null,"dirs":[{"s":1,"o":"鴨脷洲 (平瀾街)","d":"銅鑼灣 (渣甸街)"},{"s":2,"o":"銅鑼灣 (渣甸街)","d":"鴨脷洲 (平瀾街)"}]},{"id":2005689,"r":"32","g":"HKI","desc":"正常班次 ","dirs":[{"s":1,"o":"康山","d":"筲箕灣站"},{"s":2,"o":"筲箕灣站","d":"康山"}]},{"id":2006540,"r":"3A","g":"HKI","desc":null,"dirs":[{"s":1,"o":"中環(香港站公共運輸交匯處)","d":"干德道"},{"s":2,"o":"干德道","d":"中環(香港站公共運輸交匯處)"}]},{"id":2006541,"r":"3A","g":"HKI","desc":"繁忙時段班次(不經大會堂) ","dirs":[{"s":1,"o":"中環(香港站公共運輸交匯處)","d":"干德道"}]},{"id":2002217,"r":"44M","g":"HKI","desc":"通宵班次","dirs":[{"s":1,"o":"柴灣站","d":"小西灣邨(循環線)"}]},{"id":2005291,"r":"45A","g":"HKI","desc":null,"dirs":[{"s":1,"o":"西區(第一街)","d":"干德道 (循環線)"}]},{"id":2004074,"r":"47S","g":"HKI","desc":"短程班次","dirs":[{"s":1,"o":"柴灣站","d":"富欣花園(循環線)"}]},{"id":2003408,"r":"63A","g":"HKI","desc":"短程班次","dirs":[{"s":1,"o":"香港仔(南寧街)","d":"華富邨(循環線)"}]},{"id":2001265,"r":"40X","g":"HKI","desc":"短程班次","dirs":[{"s":1,"o":"赤柱監獄","d":"渣甸街"},{"s":2,"o":"渣甸街","d":"赤柱監獄"}]},{"id":2002811,"r":"51S","g":"HKI","desc":null,"dirs":[{"s":1,"o":"華貴邨","d":"香港仔(循環線)"}]},{"id":2002813,"r":"51","g":"HKI","desc":null,"dirs":[{"s":1,"o":"田灣邨","d":"香港仔(循環線)"}]},{"id":2004098,"r":"4M","g":"HKI","desc":"特別班次","dirs":[{"s":1,"o":"香港仔(石排灣)","d":"黃竹坑站"},{"s":2,"o":"黃竹坑站","d":"香港仔(石排灣)"}]},{"id":2004100,"r":"4M","g":"HKI","desc":"短程班次","dirs":[{"s":1,"o":"香港仔(南寧街)","d":"黃竹坑站"},{"s":2,"o":"黃竹坑站","d":"香港仔(南寧街)"}]},{"id":2004131,"r":"4M","g":"HKI","desc":"晨早特別班次","dirs":[{"s":1,"o":"香港仔(石排灣)","d":"黃竹坑站"}]},{"id":2003902,"r":"48M","g":"HKI","desc":null,"dirs":[{"s":1,"o":"柴灣站(利眾街)","d":"東區尤德夫人那打素醫院"},{"s":2,"o":"東區尤德夫人那打素醫院","d":"柴灣站(利眾街)"}]},{"id":2004096,"r":"4B","g":"HKI","desc":null,"dirs":[{"s":1,"o":"香港仔(石排灣)","d":"灣仔(循環線)"}]},{"id":2005220,"r":"52","g":"HKI","desc":null,"dirs":[{"s":1,"o":"香港仔(漁暉道)","d":"赤柱監獄"},{"s":2,"o":"赤柱監獄","d":"香港仔(漁暉道)"}]},{"id":2005286,"r":"52","g":"HKI","desc":"特別班次(經漁光道班次)","dirs":[{"s":1,"o":"赤柱監獄","d":"香港仔(漁暉道)"}]},{"id":2005287,"r":"52","g":"HKI","desc":"特別班次(環角道開出) ","dirs":[{"s":1,"o":"赤柱","d":"香港仔(漁暉道)"}]},{"id":2005288,"r":"52","g":"HKI","desc":"特別班次(赤柱廣場開出)","dirs":[{"s":1,"o":"赤柱廣場","d":"香港仔(漁暉道)"}]},{"id":2004084,"r":"61","g":"HKI","desc":"通宵班次","dirs":[{"s":1,"o":"小西灣(藍灣半島)","d":"旺角 (快富街)"},{"s":2,"o":"旺角 (快富街)","d":"小西灣(藍灣半島)"}]},{"id":2004081,"r":"5","g":"HKI","desc":null,"dirs":[{"s":1,"o":"香港仔(南寧街)","d":"銅鑼灣(謝斐道)"},{"s":2,"o":"銅鑼灣(謝斐道)","d":"香港仔(南寧街)"}]},{"id":2003636,"r":"54","g":"HKI","desc":"繁忙時間","dirs":[{"s":1,"o":"中環(碼頭)","d":"瑪麗醫院(循環線)"}]},{"id":2003637,"r":"54","g":"HKI","desc":null,"dirs":[{"s":1,"o":"中環(碼頭)","d":"瑪麗醫院(循環線)"}]},{"id":2009840,"r":"54","g":"HKI","desc":"早間特別班次","dirs":[{"s":1,"o":"瑪麗醫院","d":"中環(碼頭)"}]},{"id":2009842,"r":"54","g":"HKI","desc":"夜間特別班次","dirs":[{"s":1,"o":"中環(碼頭)","d":"瑪麗醫院"}]},{"id":2002712,"r":"59","g":"HKI","desc":null,"dirs":[{"s":1,"o":"堅尼地城站","d":"深灣道公共交通總站"},{"s":2,"o":"深灣道公共交通總站","d":"堅尼地城站"}]},{"id":2003405,"r":"63","g":"HKI","desc":"正常班次 ","dirs":[{"s":1,"o":"海怡半島","d":"瑪麗醫院"},{"s":2,"o":"瑪麗醫院","d":"海怡半島"}]},{"id":2002714,"r":"59B","g":"HKI","desc":"特别班次","dirs":[{"s":1,"o":"香港仔(東勝道)","d":"深灣道公共交通總站(經葛量洪醫院)(循環線)"}]},{"id":2005295,"r":"68","g":"HKI","desc":"循環線","dirs":[{"s":1,"o":"愛秩序灣","d":"鰂魚涌(海灣街)"}]},{"id":2004085,"r":"8","g":"HKI","desc":"正常班次 ","dirs":[{"s":1,"o":"碧瑤灣(下)","d":"中環(交易廣場)"}]},{"id":2000511,"r":"69X","g":"HKI","desc":null,"dirs":[{"s":1,"o":"數碼港","d":"銅鑼灣(駱克道)"},{"s":2,"o":"銅鑼灣(駱克道)","d":"數碼港"}]},{"id":2000961,"r":"69X","g":"HKI","desc":"經華富邨","dirs":[{"s":1,"o":"數碼港","d":"銅鑼灣(駱克道)"},{"s":2,"o":"銅鑼灣(駱克道)","d":"數碼港"}]},{"id":2004087,"r":"8X","g":"HKI","desc":"特快班次  ","dirs":[{"s":1,"o":"碧瑤灣(下)","d":"中環(交易廣場)"},{"s":2,"o":"中環(交易廣場)","d":"碧瑤灣(下)"}]},{"id":2006772,"r":"N31","g":"HKI","desc":"通宵服務班次","dirs":[{"s":1,"o":"田灣邨","d":"銅鑼灣(謝斐道)"},{"s":2,"o":"銅鑼灣(謝斐道)","d":"田灣邨"}]},{"id":2001264,"r":"N40","g":"HKI","desc":"凌晨班次","dirs":[{"s":1,"o":"赤柱村","d":"渣甸街"},{"s":2,"o":"渣甸街","d":"赤柱村"}]},{"id":2004086,"r":"N4A","g":"HKI","desc":"通宵服務","dirs":[{"s":1,"o":"香港仔(石排灣)","d":"銅鑼灣(景隆街)"}]},{"id":2004089,"r":"N4C","g":"HKI","desc":"通宵服務","dirs":[{"s":1,"o":"香港仔(石排灣)","d":"銅鑼灣(景隆街)"},{"s":2,"o":"銅鑼灣(景隆街)","d":"香港仔(石排灣)"}]},{"id":2010995,"r":"N4M","g":"HKI","desc":"通宵服務","dirs":[{"s":1,"o":"香港仔(石排灣)","d":"黃竹坑站"},{"s":2,"o":"黃竹坑站","d":"香港仔(石排灣)"}]},{"id":2008060,"r":"65A","g":"HKI","desc":"額外班次","dirs":[{"s":1,"o":"柴灣(康民街)","d":"鰂魚涌(途經東區尤德夫人那打素醫院)(循環線)"}]},{"id":2008092,"r":"65X","g":"HKI","desc":"額外班次","dirs":[{"s":1,"o":"東區尤德夫人那打素醫院","d":"北角渡輪碼頭公共運輸交匯處"},{"s":2,"o":"北角渡輪碼頭公共運輸交匯處","d":"東區尤德夫人那打素醫院"}]},{"id":2002814,"r":"N51S","g":"HKI","desc":"通宵班次","dirs":[{"s":1,"o":"華貴邨","d":"香港仔(循環線)"}]},{"id":2002331,"r":"12A","g":"KLN","desc":"短程班次","dirs":[{"s":1,"o":"旺角東站","d":"大同新邨"},{"s":2,"o":"大同新邨","d":"旺角東站"}]},{"id":2002333,"r":"12B","g":"KLN","desc":"短程班次","dirs":[{"s":1,"o":"旺角東站","d":"港灣豪庭"},{"s":2,"o":"港灣豪庭","d":"旺角東站"}]},{"id":2002335,"r":"12B","g":"KLN","desc":"早上繁忙班次","dirs":[{"s":1,"o":"港灣豪庭","d":"西洋菜南街"}]},{"id":2003571,"r":"13","g":"KLN","desc":"正常班次 ","dirs":[{"s":1,"o":"九龍塘(廣播道)","d":"紅磡(紅鸞道)"},{"s":2,"o":"紅磡(紅鸞道)","d":"九龍塘(廣播道)"}]},{"id":2002336,"r":"12S","g":"KLN","desc":"額外班次","dirs":[{"s":1,"o":"大角咀(櫻桃街)","d":"旺角東站(循環線)"}]},{"id":2004632,"r":"16B","g":"KLN","desc":"特別班次","dirs":[{"s":1,"o":"曉暉花園","d":"坪石公共運輸交匯處一樓"},{"s":2,"o":"坪石公共運輸交匯處一樓","d":"曉暉花園"}]},{"id":2006677,"r":"17M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"太子站","d":"九龍醫院"}]},{"id":2006679,"r":"17M","g":"KLN","desc":"特別班次","dirs":[{"s":1,"o":"九龍醫院","d":"通菜街"}]},{"id":2002085,"r":"18M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"黃大仙公共小型巴士(專綫)服務總站","d":"慈雲山(北)"},{"s":2,"o":"慈雲山(北)","d":"黃大仙公共小型巴士(專綫)服務總站"}]},{"id":2007502,"r":"N27","g":"HKI","desc":"通宵服務班次","dirs":[{"s":1,"o":"香港仔 (西安街)","d":"鴨脷洲 (循環線)"}]},{"id":2004093,"r":"N4X","g":"HKI","desc":"通宵服務","dirs":[{"s":1,"o":"銅鑼灣(景隆街)","d":"深灣道公共交通總站(循環線)"}]},{"id":2002091,"r":"19A","g":"KLN","desc":"額外班次","dirs":[{"s":1,"o":"鑽石山站公共運輸交匯處","d":"宏景花園(循環線) "}]},{"id":2004077,"r":"5M","g":"HKI","desc":"特別班次","dirs":[{"s":1,"o":"黃竹坑站","d":"葛量洪醫院"},{"s":2,"o":"葛量洪醫院","d":"黄竹坑站"}]},{"id":2002118,"r":"19S","g":"KLN","desc":"額外班次 ","dirs":[{"s":1,"o":"鑽石山站公共運輸交匯處","d":"慈雲山購物中心"},{"s":2,"o":"慈雲山購物中心","d":"鑽石山站公共運輸交匯處"}]},{"id":2004091,"r":"62A","g":"HKI","desc":null,"dirs":[{"s":1,"o":"小西灣(藍灣半島)公共運輸交匯處","d":"杏花邨公共交通交匯處"},{"s":2,"o":"杏花邨公共交通交匯處","d":"小西灣(藍灣半島)公共運輸交匯處"}]},{"id":2008025,"r":"65","g":"HKI","desc":null,"dirs":[{"s":1,"o":"東區尤德夫人那打素醫院","d":"北角(堡壘街)"},{"s":2,"o":"北角(堡壘街)","d":"東區尤德夫人那打素醫院"}]},{"id":2005293,"r":"66","g":"HKI","desc":"循環線","dirs":[{"s":1,"o":"愛秩序灣","d":"柴灣(環翠道)"}]},{"id":2005294,"r":"66A","g":"HKI","desc":"循環線","dirs":[{"s":1,"o":"愛秩序灣","d":"東區尤德夫人那打素醫院"}]},{"id":2002283,"r":"9","g":"HKI","desc":null,"dirs":[{"s":1,"o":"中環(交易廣場)","d":"寶雲道(循環線)"}]},{"id":2000819,"r":"69A","g":"HKI","desc":null,"dirs":[{"s":1,"o":"數碼港","d":"黃竹坑站"},{"s":2,"o":"黃竹坑站","d":"數碼港"}]},{"id":2002329,"r":"12","g":"KLN","desc":null,"dirs":[{"s":1,"o":"白田","d":"旺角東站"},{"s":2,"o":"旺角東站","d":"白田"}]},{"id":2000410,"r":"69","g":"HKI","desc":null,"dirs":[{"s":1,"o":"數碼港","d":"鰂魚涌(船塢里)(循環線)"}]},{"id":2003603,"r":"13M","g":"KLN","desc":" 額外班次 ","dirs":[{"s":1,"o":"紅磡(紅鸞道)","d":"紅磡站(循環線)"}]},{"id":2004630,"r":"16A","g":"KLN","desc":"特別班次","dirs":[{"s":1,"o":"豐盛街","d":"坪石邨(循環線)"}]},{"id":2002087,"r":"19","g":"KLN","desc":null,"dirs":[{"s":1,"o":"新蒲崗","d":"慈雲山道(沙田坳邨)"},{"s":2,"o":"慈雲山道(沙田坳邨)","d":"新蒲崗"}]},{"id":2002151,"r":"19","g":"KLN","desc":"特別班次","dirs":[{"s":1,"o":"富山公共交通總站","d":"鑽石山站公共交通交匯處"}]},{"id":2003604,"r":"13A","g":"KLN","desc":null,"dirs":[{"s":1,"o":"九龍塘(廣播道)","d":"樂富"},{"s":2,"o":"樂富","d":"九龍塘(廣播道)"}]},{"id":2003606,"r":"13A","g":"KLN","desc":"額外班次 ","dirs":[{"s":1,"o":"樂富","d":"九龍塘(廣播道)"},{"s":2,"o":"九龍塘(廣播道)","d":"樂富"}]},{"id":2004631,"r":"16S","g":"KLN","desc":"特別班次","dirs":[{"s":1,"o":"峻弦","d":"坪石邨(循環線)"}]},{"id":2004629,"r":"16","g":"KLN","desc":null,"dirs":[{"s":1,"o":"扎山道(彩雲邨)","d":"坪石邨(循環線)"}]},{"id":2009246,"r":"2","g":"KLN","desc":null,"dirs":[{"s":1,"o":"黃埔花園公共運輸交匯處","d":"又一城公共交通交匯處"},{"s":2,"o":"又一城公共交通交匯處","d":"黃埔花園公共運輸交匯處"}]},{"id":2002092,"r":"19M","g":"KLN","desc":"額外班次","dirs":[{"s":1,"o":"鑽石山站公共運輸交匯處","d":"慈雲山道(沙田坳邨)"},{"s":2,"o":"慈雲山道(沙田坳邨)","d":"鑽石山站公共運輸交匯處"}]},{"id":2004990,"r":"20M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"新蒲崗","d":"黃大仙站"},{"s":2,"o":"黄大仙站","d":"新蒲崗"}]},{"id":2004989,"r":"20","g":"KLN","desc":null,"dirs":[{"s":1,"o":"新蒲崗","d":"慈雲山(北)(循環線)"}]},{"id":2008322,"r":"23","g":"KLN","desc":null,"dirs":[{"s":1,"o":"觀塘 (雲漢街)","d":"裕民坊公共運輸交匯處"},{"s":2,"o":"裕民坊公共運輸交匯處","d":"觀塘 (雲漢街)"}]},{"id":2009048,"r":"22M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"樂華邨","d":"裕民坊公共運輸交匯處"},{"s":2,"o":"裕民坊公共運輸交匯處","d":"樂華邨"}]},{"id":2008355,"r":"23B","g":"KLN","desc":null,"dirs":[{"s":1,"o":"裕民坊公共運輸交匯處","d":"茶果嶺"},{"s":2,"o":"茶果嶺","d":"裕民坊公共運輸交匯處"}]},{"id":2008391,"r":"23C","g":"KLN","desc":"特别班次","dirs":[{"s":1,"o":"藍田站 (茜發道)","d":"油塘站 (茶果嶺道)(循環線)"}]},{"id":2005782,"r":"22A","g":"KLN","desc":"輔助服務路線(循環線)","dirs":[{"s":1,"o":"樂華邨","d":"觀塘碼頭"}]},{"id":2005783,"r":"22A","g":"KLN","desc":"輔助服務特别路線(循環線)","dirs":[{"s":1,"o":"樂華邨","d":"觀塘碼頭"}]},{"id":2008389,"r":"23M","g":"KLN","desc":"特别班次","dirs":[{"s":1,"o":"裕民坊公共運輸交匯處","d":"藍田站 (茜發道)"},{"s":2,"o":"藍田站 (茜發道)","d":"裕民坊公共運輸交匯處"}]},{"id":2008393,"r":"23S","g":"KLN","desc":"短程班次","dirs":[{"s":1,"o":"麗港城 (第二期)","d":"藍田站 (茜發道)"}]},{"id":2008454,"r":"24M","g":"KLN","desc":"短程班次","dirs":[{"s":1,"o":"興田 (碧雲道)","d":"油塘公共運輸交匯處"},{"s":2,"o":"油塘公共運輸交匯處","d":"興田 (碧雲道)"}]},{"id":2006045,"r":"25A","g":"KLN","desc":"額外班次","dirs":[{"s":1,"o":"九龍塘(沙福道)公共交通交匯處","d":"東頭邨(東隆道)"},{"s":2,"o":"東頭邨(東隆道)","d":"九龍塘(沙福道)公共交通交匯處"}]},{"id":2011622,"r":"24S","g":"KLN","desc":"特别班次","dirs":[{"s":1,"o":"油塘 (東源街)","d":"油塘 (高超道)(循環線)"}]},{"id":2006078,"r":"25B","g":"KLN","desc":"額外班次","dirs":[{"s":1,"o":"新蒲崗(譽.港灣)","d":"九龍塘(沙福道)公共交通交匯處"},{"s":2,"o":"九龍塘(沙福道)公共交通交匯處","d":"新蒲崗(譽.港灣)"}]},{"id":2008421,"r":"24","g":"KLN","desc":null,"dirs":[{"s":1,"o":"藍田 (平田公共運輸交匯處)","d":"三家村碼頭 (循環線)"}]},{"id":2002846,"r":"26A","g":"KLN","desc":"額外班次","dirs":[{"s":1,"o":"黃埔花園公共運輸交匯處","d":"尖沙咀(廣東道)(循環線)"}]},{"id":2009477,"r":"23P","g":"KLN","desc":"特别班次","dirs":[{"s":1,"o":"高嶺道","d":"藍田站 (茜發道)"},{"s":2,"o":"藍田站 (茜發道)","d":"高嶺道"}]},{"id":2002849,"r":"26H","g":"KLN","desc":"額外班次","dirs":[{"s":1,"o":"伊利沙伯醫院","d":"紅磡站(循環線)"}]},{"id":2002815,"r":"26","g":"KLN","desc":null,"dirs":[{"s":1,"o":"土瓜灣(浙江街)","d":"九龍站"},{"s":2,"o":"九龍站","d":"土瓜灣(浙江街)"}]},{"id":2006112,"r":"25MS","g":"KLN","desc":"額外班次","dirs":[{"s":1,"o":"九龍塘(沙福道)公共交通交匯處","d":"香港浸會大學(循環線)"}]},{"id":2006079,"r":"25M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"九龍塘(沙福道)公共交通交匯處","d":"東頭邨(東隆道)"},{"s":2,"o":"東頭邨(東隆道)","d":"九龍塘(沙福道)公共交通交匯處"}]},{"id":2006111,"r":"25M","g":"KLN","desc":"特別班次 (喇沙利道)","dirs":[{"s":1,"o":"九龍塘(沙福道)公共交通交匯處","d":"喇沙利道"}]},{"id":2002844,"r":"26W","g":"KLN","desc":"短程班次(早繁時段)","dirs":[{"s":1,"o":"海逸豪園","d":"紅磡站(循環線)"}]},{"id":2002845,"r":"26W","g":"KLN","desc":"短程班次(晚繁時段)","dirs":[{"s":1,"o":"海逸豪園","d":"紅磡站(循環線)"}]},{"id":2002850,"r":"26X","g":"KLN","desc":"特快班次","dirs":[{"s":1,"o":"海逸豪園","d":"佐敦(渡船街)(循環線)"}]},{"id":2001001,"r":"27MS","g":"KLN","desc":null,"dirs":[{"s":1,"o":"旺角站","d":"何文田（常樂街） (循環線)"}]},{"id":2001002,"r":"27MS","g":"KLN","desc":"假日班次","dirs":[{"s":1,"o":"旺角站","d":"何文田（常樂街） (循環線)"}]},{"id":2000998,"r":"27M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"樂民新村(美善同道)","d":"旺角站"},{"s":2,"o":"旺角站","d":"樂民新村(美善同道)"}]},{"id":2001000,"r":"27M","g":"KLN","desc":"特別班次","dirs":[{"s":1,"o":"樂民新村(美善同道)","d":"旺角站"}]},{"id":2003108,"r":"27M","g":"KLN","desc":"特快班次","dirs":[{"s":1,"o":"樂民新村(美善同道)","d":"旺角站"}]},{"id":2001005,"r":"28MS","g":"KLN","desc":null,"dirs":[{"s":1,"o":"九龍城(偉恒昌新邨)","d":"何文田站 (循環線)"}]},{"id":2001003,"r":"28M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"九龍城（偉恒昌新邨）","d":"旺角站"},{"s":2,"o":"旺角站","d":"九龍城（偉恒昌新邨）"}]},{"id":2001006,"r":"29A","g":"KLN","desc":null,"dirs":[{"s":1,"o":"九龍塘(沙福道)公共交通交匯處","d":"廣播道 (循環線)"}]},{"id":2001007,"r":"29B","g":"KLN","desc":null,"dirs":[{"s":1,"o":"九龍塘(沙福道)公共交通交匯處","d":"筆架山 (循環線)"}]},{"id":2000996,"r":"30A","g":"KLN","desc":null,"dirs":[{"s":1,"o":"澤安邨","d":"旺角站"},{"s":2,"o":"旺角站","d":"澤安邨"}]},{"id":2001010,"r":"33M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"海港花園","d":"黃大仙站"},{"s":2,"o":"黃大仙站","d":"海港花園"}]},{"id":2006276,"r":"3","g":"KLN","desc":null,"dirs":[{"s":1,"o":"尖沙咀(亞士厘道)","d":"大同新邨"},{"s":2,"o":"大同新邨","d":"尖沙咀(亞士厘道)"}]},{"id":2006283,"r":"3","g":"KLN","desc":"早上繁忙班次 (經渡船街)","dirs":[{"s":1,"o":"尖沙咀(亞士厘道)","d":"大同新邨"}]},{"id":2000992,"r":"32M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"龍坪道","d":"石硤尾 (循環線)"}]},{"id":2000995,"r":"30B","g":"KLN","desc":null,"dirs":[{"s":1,"o":"澤安邨","d":"石硤尾站 (循環線)"}]},{"id":2005946,"r":"34M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"曉麗苑","d":"裕民坊公共運輸交匯處"}]},{"id":2001008,"r":"33A","g":"KLN","desc":null,"dirs":[{"s":1,"o":"海港花園","d":"鑽石山站"},{"s":2,"o":"鑽石山站","d":"海港花園"}]},{"id":2009247,"r":"2A","g":"KLN","desc":"額外班次","dirs":[{"s":1,"o":"黃埔花園公共運輸交匯處","d":"又一城公共交通交匯處"},{"s":2,"o":"又一城公共交通交匯處","d":"黃埔花園公共運輸交匯處"}]},{"id":2005814,"r":"35","g":"KLN","desc":"正常班次 ","dirs":[{"s":1,"o":"彩霞邨","d":"康利苑"},{"s":2,"o":"康利苑","d":"彩霞邨"}]},{"id":2005913,"r":"36A","g":"KLN","desc":"額外班次","dirs":[{"s":1,"o":"鱷魚山(康利苑)","d":"裕民坊公共運輸交匯處"}]},{"id":2005914,"r":"36A","g":"KLN","desc":null,"dirs":[{"s":1,"o":"鱷魚山(康利苑)","d":"裕民坊公共運輸交匯處"}]},{"id":2005947,"r":"34S","g":"KLN","desc":"特別班次","dirs":[{"s":1,"o":"秀茂坪(上)巴士總站","d":"裕民坊公共運輸交匯處"}]},{"id":2005949,"r":"34S","g":"KLN","desc":"短程班次","dirs":[{"s":1,"o":"曉光街","d":"裕民坊公共運輸交匯處"}]},{"id":2003505,"r":"37M","g":"KLN","desc":"額外班次","dirs":[{"s":1,"o":"黃大仙公共小型巴士(專綫)服務總站","d":"慈民邨(循環線)"}]},{"id":2004659,"r":"38M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"竹園(北)邨","d":"黃大仙公共小型巴士(專線)服務總站"},{"s":2,"o":"黃大仙公共小型巴士(專線)服務總站","d":"竹園(北)邨"}]},{"id":2004660,"r":"39M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"樂富","d":"東頭(循環線)"}]},{"id":2004661,"r":"39M","g":"KLN","desc":"正常班次 (經培民街)","dirs":[{"s":1,"o":"樂富","d":"東頭(循環線)"}]},{"id":2005686,"r":"41M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"又一村","d":"石硤尾站(循環線)"}]},{"id":2005690,"r":"42","g":"KLN","desc":null,"dirs":[{"s":1,"o":"長沙灣(汝州西街)","d":"澤安邨"},{"s":2,"o":"澤安邨","d":"長沙灣(汝州西街)"}]},{"id":2005687,"r":"41A","g":"KLN","desc":"短程班次","dirs":[{"s":1,"o":"又一村","d":"石硤尾站(循環線)"}]},{"id":2000976,"r":"43M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"大角咀(櫻桃街)","d":"油麻地港鐵站(循環線)"}]},{"id":2000977,"r":"43M","g":"KLN","desc":"晚間服務","dirs":[{"s":1,"o":"旺角(柏景灣)巴士總站","d":"油麻地港鐵站(循環線)"}]},{"id":2000978,"r":"43M","g":"KLN","desc":"短程服務路線2.0","dirs":[{"s":1,"o":"旺角(柏景灣)巴士總站","d":"油麻地港鐵站(循環線)"}]},{"id":2000981,"r":"43M","g":"KLN","desc":"短程服務路線2.1","dirs":[{"s":1,"o":"旺角(柏景灣)巴士總站","d":"油麻地港鐵站(循環線)"}]},{"id":2000982,"r":"43M","g":"KLN","desc":"短程服務路線2.2","dirs":[{"s":1,"o":"旺角(柏景灣)巴士總站","d":"油麻地港鐵站(循環線)"}]},{"id":2000983,"r":"43M","g":"KLN","desc":"早上特別服務路線","dirs":[{"s":1,"o":"欣翔道(御金國峯)","d":"油麻地港鐵站(循環線)"}]},{"id":2000985,"r":"43M","g":"KLN","desc":"特別班次","dirs":[{"s":1,"o":"油麻地港鐵站","d":"海庭道(西九龍政府合署)"}]},{"id":2000986,"r":"43M","g":"KLN","desc":"特別班次","dirs":[{"s":1,"o":"海庭道(西九龍政府合署)","d":"油麻地港鐵站"}]},{"id":2003504,"r":"37A","g":"KLN","desc":null,"dirs":[{"s":1,"o":"黃大仙公共小型巴士(專綫)服務總站","d":"慈雲山(北)"},{"s":2,"o":"慈雲山(北)","d":"黃大仙公共小型巴士(專綫)服務總站"}]},{"id":2010368,"r":"47","g":"KLN","desc":null,"dirs":[{"s":1,"o":"順利","d":"翠屏(福塘道)"},{"s":2,"o":"翠屏(福塘道)","d":"順利"}]},{"id":2010104,"r":"44","g":"KLN","desc":"特別班次 (經海麗邨公共交通交匯處)","dirs":[{"s":1,"o":"長沙灣 (青山道)","d":"海盈邨 (循環線)"}]},{"id":2010137,"r":"44","g":"KLN","desc":"特別班次","dirs":[{"s":1,"o":"長沙灣 (青山道)","d":"海盈邨 (循環線)"}]},{"id":2011327,"r":"45M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"明愛醫院","d":"深水埗(汝州街)"},{"s":2,"o":"深水埗(汝州街)","d":"明愛醫院"}]},{"id":2004627,"r":"44S","g":"KLN","desc":"特別班次","dirs":[{"s":1,"o":"海麗邨","d":"青山道(循環線)"}]},{"id":2004599,"r":"44A","g":"KLN","desc":"短程班次","dirs":[{"s":1,"o":"長沙灣廣場","d":"海麗邨"},{"s":2,"o":"海麗邨","d":"長沙灣廣場"}]},{"id":2004626,"r":"44A","g":"KLN","desc":"短程班次","dirs":[{"s":1,"o":"長沙灣廣場","d":"海盈邨(循環線)"}]},{"id":2007299,"r":"49","g":"KLN","desc":null,"dirs":[{"s":1,"o":"順天","d":"九龍城渡輪碼頭(循環線)"}]},{"id":2007267,"r":"48","g":"KLN","desc":null,"dirs":[{"s":1,"o":"順利","d":"九龍灣(循環線)"}]},{"id":2007332,"r":"48","g":"KLN","desc":"晚間服務","dirs":[{"s":1,"o":"順利","d":"九龍灣(循環線)"}]},{"id":2004593,"r":"44M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"昂船洲","d":"長沙灣(長順街)"},{"s":2,"o":"長沙灣(長順街)","d":"昂船洲"}]},{"id":2004595,"r":"44M","g":"KLN","desc":"特別班次 (不經長茂街班次)","dirs":[{"s":1,"o":"昂船洲","d":"長沙灣(長順街)"}]},{"id":2005022,"r":"44M","g":"KLN","desc":"特別班次 (不經長裕街班次)","dirs":[{"s":1,"o":"長沙灣(長順街)","d":"昂船洲"}]},{"id":2008487,"r":"50","g":"KLN","desc":null,"dirs":[{"s":1,"o":"基督教聯合醫院","d":"裕民坊公共運輸交匯處 (循環線)"}]},{"id":2007500,"r":"51M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"麗晶花園","d":"九龍灣站(循環線)"}]},{"id":2008000,"r":"52","g":"KLN","desc":null,"dirs":[{"s":1,"o":"竹園邨","d":"新蒲崗"},{"s":2,"o":"新蒲崗","d":"竹園邨"}]},{"id":2007300,"r":"49M","g":"KLN","desc":"額外班次","dirs":[{"s":1,"o":"順天","d":"坪石(循環線)"}]},{"id":2008001,"r":"53M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"樂富站","d":"天馬苑(金竹里)(循環線)"}]},{"id":2003174,"r":"54","g":"KLN","desc":null,"dirs":[{"s":1,"o":"順天","d":"樂富"},{"s":2,"o":"樂富","d":"順天"}]},{"id":2007233,"r":"46","g":"KLN","desc":null,"dirs":[{"s":1,"o":"麗晶花園","d":"大角咀( 奧運站)"},{"s":2,"o":"大角咀( 奧運站)","d":"麗晶花園"}]},{"id":2007234,"r":"46","g":"KLN","desc":"早上特別班次","dirs":[{"s":1,"o":"深旺道","d":"麗晶花園"}]},{"id":2001524,"r":"56","g":"KLN","desc":null,"dirs":[{"s":1,"o":"麗晶花園","d":"崇仁街"},{"s":2,"o":"崇仁街","d":"麗晶花園"}]},{"id":2003177,"r":"54M","g":"KLN","desc":"短程班次","dirs":[{"s":1,"o":"順天","d":"坪石(循環線)"}]},{"id":2004463,"r":"57M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"佐敦站(南京街)","d":"伊利沙伯醫院"},{"s":2,"o":"伊利沙伯醫院","d":"佐敦站(南京街)"}]},{"id":2004397,"r":"59","g":"KLN","desc":"正常班次 ","dirs":[{"s":1,"o":"翠屏南邨","d":"協和街(循環線)"}]},{"id":2004857,"r":"59","g":"KLN","desc":"不經佳廉道班次","dirs":[{"s":1,"o":"翠屏南邨","d":"協和街(循環線)"}]},{"id":2004398,"r":"59M","g":"KLN","desc":"特別班次","dirs":[{"s":1,"o":"翠屏南邨","d":"福塘道(循環線)"}]},{"id":2006012,"r":"60","g":"KLN","desc":null,"dirs":[{"s":1,"o":"藍田","d":"順利邨(循環線)"}]},{"id":2003537,"r":"5M","g":"KLN","desc":"正常班次  ","dirs":[{"s":1,"o":"窩打老道山(學餘里)","d":"旺角站(循環線)"}]},{"id":2003538,"r":"5M","g":"KLN","desc":"特別班次","dirs":[{"s":1,"o":"窩打老道山(學餘里)","d":"旺角站(循環線)(經花園街)"}]},{"id":2003570,"r":"5M","g":"KLN","desc":"特別班次 ","dirs":[{"s":1,"o":"窩打老道山(學餘里)","d":"旺角站(循環線)(經亞皆老街)"}]},{"id":2003179,"r":"54S","g":"KLN","desc":"特別班次","dirs":[{"s":1,"o":"順利紀律部隊宿舍","d":"黃大仙(沙田坳道)(循環線)"}]},{"id":2004395,"r":"62S","g":"KLN","desc":"正常班次 ","dirs":[{"s":1,"o":"藍田(廣田邨)","d":"尖沙咀"},{"s":2,"o":"尖沙咀","d":"藍田(廣田邨)"}]},{"id":2011358,"r":"68","g":"KLN","desc":null,"dirs":[{"s":1,"o":"彩雲邨","d":"九龍灣(循環線)"}]},{"id":2004396,"r":"63","g":"KLN","desc":"正常班次 ","dirs":[{"s":1,"o":"藍田(廣田邨)","d":"裕民坊公共運輸交匯處 (循環線)"}]},{"id":2008289,"r":"71A","g":"KLN","desc":null,"dirs":[{"s":1,"o":"寶達邨","d":"藍田站 (循環線)"}]},{"id":2007433,"r":"66S","g":"KLN","desc":"通宵服務班次","dirs":[{"s":1,"o":"斧山道","d":"旺角"},{"s":2,"o":"旺角","d":"斧山道"}]},{"id":2008850,"r":"70","g":"KLN","desc":null,"dirs":[{"s":1,"o":"鑽石山站公共運輸交匯處","d":"大角咀(維港灣)"},{"s":2,"o":"大角咀(維港灣)","d":"鑽石山站公共運輸交匯處"}]},{"id":2007068,"r":"69A","g":"KLN","desc":"輔助班次","dirs":[{"s":1,"o":"麗港城","d":"通菜街"},{"s":2,"o":"通菜街","d":"麗港城"}]},{"id":2007168,"r":"69A","g":"KLN","desc":"輔助班次 (早上10時前班次)","dirs":[{"s":1,"o":"麗港城","d":"通菜街"}]},{"id":2008291,"r":"71B","g":"KLN","desc":null,"dirs":[{"s":1,"o":"秀茂坪邨 (第5期)","d":"藍田站"},{"s":2,"o":"藍田站","d":"秀茂坪邨 (第5期)"}]},{"id":2005880,"r":"72","g":"KLN","desc":null,"dirs":[{"s":1,"o":"宏景花園","d":"又一城公共交通總站"},{"s":2,"o":"又一城公共交通總站","d":"宏景花園"}]},{"id":2008916,"r":"73","g":"KLN","desc":null,"dirs":[{"s":1,"o":"又一城公共交通總站","d":"慈雲山中心 (循環線)"}]},{"id":2011424,"r":"74","g":"KLN","desc":null,"dirs":[{"s":1,"o":"九龍站","d":"旺角(聯運街)(循環線)"}]},{"id":2003372,"r":"75","g":"KLN","desc":null,"dirs":[{"s":1,"o":"深水埗(富昌邨)","d":"長沙灣(青山道)(循環線)"}]},{"id":2003373,"r":"75A","g":"KLN","desc":"短程班次","dirs":[{"s":1,"o":"深水埗(富昌邨)","d":"桂林街(循環線)"}]},{"id":2006936,"r":"69","g":"KLN","desc":null,"dirs":[{"s":1,"o":"麗港城","d":"九龍城(獅子石道)"},{"s":2,"o":"九龍城(獅子石道)","d":"麗港城"}]},{"id":2007035,"r":"69","g":"KLN","desc":"正常班次(早上時10前班次)","dirs":[{"s":1,"o":"麗港城","d":"九龍城(獅子石道)"}]},{"id":2007169,"r":"69","g":"KLN","desc":"特别班次","dirs":[{"s":1,"o":"麗港城","d":"九龍灣 (零碳天地)"},{"s":2,"o":"九龍灣 (零碳天地)","d":"麗港城"}]},{"id":2011391,"r":"75X","g":"KLN","desc":"輔助服務路線","dirs":[{"s":1,"o":"深水埗(富昌邨)","d":"長沙灣(青山道)(循環線)"}]},{"id":2006969,"r":"76A","g":"KLN","desc":null,"dirs":[{"s":1,"o":"廣田","d":"基督教聯合醫院(循環線)"}]},{"id":2010335,"r":"76A","g":"KLN","desc":null,"dirs":[{"s":1,"o":"廣田","d":"基督教聯合醫院(循環線)"}]},{"id":2007002,"r":"76B","g":"KLN","desc":null,"dirs":[{"s":1,"o":"基督教聯合醫院","d":"油塘公共運輸交匯處"},{"s":2,"o":"油塘公共運輸交匯處","d":"基督教聯合醫院"}]},{"id":2003471,"r":"78A","g":"KLN","desc":"短程班次","dirs":[{"s":1,"o":"大角咀(維港灣)公共運輸交匯處","d":"尖沙咀(北京道)"}]},{"id":2003438,"r":"78","g":"KLN","desc":null,"dirs":[{"s":1,"o":"大角咀(維港灣)公共運輸交匯處","d":"尖沙咀(北京道)(循環線)"}]},{"id":2004725,"r":"79K","g":"KLN","desc":null,"dirs":[{"s":1,"o":"旺角(柏景灣)","d":"旺角東站(循環線)"}]},{"id":2003339,"r":"77M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"九龍站","d":"尖東(循環線)"}]},{"id":2004759,"r":"79M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"瓊東街","d":"黃大仙站"},{"s":2,"o":"黃大仙站","d":"瓊東街"}]},{"id":2008883,"r":"70A","g":"KLN","desc":"額外服務班次","dirs":[{"s":1,"o":"鑽石山站公共運輸交匯處","d":"奧運站交通交匯處"},{"s":2,"o":"奧運站交通交匯處","d":"鑽石山站公共運輸交匯處"}]},{"id":2001755,"r":"81K","g":"KLN","desc":null,"dirs":[{"s":1,"o":"深水埗海麗邨","d":"美孚站(循環線)"}]},{"id":2001557,"r":"80M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"君頤峰","d":"佐敦站 (循環線)"}]},{"id":2006309,"r":"8","g":"KLN","desc":null,"dirs":[{"s":1,"o":"尖沙咀(漢口道)","d":"何文田邨"},{"s":2,"o":"何文田邨","d":"尖沙咀(漢口道)"}]},{"id":2006312,"r":"8","g":"KLN","desc":"短程班次","dirs":[{"s":1,"o":"尖沙咀(漢口道)","d":"何文田(忠孝街)"},{"s":2,"o":"何文田(忠孝街)","d":"尖沙咀(漢口道)"}]},{"id":2006314,"r":"8","g":"KLN","desc":"繁忙時段班次","dirs":[{"s":1,"o":"尖沙咀(漢口道)","d":"何文田邨"}]},{"id":2001558,"r":"82","g":"KLN","desc":null,"dirs":[{"s":1,"o":"明愛樂恩學校","d":"啟德"},{"s":2,"o":"啟德","d":"明愛樂恩學校"}]},{"id":2010038,"r":"82","g":"KLN","desc":"輔助服務","dirs":[{"s":1,"o":"彩興苑","d":"坪石公共運輸交匯處一樓"}]},{"id":2004760,"r":"79S","g":"KLN","desc":"特別班次","dirs":[{"s":1,"o":"瓊東街","d":"龍翔道(鑽石山站)(循環線)"}]},{"id":2008818,"r":"83A","g":"KLN","desc":"特別服務路線","dirs":[{"s":1,"o":"彩福邨","d":"坪石"},{"s":2,"o":"坪石","d":"彩福邨"}]},{"id":2010962,"r":"83B","g":"KLN","desc":"特別服務路線","dirs":[{"s":1,"o":"彩興路簡約公屋","d":"坪石"},{"s":2,"o":"坪石","d":"彩興路簡約公屋"}]},{"id":2005319,"r":"86","g":"KLN","desc":null,"dirs":[{"s":1,"o":"郵輪碼頭","d":"九龍灣(德福花園)(循環線)"}]},{"id":2008520,"r":"87","g":"KLN","desc":null,"dirs":[{"s":1,"o":"鯉魚門邨","d":"九龍灣(啟仁街)(循環線)"}]},{"id":2004428,"r":"88","g":"KLN","desc":null,"dirs":[{"s":1,"o":"啟晴邨(啟德)","d":"黃大仙站(循環線)"}]},{"id":2010797,"r":"88A","g":"KLN","desc":"輔助班次","dirs":[{"s":1,"o":"黃大仙站","d":"香港兒童醫院(循環線)"}]},{"id":2010798,"r":"88A","g":"KLN","desc":"短途班次","dirs":[{"s":1,"o":"啟晴邨","d":"香港兒童醫院(循環線)"}]},{"id":2001031,"r":"89A","g":"KLN","desc":null,"dirs":[{"s":1,"o":"安泰邨","d":"牛頭角總站"},{"s":2,"o":"牛頭角總站","d":"安泰邨"}]},{"id":2001033,"r":"89C","g":"KLN","desc":"特別班次","dirs":[{"s":1,"o":"安達邨","d":"牛頭角總站"},{"s":2,"o":"牛頭角總站","d":"安達邨"}]},{"id":2001035,"r":"89C","g":"KLN","desc":"短途班次","dirs":[{"s":1,"o":"安達邨","d":"牛頭角總站"},{"s":2,"o":"牛頭角總站","d":"安達邨"}]},{"id":2000974,"r":"89B","g":"KLN","desc":null,"dirs":[{"s":1,"o":"安泰邨","d":"九龍灣（零碳天地）"},{"s":2,"o":"九龍灣（零碳天地）","d":"安泰邨"}]},{"id":2006318,"r":"8M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"何文田(常和街)","d":"何文田站"},{"s":2,"o":"何文田站","d":"何文田(常和街)"}]},{"id":2006315,"r":"8S","g":"KLN","desc":null,"dirs":[{"s":1,"o":"尖沙咀(漢口道)","d":"何文田(常富街)"},{"s":2,"o":"何文田(常富街)","d":"尖沙咀(漢口道)"}]},{"id":2006317,"r":"8S","g":"KLN","desc":"繁忙時段班次(經紅磡繞道)","dirs":[{"s":1,"o":"尖沙咀(漢口道)","d":"何文田(常富街)"}]},{"id":2008592,"r":"90B","g":"KLN","desc":null,"dirs":[{"s":1,"o":"秀茂坪","d":"香港兒童醫院"},{"s":2,"o":"香港兒童醫院","d":"秀茂坪"}]},{"id":2008586,"r":"90A","g":"KLN","desc":null,"dirs":[{"s":1,"o":"油塘 (油麗邨)","d":"香港兒童醫院"},{"s":2,"o":"香港兒童醫院","d":"油塘 (油麗邨)"}]},{"id":2008590,"r":"90A","g":"KLN","desc":"特別班次","dirs":[{"s":1,"o":"香港兒童醫院","d":"油塘 (油麗邨) 經高超道及鯉魚門道"}]},{"id":2010698,"r":"91","g":"KLN","desc":"正常路線","dirs":[{"s":1,"o":"秀茂坪(曉光街)","d":"佐敦(北海街)"},{"s":2,"o":"佐敦(北海街)","d":"秀茂坪(曉光街)"}]},{"id":2010731,"r":"91","g":"KLN","desc":"早上班次","dirs":[{"s":1,"o":"秀茂坪(曉光街)","d":"佐敦(南京街)"}]},{"id":2010764,"r":"91","g":"KLN","desc":"特別班次","dirs":[{"s":1,"o":"佐敦(北海街)","d":"秀茂坪(曉光街)(循環線)"}]},{"id":2009642,"r":"CX1","g":"KLN","desc":null,"dirs":[{"s":1,"o":"柯士甸站","d":"香港故宮文化博物館 (循環線)"}]},{"id":2004362,"r":"9M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"白田上邨","d":"石硤尾站(循環線)"}]},{"id":2008817,"r":"83M","g":"KLN","desc":null,"dirs":[{"s":1,"o":"牛頭角(安華街)","d":"坪石"},{"s":2,"o":"坪石","d":"牛頭角(安華街)"}]},{"id":2003835,"r":"102B","g":"NT","desc":"正常路線","dirs":[{"s":1,"o":"煜明苑","d":"彩虹(循環線)"}]},{"id":2002337,"r":"1","g":"NT","desc":null,"dirs":[{"s":1,"o":"西貢","d":"九龍灣(德福花園)"},{"s":2,"o":"九龍灣(德福花園)","d":"西貢"}]},{"id":2003900,"r":"102S","g":"NT","desc":"通宵路線","dirs":[{"s":1,"o":"坑口站公共運輸交匯處","d":"新蒲崗"},{"s":2,"o":"新蒲崗","d":"坑口站公共運輸交匯處"}]},{"id":2003801,"r":"102","g":"NT","desc":null,"dirs":[{"s":1,"o":"坑口站","d":"新蒲崗"},{"s":2,"o":"新蒲崗","d":"坑口站"}]},{"id":2003834,"r":"102","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"新蒲崗","d":"坑口站"}]},{"id":2003240,"r":"101M","g":"NT","desc":null,"dirs":[{"s":1,"o":"坑口站","d":"西貢"},{"s":2,"o":"西貢","d":"坑口站"}]},{"id":2003242,"r":"101M","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"經西貢北公共運輸交匯處 (西貢)","d":"坑口站"}]},{"id":2003243,"r":"101M","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"白沙灣","d":"坑口"}]},{"id":2005451,"r":"101M","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"翠塘花園","d":"坑口"}]},{"id":2005452,"r":"101M","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"菠蘿輋","d":"坑口"}]},{"id":2005453,"r":"101M","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"匡湖居","d":"坑口"}]},{"id":2007134,"r":"103","g":"NT","desc":null,"dirs":[{"s":1,"o":"清水灣","d":"觀塘碼頭"},{"s":2,"o":"觀塘碼頭","d":"清水灣"}]},{"id":2007201,"r":"103M","g":"NT","desc":null,"dirs":[{"s":1,"o":"將軍澳站公共運輸交匯處","d":"清水灣"},{"s":2,"o":"清水灣","d":"將軍澳站公共運輸交匯處"}]},{"id":2007200,"r":"104","g":"NT","desc":null,"dirs":[{"s":1,"o":"香港科技大學(南站)","d":"觀塘(循環線)"}]},{"id":2006606,"r":"105","g":"NT","desc":null,"dirs":[{"s":1,"o":"土瓜灣","d":"康盛花園"},{"s":2,"o":"康盛花園","d":"土瓜灣"}]},{"id":2002945,"r":"106","g":"NT","desc":null,"dirs":[{"s":1,"o":"寶琳","d":"九龍灣"},{"s":2,"o":"九龍灣","d":"寶琳"}]},{"id":2003010,"r":"106","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"九龍灣","d":"寶琳"}]},{"id":2002910,"r":"107","g":"NT","desc":null,"dirs":[{"s":1,"o":"靈實醫院","d":"寶琳公共運輸交匯處"}]},{"id":2002350,"r":"109M","g":"NT","desc":null,"dirs":[{"s":1,"o":"清水灣半島","d":"坑口站"},{"s":2,"o":"坑口站","d":"清水灣半島"}]},{"id":2000993,"r":"108A","g":"NT","desc":null,"dirs":[{"s":1,"o":"彩明公共運輸交匯處","d":"坑口（北）"},{"s":2,"o":"坑口（北）","d":"彩明公共運輸交匯處"}]},{"id":2004791,"r":"11","g":"NT","desc":null,"dirs":[{"s":1,"o":"坑口村","d":"彩虹站(龍翔道)"},{"s":2,"o":"彩虹站(龍翔道)","d":"坑口村"}]},{"id":2003867,"r":"111","g":"NT","desc":null,"dirs":[{"s":1,"o":"寶琳","d":"新蒲崗"},{"s":2,"o":"新蒲崗","d":"寶琳"}]},{"id":2007596,"r":"10M","g":"NT","desc":null,"dirs":[{"s":1,"o":"慧安園","d":"觀塘(裕民坊)"},{"s":2,"o":"觀塘(裕民坊)","d":"慧安園"}]},{"id":2007366,"r":"112A","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"康城站公共運輸交匯處","d":"峻瀅"},{"s":2,"o":"峻瀅","d":"康城站公共運輸交匯處"}]},{"id":2007367,"r":"112S","g":"NT","desc":"通宵班次","dirs":[{"s":1,"o":"將軍澳站公共運輸交匯處","d":"將軍澳工業邨"},{"s":2,"o":"將軍澳工業邨","d":"將軍澳站公共運輸交匯處"}]},{"id":2007365,"r":"112M","g":"NT","desc":null,"dirs":[{"s":1,"o":"康城站公共運輸交匯處","d":"將軍澳工業邨"},{"s":2,"o":"將軍澳工業邨","d":"康城站公共運輸交匯處"}]},{"id":2007368,"r":"113","g":"NT","desc":null,"dirs":[{"s":1,"o":"峻瀅","d":"坑口站公共運輸交匯處(循環線)"}]},{"id":2005187,"r":"114B","g":"NT","desc":null,"dirs":[{"s":1,"o":"調景嶺站公共運輸交匯處","d":"藍塘傲(循環線)"}]},{"id":2005122,"r":"114A","g":"NT","desc":null,"dirs":[{"s":1,"o":"將軍澳站","d":"海天晉(循環線)"}]},{"id":2005155,"r":"114A","g":"NT","desc":"正常班次 (經唐賢街, 唐明街)","dirs":[{"s":1,"o":"將軍澳站","d":"海天晉(循環線)"}]},{"id":2009609,"r":"116","g":"NT","desc":null,"dirs":[{"s":1,"o":"百勝角","d":"將軍澳站 (循環線)"}]},{"id":2002943,"r":"115","g":"NT","desc":null,"dirs":[{"s":1,"o":"寶琳","d":"駿昌街"},{"s":2,"o":"駿昌街","d":"寶琳"}]},{"id":2011259,"r":"116H","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"將軍澳站公共運輸交匯處","d":"香港中醫醫院(循環線)"}]},{"id":2011556,"r":"117B","g":"NT","desc":null,"dirs":[{"s":1,"o":"安達臣(安愉道)公共交通總站","d":"油塘(循環線)"}]},{"id":2010896,"r":"117A","g":"NT","desc":null,"dirs":[{"s":1,"o":"安達臣(安愉道) 公共交通總站","d":"尚德公共交通總站"},{"s":2,"o":"尚德公共交通總站","d":"安達臣(安愉道) 公共交通總站"}]},{"id":2011721,"r":"117P","g":"NT","desc":"特别班次","dirs":[{"s":1,"o":"安達臣(安愉道) 公共交通總站","d":"景林邨 (循環線)"}]},{"id":2011127,"r":"116M","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"將軍澳站公共運輸交匯處","d":"百勝角(循環線)"}]},{"id":2004824,"r":"11A","g":"NT","desc":"正常班次 ","dirs":[{"s":1,"o":"坑口村","d":"坑口站公共運輸交匯處"},{"s":2,"o":"坑口站公共運輸交匯處","d":"坑口村"}]},{"id":2004763,"r":"12","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"寶琳","d":"順利"}]},{"id":2004764,"r":"12","g":"NT","desc":null,"dirs":[{"s":1,"o":"西貢","d":"寶琳"},{"s":2,"o":"寶琳","d":"西貢"}]},{"id":2004827,"r":"11B","g":"NT","desc":"  日間特別班次 ","dirs":[{"s":1,"o":"香港科技大學(北站)","d":"彩虹站(龍翔道)"},{"s":2,"o":"彩虹站(龍翔道)","d":"香港科技大學(北站)"}]},{"id":2004828,"r":"11B","g":"NT","desc":" 黃昏特别班次","dirs":[{"s":1,"o":"香港科技大學(南站)","d":"彩虹站(龍翔道)"}]},{"id":2004825,"r":"11M","g":"NT","desc":"正常班次 ","dirs":[{"s":1,"o":"坑口站公共運輸交匯處","d":"香港科技大學(北站)"},{"s":2,"o":"香港科技大學(北站)","d":"坑口站公共運輸交匯處"}]},{"id":2004598,"r":"140M","g":"NT","desc":null,"dirs":[{"s":1,"o":"屯門(恒福花園)","d":"青衣站"},{"s":2,"o":"青衣站","d":"屯門(恒福花園)"}]},{"id":2004826,"r":"11S","g":"NT","desc":"通宵班次","dirs":[{"s":1,"o":"寶琳","d":"彩虹站(龍翔道)"},{"s":2,"o":"彩虹站(龍翔道)","d":"寶琳"}]},{"id":2007629,"r":"13","g":"NT","desc":null,"dirs":[{"s":1,"o":"靈實醫院","d":"觀塘(裕民坊)"},{"s":2,"o":"觀塘(裕民坊)","d":"靈實醫院"}]},{"id":2006639,"r":"15M","g":"NT","desc":null,"dirs":[{"s":1,"o":"寶琳站","d":"康盛"},{"s":2,"o":"康盛","d":"寶琳站"}]},{"id":2006640,"r":"15M","g":"NT","desc":"早上班次 (不經翠琳路)","dirs":[{"s":1,"o":"康盛","d":"寶琳站"}]},{"id":2006609,"r":"15","g":"NT","desc":null,"dirs":[{"s":1,"o":"坑口","d":"康盛"},{"s":2,"o":"康盛","d":"坑口"}]},{"id":2006610,"r":"15","g":"NT","desc":"特別黃昏短程班次","dirs":[{"s":1,"o":"翠林","d":"坑口（重華路）（循環線）"}]},{"id":2006611,"r":"15A","g":"NT","desc":null,"dirs":[{"s":1,"o":"坑口(北)","d":"茵怡花園"},{"s":2,"o":"茵怡花園","d":"坑口(北)"}]},{"id":2006612,"r":"15A","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"坑口(寶寧里)","d":"新都城2期"},{"s":2,"o":"新都城2期","d":"坑口(寶寧里)"}]},{"id":2006641,"r":"16","g":"NT","desc":null,"dirs":[{"s":1,"o":"寶琳","d":"布袋澳"},{"s":2,"o":"布袋澳","d":"寶琳"}]},{"id":2006672,"r":"16","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"坑口(重華路)","d":"大坳門"},{"s":2,"o":"大坳門","d":"坑口(重華路)"}]},{"id":2006673,"r":"17","g":"NT","desc":null,"dirs":[{"s":1,"o":"翠林","d":"藍田站"},{"s":2,"o":"藍田站","d":"翠林"}]},{"id":2006674,"r":"17A","g":"NT","desc":null,"dirs":[{"s":1,"o":"寶琳站","d":"將軍澳村"},{"s":2,"o":"將軍澳村","d":"寶琳站"}]},{"id":2006675,"r":"17M","g":"NT","desc":null,"dirs":[{"s":1,"o":"寶琳站","d":"翠林"},{"s":2,"o":"翠林","d":"寶琳站"}]},{"id":2006676,"r":"17M","g":"NT","desc":"早上特別班次(經寶康路)","dirs":[{"s":1,"o":"翠林","d":"寶琳站(經康寶路)"}]},{"id":2002355,"r":"1A","g":"NT","desc":null,"dirs":[{"s":1,"o":"西貢","d":"鑽石山(彩虹道)公共運輸交匯處"},{"s":2,"o":"鑽石山(彩虹道)公共運輸交匯處","d":"西貢"}]},{"id":2002357,"r":"1A","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"白沙灣","d":"鑽石山(彩虹道)公共運輸交匯處"}]},{"id":2002358,"r":"1A","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"灰窰里","d":"鑽石山(彩虹道)公共運輸交匯處"}]},{"id":2002359,"r":"1A","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"西貢北","d":"鑽石山(彩虹道)公共運輸交匯處"}]},{"id":2002352,"r":"1S","g":"NT","desc":"通宵班次","dirs":[{"s":1,"o":"西貢","d":"鑽石山(彩虹道)公共運輸交匯處"},{"s":2,"o":"鑽石山(彩虹道)公共運輸交匯處","d":"西貢"}]},{"id":2002342,"r":"2","g":"NT","desc":null,"dirs":[{"s":1,"o":"西貢","d":"蠔涌"},{"s":2,"o":"蠔涌","d":"西貢"}]},{"id":2002344,"r":"2","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"北港","d":"西貢"}]},{"id":2002349,"r":"2","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"西貢(宜春街)","d":"界咸(循環線)"}]},{"id":2001361,"r":"20A","g":"NT","desc":null,"dirs":[{"s":1,"o":"大埔墟站專線小巴總站","d":"雅麗氏何妙齡那打素醫院"}]},{"id":2001468,"r":"20B","g":"NT","desc":"早上10時前班次","dirs":[{"s":1,"o":"洞梓","d":"大埔墟站"}]},{"id":2001469,"r":"20B","g":"NT","desc":"早上10時後班次(經洞梓山路)","dirs":[{"s":1,"o":"洞梓","d":"大埔墟站"}]},{"id":2005484,"r":"20B","g":"NT","desc":null,"dirs":[{"s":1,"o":"大埔墟站","d":"洞梓"}]},{"id":2009939,"r":"20G","g":"NT","desc":"輔助路線","dirs":[{"s":1,"o":"黃魚灘(樂善村)","d":"大埔墟站"}]},{"id":2001475,"r":"20R","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"大埔墟站","d":"烏蛟騰"},{"s":2,"o":"烏蛟騰","d":"大埔墟站"}]},{"id":2001463,"r":"20M","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"鳳園","d":"大埔中心(循環線)"}]},{"id":2001470,"r":"20C","g":"NT","desc":null,"dirs":[{"s":1,"o":"大埔墟站","d":"大美督"},{"s":2,"o":"大美督","d":"大埔墟站"}]},{"id":2001471,"r":"20C","g":"NT","desc":"特快班次","dirs":[{"s":1,"o":"大埔墟站","d":"大美督"},{"s":2,"o":"大美督","d":"大埔墟站"}]},{"id":2001472,"r":"20C","g":"NT","desc":"特別班次(經山寮路)","dirs":[{"s":1,"o":"大埔墟站","d":"大美督"},{"s":2,"o":"大美督","d":"大埔墟站"}]},{"id":2001460,"r":"20S","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"馬窩","d":"大埔墟(循環線)"}]},{"id":2001278,"r":"21A","g":"NT","desc":null,"dirs":[{"s":1,"o":"大埔頭","d":"大埔墟"},{"s":2,"o":"大埔墟","d":"大埔頭"}]},{"id":2001464,"r":"20K","g":"NT","desc":null,"dirs":[{"s":1,"o":"大埔墟站","d":"三門仔"},{"s":2,"o":"三門仔","d":"大埔墟站"}]},{"id":2001465,"r":"20K","g":"NT","desc":"特快班次","dirs":[{"s":1,"o":"大埔墟站","d":"三門仔"},{"s":2,"o":"三門仔","d":"大埔墟站"}]},{"id":2001467,"r":"20K","g":"NT","desc":"特別班次(經聯益新村)","dirs":[{"s":1,"o":"大埔墟站","d":"三門仔"},{"s":2,"o":"三門仔","d":"大埔墟站"}]},{"id":2001478,"r":"20K","g":"NT","desc":"特別班次(由沙欄路)","dirs":[{"s":1,"o":"沙欄路","d":"大埔墟"}]},{"id":2001461,"r":"20P","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"鳳園","d":"大埔墟站(循環線)"}]},{"id":2001462,"r":"20P","g":"NT","desc":"額外班次(經廣福道)","dirs":[{"s":1,"o":"鳳園","d":"大埔墟站(循環線)"}]},{"id":2001473,"r":"20E","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"大埔墟站","d":"山寮(循環線)"}]},{"id":2001474,"r":"20E","g":"NT","desc":"額外班次(經汀角村)","dirs":[{"s":1,"o":"大埔墟站","d":"山寮(循環線)"}]},{"id":2001275,"r":"22K","g":"NT","desc":null,"dirs":[{"s":1,"o":"大埔墟","d":"錦山"},{"s":2,"o":"錦山","d":"大埔墟"}]},{"id":2001326,"r":"23K","g":"NT","desc":null,"dirs":[{"s":1,"o":"新屋家","d":"大埔墟"}]},{"id":2001327,"r":"23K","g":"NT","desc":"早上額外班次","dirs":[{"s":1,"o":"荔枝山","d":"大埔墟"}]},{"id":2001359,"r":"23K","g":"NT","desc":"下午額外班次","dirs":[{"s":1,"o":"大埔墟站專線小巴總站","d":"新屋家"}]},{"id":2001476,"r":"20T","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"大埔墟站","d":"慈山寺"},{"s":2,"o":"慈山寺","d":"大埔墟站"}]},{"id":2001392,"r":"20X","g":"NT","desc":"額外快速班次","dirs":[{"s":1,"o":"大埔墟站專線小巴總站","d":"雅麗氏何妙齡那打素醫院"},{"s":2,"o":"雅麗氏何妙齡那打素醫院","d":"大埔墟站專線小巴總站"}]},{"id":2005221,"r":"20X","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"斑蝶樓","d":"大埔墟站專線小巴總站"}]},{"id":2001276,"r":"21K","g":"NT","desc":null,"dirs":[{"s":1,"o":"圍頭村","d":"大埔墟"}]},{"id":2001277,"r":"21K","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"圍頭村","d":"大埔墟"}]},{"id":2004070,"r":"25A","g":"NT","desc":null,"dirs":[{"s":1,"o":"大埔墟","d":"南華莆(循環線)"}]},{"id":2004075,"r":"25A","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"泰亨鄉公所","d":"大埔墟 (靖遠街) 總站"}]},{"id":2001360,"r":"23S","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"大埔墟站專線小巴總站","d":"打鐵屻通路"},{"s":2,"o":"打鐵屻通路","d":"大埔墟站專線小巴總站"}]},{"id":2009873,"r":"24","g":"NT","desc":null,"dirs":[{"s":1,"o":"大埔 (富蝶邨)","d":"大埔 (廣福道) (循環線)"}]},{"id":2004078,"r":"25B","g":"NT","desc":null,"dirs":[{"s":1,"o":"大埔墟","d":"九龍坑∕元嶺(循環線)"}]},{"id":2004080,"r":"25B","g":"NT","desc":" 特別班次 (大埔墟 – 大窩)","dirs":[{"s":1,"o":"大埔墟","d":"九龍坑∕元嶺(循環線)"}]},{"id":2004082,"r":"25B","g":"NT","desc":"早上班次 (大埔墟 – 元嶺)","dirs":[{"s":1,"o":"大埔墟","d":"九龍坑∕元嶺(循環線)"}]},{"id":2004083,"r":"25B","g":"NT","desc":"早上班次 (大埔墟 - 九龍坑)","dirs":[{"s":1,"o":"大埔墟","d":"九龍坑∕元嶺(循環線)"}]},{"id":2004067,"r":"25K","g":"NT","desc":"正常路線","dirs":[{"s":1,"o":"大埔墟","d":"林村 (白牛石)"},{"s":2,"o":"林村 (白牛石)","d":"大埔墟"}]},{"id":2005222,"r":"26A","g":"NT","desc":null,"dirs":[{"s":1,"o":"香港教育大學","d":"大埔墟(廣福道) (循環線)"}]},{"id":2007861,"r":"27A","g":"NT","desc":"輔助服務","dirs":[{"s":1,"o":"白石角(天賦海灣)","d":"沙田(排頭街)"},{"s":2,"o":"沙田(排頭街)","d":"白石角(天賦海灣)"}]},{"id":2007862,"r":"27A","g":"NT","desc":"輔助服務","dirs":[{"s":1,"o":"白石角(天賦海灣)","d":"沙田(排頭街)(經科技大道西)"},{"s":2,"o":"沙田(排頭街)(經科技大道西)","d":"白石角(天賦海灣)"}]},{"id":2007893,"r":"27A","g":"NT","desc":"(特別班次)(經海日灣)","dirs":[{"s":1,"o":"白石角(天賦海灣)","d":"沙田(排頭街)"},{"s":2,"o":"沙田(排頭街)","d":"白石角(天賦海灣)"}]},{"id":2007894,"r":"27A","g":"NT","desc":"(特別班次)(經海日灣及創新路)","dirs":[{"s":1,"o":"白石角(天賦海灣)","d":"沙田(排頭街)"},{"s":2,"o":"沙田(排頭街)","d":"白石角(天賦海灣)"}]},{"id":2007860,"r":"27","g":"NT","desc":null,"dirs":[{"s":1,"o":"香港科學園","d":"沙田(排頭街)"},{"s":2,"o":"沙田(排頭街)","d":"香港科學園"}]},{"id":2007895,"r":"27B","g":"NT","desc":"輔助服務","dirs":[{"s":1,"o":"白石角(天賦海灣)","d":"沙田(排頭街)(經大學站)"},{"s":2,"o":"沙田(排頭街)(經大學站)","d":"白石角(天賦海灣)"}]},{"id":2010401,"r":"28A","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"大埔墟站","d":"優景里"},{"s":2,"o":"優景里","d":"大埔墟站"}]},{"id":2010071,"r":"28K","g":"NT","desc":null,"dirs":[{"s":1,"o":"大埔墟站","d":"沙田(白鶴汀街)(循環線)"}]},{"id":2010073,"r":"28K","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"大埔道","d":"沙田(白鶴汀街)"}]},{"id":2010074,"r":"28K","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"大埔墟站","d":"鹿茵山莊"}]},{"id":2010075,"r":"28K","g":"NT","desc":"特别班次","dirs":[{"s":1,"o":"廣福道","d":"沙田(白鶴汀街)"}]},{"id":2010076,"r":"28S","g":"NT","desc":null,"dirs":[{"s":1,"o":"白石角(天賦海灣)","d":"沙田(白鶴汀街)(循環線)"}]},{"id":2005253,"r":"26","g":"NT","desc":"正常班次 ","dirs":[{"s":1,"o":"香港教育大學","d":"馬鞍山海栢花園"},{"s":2,"o":"馬鞍山海栢花園","d":"香港教育大學"}]},{"id":2005254,"r":"26","g":"NT","desc":"特別班次 ","dirs":[{"s":1,"o":"頌安邨","d":"香港教育大學"}]},{"id":2001855,"r":"29","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"馬料水碼頭","d":"運頭塘"},{"s":2,"o":"運頭塘","d":"馬料水碼頭"}]},{"id":2001689,"r":"301","g":"NT","desc":null,"dirs":[{"s":1,"o":"祈德尊新邨","d":"荃灣站(循環線)"}]},{"id":2009016,"r":"3","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"西貢","d":"菠蘿輋"},{"s":2,"o":"菠蘿輋","d":"西貢"}]},{"id":2001206,"r":"308A","g":"NT","desc":null,"dirs":[{"s":1,"o":"碧堤半島","d":"青衣站"},{"s":2,"o":"青衣站","d":"碧堤半島"}]},{"id":2004594,"r":"310M","g":"NT","desc":"正常班次 ","dirs":[{"s":1,"o":"青衣站","d":"荃灣(海濱花園)(循環線)"}]},{"id":2004263,"r":"312","g":"NT","desc":null,"dirs":[{"s":1,"o":"梨木樹邨公共運輸交匯處","d":"青衣站"},{"s":2,"o":"青衣站","d":"梨木樹邨公共運輸交匯處"}]},{"id":2001890,"r":"302","g":"NT","desc":null,"dirs":[{"s":1,"o":"豪景花園","d":"葵芳站(循環線)"}]},{"id":2001891,"r":"302","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"碧堤半島","d":"葵芳(循環線)"}]},{"id":2004296,"r":"313","g":"NT","desc":"正常班次 ","dirs":[{"s":1,"o":"荃灣(曹公街)","d":"瑪嘉烈醫院"},{"s":2,"o":"瑪嘉烈醫院","d":"荃灣(曹公街)"}]},{"id":2011457,"r":"313","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"荃灣(曹公街)","d":"葵涌醫院"},{"s":2,"o":"葵涌醫院","d":"荃灣(曹公街)"}]},{"id":2001201,"r":"308M","g":"NT","desc":"正常路線","dirs":[{"s":1,"o":"青衣站","d":"浪翠園"}]},{"id":2001204,"r":"308M","g":"NT","desc":"經青嶼幹線訪客中心","dirs":[{"s":1,"o":"青衣站","d":"浪翠園"}]},{"id":2006576,"r":"31A","g":"NT","desc":null,"dirs":[{"s":1,"o":"唐人新村","d":"元朗廣場(循環線)"}]},{"id":2006574,"r":"31","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗(康景街)","d":"唐人新村(循環線)"}]},{"id":2006575,"r":"31","g":"NT","desc":"早上班次","dirs":[{"s":1,"o":"元朗(康景街)","d":"唐人新村(循環線)"}]},{"id":2011688,"r":"313S","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"葵涌醫院","d":"荔景山路 (荔景站)"},{"s":2,"o":"荔景山路 (荔景站)","d":"葵涌醫院"}]},{"id":2006577,"r":"32","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗站(北)公共運輸交匯處","d":"丹桂村"},{"s":2,"o":"丹桂村","d":"元朗站(北)公共運輸交匯處"}]},{"id":2002321,"r":"33","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗(泰豐街)","d":"下白泥"},{"s":2,"o":"下白泥","d":"元朗(泰豐街)"}]},{"id":2002325,"r":"35","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗(泰豐街)","d":"沙橋(尖鼻咀)"},{"s":2,"o":"沙橋(尖鼻咀)","d":"元朗(泰豐街)"}]},{"id":2002327,"r":"35","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"元朗(泰豐街)","d":"輞井圍"},{"s":2,"o":"輞井圍","d":"元朗(泰豐街)"}]},{"id":2002382,"r":"34A","g":"NT","desc":null,"dirs":[{"s":1,"o":"廈村","d":"流浮山"},{"s":2,"o":"流浮山","d":"廈村"}]},{"id":2008622,"r":"36","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗(福康街)","d":"大生圍村公所"},{"s":2,"o":"大生圍村公所","d":"元朗(福康街)"}]},{"id":2008630,"r":"36","g":"NT","desc":"黃昏班次 (不經擊壤路)","dirs":[{"s":1,"o":"大生圍村公所","d":"元朗(福康街)"}]},{"id":2011193,"r":"36","g":"NT","desc":"夜間特別班次(經攸壆路簡約公屋)","dirs":[{"s":1,"o":"元朗(福康街)","d":"大生圍村公所(循環線) "}]},{"id":2007532,"r":"39","g":"NT","desc":null,"dirs":[{"s":1,"o":"公庵","d":"元朗(鳳翔路)"},{"s":2,"o":"元朗(鳳翔路)","d":"公庵"}]},{"id":2007563,"r":"39","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"公庵","d":"元朗站"},{"s":2,"o":"元朗站","d":"公庵"}]},{"id":2009015,"r":"3A","g":"NT","desc":null,"dirs":[{"s":1,"o":"西貢","d":"南山新村"},{"s":2,"o":"南山新村","d":"西貢"}]},{"id":2008632,"r":"37","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗(福康街)","d":"攸潭尾村公所"},{"s":2,"o":"攸潭尾村公所","d":"元朗(福康街)"}]},{"id":2008633,"r":"37","g":"NT","desc":"黃昏班次 (不經擊壤路)","dirs":[{"s":1,"o":"攸潭尾村公所","d":"元朗(福康街)"}]},{"id":2007533,"r":"39A","g":"NT","desc":null,"dirs":[{"s":1,"o":"公庵路(木橋頭)","d":"元朗(教育路)(循環線)"}]},{"id":2008652,"r":"38","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗(福康街)","d":"攸潭尾西(近何生農場)"},{"s":2,"o":"攸潭尾西(近何生農場)","d":"元朗(福康街)"}]},{"id":2008686,"r":"38","g":"NT","desc":"黃昏班次 (不經擊壤路)","dirs":[{"s":1,"o":"攸潭尾西(近何生農場)","d":"元朗(福康街)"}]},{"id":2009018,"r":"4","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"西貢","d":"對面海"},{"s":2,"o":"對面海","d":"西貢"}]},{"id":2010830,"r":"36A","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗(福康街)","d":"攸壆路簡約公屋"},{"s":2,"o":"攸壆路簡約公屋","d":"元朗(福康街)"}]},{"id":2010863,"r":"36A","g":"NT","desc":"黃昏班次 (不經擊壤路)","dirs":[{"s":1,"o":"攸壆路簡約公屋","d":"元朗(福康街)"}]},{"id":2003306,"r":"402S","g":"NT","desc":"通宵班次","dirs":[{"s":1,"o":"長亨","d":"荃灣(眾安街)"},{"s":2,"o":"荃灣(眾安街)","d":"長亨"}]},{"id":2004956,"r":"40","g":"NT","desc":null,"dirs":[{"s":1,"o":"小坑村","d":"屯門市中心(循環線)"}]},{"id":2001266,"r":"403","g":"NT","desc":null,"dirs":[{"s":1,"o":"梨貝街巴士總站","d":"沙田圍"}]},{"id":2001270,"r":"403A","g":"NT","desc":null,"dirs":[{"s":1,"o":"安足街安蔭邨","d":"沙田担杆莆街"}]},{"id":2001271,"r":"403A","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"石蔭商場","d":"沙田担杆莆街"}]},{"id":2001272,"r":"403X","g":"NT","desc":null,"dirs":[{"s":1,"o":"大圍站公共運輸交匯處","d":"東北葵涌"}]},{"id":2001273,"r":"403X","g":"NT","desc":"特別班次(至和宜合路)","dirs":[{"s":1,"o":"大圍站公共運輸交匯處","d":"雍雅軒"}]},{"id":2001274,"r":"403X","g":"NT","desc":"特別班次(由梨木道)","dirs":[{"s":1,"o":"石蔭梨木道","d":"大圍"}]},{"id":2001887,"r":"404M","g":"NT","desc":null,"dirs":[{"s":1,"o":"葵芳站","d":"海濱花園(循環線)"}]},{"id":2001888,"r":"404M","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"葵芳站","d":"葵喜街(循環線)"}]},{"id":2003273,"r":"401","g":"NT","desc":null,"dirs":[{"s":1,"o":"青衣碼頭","d":"石蔭"},{"s":2,"o":"石蔭","d":"青衣碼頭"}]},{"id":2003307,"r":"401","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"長安巴士總站","d":"石蔭"}]},{"id":2001635,"r":"405","g":"NT","desc":null,"dirs":[{"s":1,"o":"長亨","d":"茘景南 (循環線)"}]},{"id":2006837,"r":"406","g":"NT","desc":null,"dirs":[{"s":1,"o":"石籬","d":"葵盛(循環線)"}]},{"id":2006870,"r":"407","g":"NT","desc":null,"dirs":[{"s":1,"o":"長宏","d":"瑪嘉烈醫院"},{"s":2,"o":"瑪嘉烈醫院","d":"長宏"}]},{"id":2006903,"r":"407","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"長發","d":"瑪嘉列醫院"}]},{"id":2006904,"r":"407A","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"葵芳站(興寧路)","d":"瑪嘉烈醫院"},{"s":2,"o":"瑪嘉烈醫院","d":"葵芳站(興寧路)"}]},{"id":2006906,"r":"407B","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"長宏","d":"葵盛圍"}]},{"id":2006907,"r":"407B","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"長發","d":"葵盛圍"}]},{"id":2001267,"r":"403P","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"石籬梨貝街","d":"沙田担杆莆街"}]},{"id":2001268,"r":"403P","g":"NT","desc":"特別班次(經圍乪街)","dirs":[{"s":1,"o":"石籬梨貝街","d":"沙田担杆莆街"}]},{"id":2001269,"r":"403P","g":"NT","desc":"特別班次經雍雅軒","dirs":[{"s":1,"o":"石籬梨貝街","d":"沙田担杆莆街"}]},{"id":2008653,"r":"409","g":"NT","desc":null,"dirs":[{"s":1,"o":"青衣(長亨)","d":"荃灣(荃灣街市街)(循環線)"}]},{"id":2008655,"r":"409S","g":"NT","desc":"額外服務班次","dirs":[{"s":1,"o":"青衣(長亨)","d":"荃灣(荃灣街市街)經德海街(循環線)"}]},{"id":2011787,"r":"40A","g":"NT","desc":"輔助班次","dirs":[{"s":1,"o":"紫麟路","d":"屯門市中心(循環線)"}]},{"id":2005847,"r":"411","g":"NT","desc":"正常班次(循環線)","dirs":[{"s":1,"o":"葵涌(荔崗街)","d":"深水埗(元州街)"}]},{"id":2008654,"r":"409K","g":"NT","desc":"額外服務班次","dirs":[{"s":1,"o":"青衣(長亨)","d":"荃灣西站(循環線)"}]},{"id":2001788,"r":"413","g":"NT","desc":null,"dirs":[{"s":1,"o":"青衣公眾碼頭","d":"瑪嘉烈醫院"},{"s":2,"o":"瑪嘉烈醫院","d":"青衣公眾碼頭"}]},{"id":2001012,"r":"42","g":"NT","desc":null,"dirs":[{"s":1,"o":"青磚圍","d":"屯門市中心(循環線)"}]},{"id":2001740,"r":"43B","g":"NT","desc":null,"dirs":[{"s":1,"o":"屯門市中心(河傍街) ","d":"大欖涌 (循環線)"}]},{"id":2005056,"r":"410","g":"NT","desc":null,"dirs":[{"s":1,"o":"瑪嘉烈醫院","d":"東北葵涌"},{"s":2,"o":"東北葵涌","d":"瑪嘉烈醫院"}]},{"id":2001656,"r":"43S","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"屯門市中心(河傍街) ","d":"掃管笏 (循環線)"}]},{"id":2001723,"r":"43A","g":"NT","desc":null,"dirs":[{"s":1,"o":"屯門市中心(河傍街) ","d":"青榕街"},{"s":2,"o":"青榕街","d":"屯門市中心(河傍街) "}]},{"id":2003999,"r":"44A","g":"NT","desc":null,"dirs":[{"s":1,"o":"屯門站公共交通交匯處","d":"上水站"},{"s":2,"o":"上水站","d":"屯門站公共交通交匯處"}]},{"id":2004001,"r":"44A","g":"NT","desc":"特别班次","dirs":[{"s":1,"o":"山景邨景貴樓","d":"上水站"}]},{"id":2001690,"r":"43","g":"NT","desc":"正常班次 (不經嘉和里山路)","dirs":[{"s":1,"o":"屯門市中心(河傍街) ","d":"掃管笏 (循環線)"}]},{"id":2001741,"r":"43","g":"NT","desc":null,"dirs":[{"s":1,"o":"屯門市中心(河傍街) ","d":"掃管笏 (循環線)"}]},{"id":2001636,"r":"43C","g":"NT","desc":null,"dirs":[{"s":1,"o":"屯門市中心(河傍街) ","d":"兆麟苑"},{"s":2,"o":"兆麟苑","d":"屯門市中心(河傍街) "}]},{"id":2004923,"r":"41","g":"NT","desc":null,"dirs":[{"s":1,"o":"龍門居","d":"屯門市中心(屯發路)"},{"s":2,"o":"屯門市中心(屯發路)","d":"龍門居"}]},{"id":2004036,"r":"44A1","g":"NT","desc":"正常路線","dirs":[{"s":1,"o":"屯門寶田邨","d":"上水站"}]},{"id":2004164,"r":"44B","g":"NT","desc":null,"dirs":[{"s":1,"o":"落馬洲(新田)公共交通交匯處","d":"屯門站"},{"s":2,"o":"屯門站","d":"落馬洲(新田)公共交通交匯處"}]},{"id":2004197,"r":"44B1","g":"NT","desc":null,"dirs":[{"s":1,"o":"落馬洲(新田)公共交通交匯處","d":"屯門碼頭"},{"s":2,"o":"屯門碼頭","d":"落馬洲(新田)公共交通交匯處"}]},{"id":2004032,"r":"45","g":"NT","desc":null,"dirs":[{"s":1,"o":"大興花園","d":"屯門市中心(循環線)"}]},{"id":2005715,"r":"46","g":"NT","desc":null,"dirs":[{"s":1,"o":"富泰邨","d":"屯門市中心(循環線)"}]},{"id":2007768,"r":"46M","g":"NT","desc":null,"dirs":[{"s":1,"o":"荔崗街","d":"荔景站(循環線)"}]},{"id":2003966,"r":"44","g":"NT","desc":"正常班次 ","dirs":[{"s":1,"o":"屯門碼頭","d":"上水站"},{"s":2,"o":"上水站","d":"屯門碼頭"}]},{"id":2008852,"r":"47S","g":"NT","desc":null,"dirs":[{"s":1,"o":"屯門碼頭","d":"旺角"},{"s":2,"o":"旺角","d":"屯門碼頭"}]},{"id":2007769,"r":"47M","g":"NT","desc":null,"dirs":[{"s":1,"o":"華景山莊","d":"荔景站(循環線)"}]},{"id":2005748,"r":"46X","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"富泰邨","d":"屯門市中心(循環線)"}]},{"id":2003209,"r":"481","g":"NT","desc":null,"dirs":[{"s":1,"o":"火炭(山尾街)","d":"荃灣街市街"},{"s":2,"o":"荃灣街市街","d":"火炭(山尾街)"}]},{"id":2003214,"r":"481B","g":"NT","desc":"輔助服務","dirs":[{"s":1,"o":"荃灣街市街","d":"大圍銅鑼灣山路"},{"s":2,"o":"大圍銅鑼灣山路","d":"荃灣街市街"}]},{"id":2003207,"r":"482","g":"NT","desc":null,"dirs":[{"s":1,"o":"沙⽥市中⼼(担杆莆街)","d":"荃灣街市街"},{"s":2,"o":"荃灣街市街","d":"沙⽥市中⼼(担杆莆街)"}]},{"id":2003212,"r":"481X","g":"NT","desc":"輔助服務","dirs":[{"s":1,"o":"火炭(駿洋邨)","d":"荃灣街市街"},{"s":2,"o":"荃灣街市街","d":"火炭(駿洋邨)"}]},{"id":2003211,"r":"481A","g":"NT","desc":"輔助服務","dirs":[{"s":1,"o":"荃灣街市街","d":"沙⽥市中心(担杆莆街)"},{"s":2,"o":"沙⽥市中心(担杆莆街)","d":"荃灣街市街"}]},{"id":2008851,"r":"48S","g":"NT","desc":null,"dirs":[{"s":1,"o":"良景邨","d":"旺角"},{"s":2,"o":"旺角","d":"良景邨"}]},{"id":2001095,"r":"501C","g":"NT","desc":null,"dirs":[{"s":1,"o":"雍盛苑","d":"聯和墟 (循環線)"}]},{"id":2005749,"r":"46A","g":"NT","desc":"輔助服務","dirs":[{"s":1,"o":"景秀里","d":"屯門市中心(循環線)"}]},{"id":2001128,"r":"501S","g":"NT","desc":null,"dirs":[{"s":1,"o":"上水站","d":"裕民坊"},{"s":2,"o":"裕民坊","d":"上水站"}]},{"id":2004033,"r":"49S","g":"NT","desc":"通宵路線","dirs":[{"s":1,"o":"屯門兆康苑","d":"灣仔"},{"s":2,"o":"灣仔","d":"屯門兆康苑"}]},{"id":2009017,"r":"4A","g":"NT","desc":null,"dirs":[{"s":1,"o":"西貢","d":"對面海 (海濱別墅)"},{"s":2,"o":"對面海 (海濱別墅)","d":"西貢"}]},{"id":2001038,"r":"501A","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"雍盛苑","d":"聯和墟 (循環線)"}]},{"id":2001920,"r":"502","g":"NT","desc":null,"dirs":[{"s":1,"o":"大埔那打素醫院","d":"清河邨"},{"s":2,"o":"清河邨公共運輸交匯處","d":"大埔那打素醫院"}]},{"id":2001955,"r":"502","g":"NT","desc":"特别班次","dirs":[{"s":1,"o":"華明路(欣暉閣)","d":"大埔那打素醫院"}]},{"id":2001986,"r":"502","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"清河邨公共運輸交匯處","d":"大埔那打素醫院"}]},{"id":2001987,"r":"502","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"大埔那打素醫院","d":"華明路(昌濤閣)"}]},{"id":2002019,"r":"502","g":"NT","desc":"特别班次","dirs":[{"s":1,"o":"大埔中心","d":"清河邨"}]},{"id":2004461,"r":"503","g":"NT","desc":"正常班次  ","dirs":[{"s":1,"o":"皇后山","d":"北區醫院"},{"s":2,"o":"北區醫院","d":"皇后山"}]},{"id":2009576,"r":"503K","g":"NT","desc":"短程服務路線","dirs":[{"s":1,"o":"皇后山","d":"上水匯"},{"s":2,"o":"上水匯","d":"皇后山"}]},{"id":2009147,"r":"505","g":"NT","desc":null,"dirs":[{"s":1,"o":"上水新發街","d":"沙田圓洲角"},{"s":2,"o":"沙田圓洲角","d":"上水新發街"}]},{"id":2009708,"r":"507","g":"NT","desc":null,"dirs":[{"s":1,"o":"馬適路","d":"粉嶺站 (循環線)"}]},{"id":2004462,"r":"504","g":"NT","desc":"正常班次 ","dirs":[{"s":1,"o":"華山村","d":"上水"},{"s":2,"o":"上水","d":"華山村"}]},{"id":2009675,"r":"506","g":"NT","desc":null,"dirs":[{"s":1,"o":"置福圍","d":"聯和墟 (循環線)"}]},{"id":2010929,"r":"508","g":"NT","desc":null,"dirs":[{"s":1,"o":"上水站","d":"古洞北福利服務綜合大樓總站"},{"s":2,"o":"古洞北福利服務綜合大樓總站","d":"上水站"}]},{"id":2011820,"r":"508X","g":"NT","desc":"輔助班次","dirs":[{"s":1,"o":"上水站","d":"古洞北福利服務綜合大樓總站"},{"s":2,"o":"古洞北福利服務綜合大樓總站","d":"上水站"}]},{"id":2005325,"r":"51K","g":"NT","desc":"正常班次 ","dirs":[{"s":1,"o":"上水站","d":"河上鄉"},{"s":2,"o":"河上鄉","d":"上水站"}]},{"id":2005327,"r":"51K","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"上水站","d":"羅湖懲教所(循環線)"}]},{"id":2005331,"r":"51B","g":"NT","desc":"特別班次 ","dirs":[{"s":1,"o":"上水站","d":"料壆"},{"s":2,"o":"料壆","d":"上水站"}]},{"id":2005333,"r":"51B","g":"NT","desc":"特別班次  ","dirs":[{"s":1,"o":"馬草壟 (信義新村)","d":"上水站"}]},{"id":2005322,"r":"50A","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"上水站","d":"古洞(南)"},{"s":2,"o":"古洞(南)","d":"上水站"}]},{"id":2006342,"r":"52A","g":"NT","desc":null,"dirs":[{"s":1,"o":"粉嶺站","d":"和滿街公共小型巴士總站"},{"s":2,"o":"和滿街公共小型巴士總站","d":"粉嶺站"}]},{"id":2006343,"r":"52A","g":"NT","desc":"(早上特別服務)(不經粉嶺樓路)","dirs":[{"s":1,"o":"和滿街公共小型巴士總站","d":"粉嶺站"}]},{"id":2006573,"r":"52B","g":"NT","desc":null,"dirs":[{"s":1,"o":"粉嶺站","d":"鶴藪"},{"s":2,"o":"鶴藪","d":"粉嶺站"}]},{"id":2006375,"r":"52K","g":"NT","desc":null,"dirs":[{"s":1,"o":"粉嶺站","d":"坪輋"},{"s":2,"o":"坪輋","d":"粉嶺站"}]},{"id":2006542,"r":"52K","g":"NT","desc":"特别班次","dirs":[{"s":1,"o":"粉嶺站","d":"坪原路,近坪洋舊村公廁"},{"s":2,"o":"坪原路,近坪洋舊村公廁","d":"粉嶺站"}]},{"id":2006543,"r":"52K","g":"NT","desc":"附加路線","dirs":[{"s":1,"o":"粉嶺站","d":"軍地(北)"},{"s":2,"o":"軍地(北)","d":"粉嶺站"}]},{"id":2007435,"r":"54K","g":"NT","desc":null,"dirs":[{"s":1,"o":"粉嶺站","d":"龍躍頭(循環線)"}]},{"id":2009543,"r":"54K","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"萃雲路, 近麻笏村","d":"粉嶺車站路, 近粉嶺名都嘉麗閣"}]},{"id":2010005,"r":"55S","g":"NT","desc":"輔助路線","dirs":[{"s":1,"o":"沙頭角公共運輸交匯處","d":"打鼓嶺(松園下)"},{"s":2,"o":"打鼓嶺(松園下)","d":"沙頭角公共運輸交匯處"}]},{"id":2007432,"r":"54A","g":"NT","desc":null,"dirs":[{"s":1,"o":"粉嶺站","d":"和滿街公共小型巴士總站"},{"s":2,"o":"和滿街公共小型巴士總站","d":"粉嶺站"}]},{"id":2007434,"r":"54A","g":"NT","desc":"(早上特別服務)(不經粉嶺樓路)","dirs":[{"s":1,"o":"和滿街公共小型巴士總站","d":"粉嶺站"}]},{"id":2011028,"r":"54A","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"和睦路海聯廣場外","d":"粉嶺站"}]},{"id":2001013,"r":"55K","g":"NT","desc":null,"dirs":[{"s":1,"o":"上水站小巴總站","d":"沙頭角公共運輸交匯處"},{"s":2,"o":"沙頭角公共運輸交匯處","d":"上水站小巴總站"}]},{"id":2001015,"r":"55K","g":"NT","desc":"特別班次(至聯和墟)","dirs":[{"s":1,"o":"上水站小巴總站","d":"聯和墟"},{"s":2,"o":"聯和墟","d":"上水站小巴總站"}]},{"id":2001019,"r":"55K","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"沙頭角公共運輸交匯處","d":"上水站小巴總站"}]},{"id":2010500,"r":"55K","g":"NT","desc":"上午特別班次","dirs":[{"s":1,"o":"萊洞","d":"上水站小巴總站"}]},{"id":2010501,"r":"55K","g":"NT","desc":"上午特別班次","dirs":[{"s":1,"o":"擔水坑","d":"上水站小巴總站"}]},{"id":2001020,"r":"56A","g":"NT","desc":null,"dirs":[{"s":1,"o":"粉嶺站","d":"和滿街小巴總站"},{"s":2,"o":"和滿街公共小巴總站","d":"粉嶺站"}]},{"id":2001458,"r":"56A","g":"NT","desc":"特別班次(不經和睦路)","dirs":[{"s":1,"o":"和滿街小巴總站","d":"粉嶺車站"}]},{"id":2001459,"r":"56A","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"海聯廣場","d":"粉嶺站"}]},{"id":2001025,"r":"56C","g":"NT","desc":null,"dirs":[{"s":1,"o":"粉嶺站","d":"小坑村"},{"s":2,"o":"小坑村","d":"粉嶺站"}]},{"id":2001023,"r":"56B","g":"NT","desc":null,"dirs":[{"s":1,"o":"粉嶺站","d":"丹竹坑"},{"s":2,"o":"丹竹坑","d":"粉嶺站"}]},{"id":2001027,"r":"56K","g":"NT","desc":null,"dirs":[{"s":1,"o":"粉嶺站","d":"鹿頸"},{"s":2,"o":"鹿頸","d":"粉嶺站"}]},{"id":2001029,"r":"56K","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"沙頭角公路, 萬屋邊","d":"粉嶺站專綫小巴總站"}]},{"id":2010203,"r":"58K","g":"NT","desc":null,"dirs":[{"s":1,"o":"上水站小巴總站","d":"丙岡路,近丙崗"},{"s":2,"o":"丙岡路,近丙崗","d":"上水站小巴總站"}]},{"id":2010170,"r":"57K","g":"NT","desc":null,"dirs":[{"s":1,"o":"上水站小巴總站","d":"粉嶺(唐公嶺)小巴總站"},{"s":2,"o":"粉嶺(唐公嶺)小巴總站","d":"上水站小巴總站"}]},{"id":2010171,"r":"57K","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"上水站小巴總站","d":"蕉徑路, 近彭氏宗祠"},{"s":2,"o":"蕉徑路, 近彭氏宗祠","d":"上水站小巴總站"}]},{"id":2009312,"r":"59A","g":"NT","desc":null,"dirs":[{"s":1,"o":"上水鄉","d":"上水站(循環線)"}]},{"id":2011292,"r":"59B","g":"NT","desc":"輔助班次","dirs":[{"s":1,"o":"上水彩石邨","d":"石湖墟新豐路 (循環線)"}]},{"id":2005323,"r":"50K","g":"NT","desc":"正常班次 ","dirs":[{"s":1,"o":"上水站","d":"坑頭"},{"s":2,"o":"坑頭","d":"上水站"}]},{"id":2008685,"r":"601","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗 (鳳翔路)","d":"北圍村"},{"s":2,"o":"北圍村","d":"元朗 (鳳翔路)"}]},{"id":2008718,"r":"601B","g":"NT","desc":null,"dirs":[{"s":1,"o":"北圍村","d":"錦上路站 (循環線)"}]},{"id":2008719,"r":"601C","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗 (鳳翔路)","d":"錦上路站 (循環線)"}]},{"id":2006277,"r":"59K","g":"NT","desc":null,"dirs":[{"s":1,"o":"上水站","d":"蓮麻坑"},{"s":2,"o":"蓮麻坑","d":"上水站"}]},{"id":2006279,"r":"59K","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"上水站","d":"香園圍"},{"s":2,"o":"香園圍","d":"上水站"}]},{"id":2006281,"r":"59K","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"上水站","d":"松園下"},{"s":2,"o":"松園下","d":"上水站"}]},{"id":2009180,"r":"59S","g":"NT","desc":null,"dirs":[{"s":1,"o":"上水站","d":"香園圍邊境管制站"},{"s":2,"o":"香園圍邊境管制站","d":"上水站"}]},{"id":2008751,"r":"602","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗 (鳳翔路)","d":"大江埔"},{"s":2,"o":"大江埔","d":"元朗 (鳳翔路)"}]},{"id":2008752,"r":"602C","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗 (鳳翔路)","d":"錦上路站 (循環線)"}]},{"id":2008753,"r":"603","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗 (鳳翔路)","d":"逢吉鄉"},{"s":2,"o":"逢吉鄉","d":"元朗 (鳳翔路)"}]},{"id":2008754,"r":"604","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗 (鳳翔路)","d":"山下村"},{"s":2,"o":"山下村","d":"元朗 (鳳翔路)"}]},{"id":2008786,"r":"606S","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗 (鳳翔路)","d":"尖沙咀東 (麼地道)"},{"s":2,"o":"尖沙咀東 (麼地道)","d":"元朗 (鳳翔路)"}]},{"id":2008784,"r":"605","g":"NT","desc":null,"dirs":[{"s":1,"o":"麒麟村","d":"上水站"},{"s":2,"o":"上水站","d":"麒麟村"}]},{"id":2001194,"r":"608","g":"NT","desc":null,"dirs":[{"s":1,"o":"橫台山","d":"元朗鳳翔路(循環線)"}]},{"id":2001195,"r":"608","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"橫台山","d":"錦上路站(循環線)"}]},{"id":2010236,"r":"608S","g":"NT","desc":"輔助路線","dirs":[{"s":1,"o":"七星薈小巴總站","d":"錦上路站公共運輸交滙處(循環線)"}]},{"id":2001196,"r":"609","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗大球場","d":"博愛醫院(循環線)"}]},{"id":2001208,"r":"609S","g":"NT","desc":null,"dirs":[{"s":1,"o":"朗善邨","d":"元朗站(北)公共運輸交匯處"}]},{"id":2001209,"r":"609S","g":"NT","desc":"特別班次(至博愛醫院)","dirs":[{"s":1,"o":"朗善邨","d":"元朗站(北)公共運輸交匯處"}]},{"id":2001197,"r":"609B","g":"NT","desc":null,"dirs":[{"s":1,"o":"朗善邨","d":"元朗港鐵站(循環線)"}]},{"id":2001200,"r":"609B","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"朗善邨","d":"元朗港鐵站(循環線)"}]},{"id":2003669,"r":"60K","g":"NT","desc":null,"dirs":[{"s":1,"o":"沙田站","d":"火炭平房區"},{"s":2,"o":"火炭平房區","d":"沙田站"}]},{"id":2003903,"r":"60K","g":"NT","desc":"特別路線","dirs":[{"s":1,"o":"沙田站","d":"黃竹洋村"},{"s":2,"o":"黃竹洋村","d":"沙田站"}]},{"id":2003671,"r":"60P","g":"NT","desc":"額外班次 ","dirs":[{"s":1,"o":"沙田站","d":"火炭駿洋邨公共運輸停車灣"},{"s":2,"o":"火炭駿洋邨公共運輸停車灣","d":"沙田站"}]},{"id":2011094,"r":"60C","g":"NT","desc":"特別路線","dirs":[{"s":1,"o":"沙田站","d":"火炭平房區"}]},{"id":2003673,"r":"60R","g":"NT","desc":" 額外班次 ","dirs":[{"s":1,"o":"沙田站","d":"沙田馬場(彭福公園)"},{"s":2,"o":"沙田馬場(彭福公園)","d":"沙田站"}]},{"id":2001161,"r":"610S","g":"NT","desc":null,"dirs":[{"s":1,"o":"天水圍天瑞邨","d":"尖沙咀海防道"},{"s":2,"o":"尖沙咀海防道","d":"天水圍天瑞邨"}]},{"id":2008598,"r":"611B","g":"NT","desc":null,"dirs":[{"s":1,"o":"鈞樂里","d":"元朗站(循環線)"}]},{"id":2008599,"r":"611B","g":"NT","desc":"特別服務班次","dirs":[{"s":1,"o":"德業街","d":"阜財街(循環線)"}]},{"id":2008595,"r":"611","g":"NT","desc":null,"dirs":[{"s":1,"o":"山貝路","d":"阜財街(循環線)"}]},{"id":2008603,"r":"611P","g":"NT","desc":null,"dirs":[{"s":1,"o":"山貝路","d":"安信街(循環線)"}]},{"id":2008597,"r":"611A","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗站","d":"山貝路(循環線)"}]},{"id":2007438,"r":"618","g":"NT","desc":null,"dirs":[{"s":1,"o":"天水圍(天恩邨)","d":"深圳灣口岸"},{"s":2,"o":"深圳灣口岸","d":"天水圍(天恩邨)"}]},{"id":2010434,"r":"618B","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"天水圍(濕地公園路)","d":"深圳灣口岸"}]},{"id":2008620,"r":"611S","g":"NT","desc":null,"dirs":[{"s":1,"o":"同心村 (山貝路)","d":"元朗站(循環線)"}]},{"id":2004762,"r":"616S","g":"NT","desc":"通宵班次","dirs":[{"s":1,"o":"旺角","d":"落馬洲管制站"},{"s":2,"o":"落馬洲管制站","d":"旺角"}]},{"id":2009906,"r":"618A","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"天水圍(天恩邨)","d":"深圳灣口岸"}]},{"id":2003681,"r":"61S","g":"NT","desc":null,"dirs":[{"s":1,"o":"火炭","d":"旺角站"},{"s":2,"o":"旺角站","d":"火炭"}]},{"id":2003683,"r":"61S","g":"NT","desc":null,"dirs":[{"s":1,"o":"瀝源∕禾輋","d":"旺角站"},{"s":2,"o":"旺角站","d":"瀝源∕禾輋"}]},{"id":2003675,"r":"61M","g":"NT","desc":null,"dirs":[{"s":1,"o":"世界花園","d":"九龍塘(沙福道)公共交通交匯處"},{"s":2,"o":"九龍塘(沙福道)公共交通交匯處","d":"世界花園"}]},{"id":2003677,"r":"61M","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"世界花園","d":"大圍站公共運輸交匯處"},{"s":2,"o":"大圍站公共運輸交匯處","d":"世界花園"}]},{"id":2008785,"r":"620","g":"NT","desc":null,"dirs":[{"s":1,"o":"峻巒交通總匯","d":"錦上路站公共運輸交匯處"},{"s":2,"o":"錦上路站公共運輸交匯處","d":"峻巒交通總匯"}]},{"id":2009774,"r":"621","g":"NT","desc":null,"dirs":[{"s":1,"o":"洪水橋(洪元路)","d":"天水圍北(濕地公園路)(經天水圍醫院) (循環線)"}]},{"id":2009807,"r":"621","g":"NT","desc":"早上班次","dirs":[{"s":1,"o":"洪水橋(洪元路)","d":"天水圍北(濕地公園路)(經天水圍醫院) (循環線)"}]},{"id":2010635,"r":"624","g":"NT","desc":null,"dirs":[{"s":1,"o":"峻巒交通總匯","d":"元朗站(朗明街)(循環線)"}]},{"id":2001591,"r":"623","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗 (鳳翔路)","d":"港頭村"},{"s":2,"o":"港頭村","d":"元朗 (鳳翔路)"}]},{"id":2003679,"r":"62K","g":"NT","desc":"正常班次  ","dirs":[{"s":1,"o":"沙田站","d":"沙田山莊"},{"s":2,"o":"沙田山莊","d":"沙田站"}]},{"id":2008224,"r":"63A","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"美松苑","d":"大圍站(村南道)"},{"s":2,"o":"大圍站(村南道)","d":"美松苑"}]},{"id":2008225,"r":"63B","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"恒峰花園","d":"大圍站(村南道)"},{"s":2,"o":"大圍站(村南道)","d":"恒峰花園"}]},{"id":2008223,"r":"63K","g":"NT","desc":null,"dirs":[{"s":1,"o":"美田邨公共運輸交匯處","d":"大圍站(村南道)"},{"s":2,"o":"大圍站(村南道)","d":"美田邨公共運輸交匯處"}]},{"id":2008226,"r":"63S","g":"NT","desc":"通宵班次","dirs":[{"s":1,"o":"美田邨公共運輸交匯處","d":"旺角"},{"s":2,"o":"旺角","d":"美田邨公共運輸交匯處"}]},{"id":2008227,"r":"64K","g":"NT","desc":null,"dirs":[{"s":1,"o":"富山","d":"大圍站(村南道)"},{"s":2,"o":"大圍站(村南道)","d":"富山"}]},{"id":2006244,"r":"64A","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"培橋書院","d":"大圍站(村南道)"}]},{"id":2009081,"r":"65K","g":"NT","desc":null,"dirs":[{"s":1,"o":"黃泥頭","d":"火炭站 (循環線)"}]},{"id":2009082,"r":"65A","g":"NT","desc":"輔助班次","dirs":[{"s":1,"o":"黃泥頭","d":"沙田市中心"},{"s":2,"o":"沙田市中心","d":"黃泥頭"}]},{"id":2009114,"r":"65A","g":"NT","desc":"額外班次 (早上繁忙時段 0700 - 0900)","dirs":[{"s":1,"o":"黃泥頭","d":"沙田站"},{"s":2,"o":"沙田站","d":"黃泥頭"}]},{"id":2009116,"r":"65S","g":"NT","desc":null,"dirs":[{"s":1,"o":"黃泥頭","d":"旺角站 (循環線)"}]},{"id":2009117,"r":"66K","g":"NT","desc":null,"dirs":[{"s":1,"o":"沙田站","d":"九肚 (循環線)"}]},{"id":2011160,"r":"65X","g":"NT","desc":"輔助班次","dirs":[{"s":1,"o":"黃泥頭","d":"第一城站 (循環線)"}]},{"id":2009115,"r":"65M","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"黃泥頭","d":"石門站"},{"s":2,"o":"石門站","d":"黃泥頭"}]},{"id":2007762,"r":"68K","g":"NT","desc":null,"dirs":[{"s":1,"o":"沙田站(排頭街)","d":"瑞峰花園"},{"s":2,"o":"瑞峰花園","d":"沙田站(排頭街)"}]},{"id":2007765,"r":"68K","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"大圍站公共運輸交匯處","d":"瑞峰花園"},{"s":2,"o":"瑞峰花園","d":"大圍站公共運輸交匯處"}]},{"id":2009119,"r":"67A","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"碩門邨","d":"沙田站"},{"s":2,"o":"沙田站","d":"碩門邨"}]},{"id":2009118,"r":"67K","g":"NT","desc":null,"dirs":[{"s":1,"o":"亞公角","d":"沙田站"},{"s":2,"o":"沙田站","d":"亞公角"}]},{"id":2007766,"r":"69K","g":"NT","desc":null,"dirs":[{"s":1,"o":"沙田站(排頭街)","d":"沙田渣甸山花園∕華翠園"},{"s":2,"o":"沙田渣甸山花園∕華翠園","d":"沙田站(排頭街)"}]},{"id":2007764,"r":"68S","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"瑞峰花園","d":"顯徑站"},{"s":2,"o":"顯徑站","d":"瑞峰花園"}]},{"id":2002339,"r":"7","g":"NT","desc":null,"dirs":[{"s":1,"o":"西貢","d":"海下"},{"s":2,"o":"海下","d":"西貢"}]},{"id":2008290,"r":"71","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗(元朗泰衡街)","d":"石湖塘(河背)"},{"s":2,"o":"石湖塘(河背)","d":"元朗(元朗泰衡街)"}]},{"id":2008388,"r":"71A","g":"NT","desc":null,"dirs":[{"s":1,"o":"長莆村","d":"錦上路運輸交匯處"},{"s":2,"o":"錦上路運輸交匯處","d":"長莆村"}]},{"id":2008390,"r":"72","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗(元朗泰衡街)","d":"雷公田"},{"s":2,"o":"雷公田","d":"元朗(元朗泰衡街)"}]},{"id":2008392,"r":"72","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"錦上路站","d":"雷公田"},{"s":2,"o":"雷公田","d":"錦上路站"}]},{"id":2008553,"r":"73","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗(福康街)小巴總站","d":"崇山新村"},{"s":2,"o":"崇山新村","d":"朗屏站(媽橫路)"}]},{"id":2009378,"r":"73A","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗(福康街)小巴總站","d":"元朗(崇山新村)"},{"s":2,"o":"元朗(崇山新村)","d":"元朗(福康街)小巴總站"}]},{"id":2007464,"r":"76","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗(福康街)","d":"小磡村"},{"s":2,"o":"小磡村","d":"元朗(福康街)"}]},{"id":2008094,"r":"76","g":"NT","desc":"特別班次(不經擊壤路)","dirs":[{"s":1,"o":"小磡村","d":"元朗(福康街)"}]},{"id":2008555,"r":"74A","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗(福康街)","d":"東頭圍"},{"s":2,"o":"東頭圍","d":"元朗(福康街)"}]},{"id":2011655,"r":"78","g":"NT","desc":null,"dirs":[{"s":1,"o":"落馬洲(新田)公共交通交匯處","d":"八鄉路(近大欖隧道轉車站)"},{"s":2,"o":"八鄉路(近大欖隧道轉車站)","d":"落馬洲(新田)公共交通交匯處"}]},{"id":2008554,"r":"74","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗(福康街)","d":"盛屋村"},{"s":2,"o":"盛屋村","d":"元朗(福康街)"}]},{"id":2007398,"r":"75","g":"NT","desc":null,"dirs":[{"s":1,"o":"元朗(福康街)","d":"落馬洲支線公共交通交匯處"},{"s":2,"o":"落馬洲支線公共交通交匯處","d":"元朗(福康街)"}]},{"id":2007431,"r":"75","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"元朗(福康街)","d":"下灣村"},{"s":2,"o":"下灣村","d":"元朗(福康街)"}]},{"id":2007436,"r":"75","g":"NT","desc":"特別班次(不經擊壤路)","dirs":[{"s":1,"o":"下灣村","d":"元朗(福康街)"}]},{"id":2007437,"r":"75","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"新田(近新田郵政局)","d":"落馬洲支線公共交通交匯處"},{"s":2,"o":"落馬洲支線公共交通交匯處","d":"新田(近新田郵政局)"}]},{"id":2007630,"r":"79S","g":"NT","desc":null,"dirs":[{"s":1,"o":"天水圍 (俊宏軒)","d":"落馬洲管制站"},{"s":2,"o":"落馬洲管制站","d":"天水圍 (俊宏軒)"}]},{"id":2007999,"r":"80","g":"NT","desc":null,"dirs":[{"s":1,"o":"荃灣(川龍街)","d":"川龍"},{"s":2,"o":"川龍","d":"荃灣(川龍街)"}]},{"id":2010269,"r":"803","g":"NT","desc":null,"dirs":[{"s":1,"o":"顯徑","d":"利安"},{"s":2,"o":"利安","d":"顯徑"}]},{"id":2010270,"r":"803","g":"NT","desc":"特别班次","dirs":[{"s":1,"o":"顯徑","d":"利安"},{"s":2,"o":"利安","d":"顯徑"}]},{"id":2011656,"r":"78A","g":"NT","desc":"正常班次 ","dirs":[{"s":1,"o":"錦上路站","d":"八鄉路(近大欖隧道轉車站)"},{"s":2,"o":"八鄉路(近大欖隧道轉車站)","d":"錦上路站"}]},{"id":2010274,"r":"803K","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"大圍站公共運輸交匯處","d":"顯徑"},{"s":2,"o":"顯徑","d":"大圍站公共運輸交匯處"}]},{"id":2010277,"r":"805S","g":"NT","desc":null,"dirs":[{"s":1,"o":"錦英苑","d":"旺角"},{"s":2,"o":"旺角","d":"錦英苑"}]},{"id":2010278,"r":"805S","g":"NT","desc":"特别班次(不經富安花園)","dirs":[{"s":1,"o":"旺角","d":"錦英苑"}]},{"id":2010275,"r":"804","g":"NT","desc":null,"dirs":[{"s":1,"o":"廣源","d":"顯徑"},{"s":2,"o":"顯徑","d":"廣源"}]},{"id":2001821,"r":"806A","g":"NT","desc":null,"dirs":[{"s":1,"o":"黃泥頭","d":"運頭塘"},{"s":2,"o":"運頭塘","d":"黃泥頭"}]},{"id":2008256,"r":"806M","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"白石角","d":"石門(循環線)"}]},{"id":2001825,"r":"806C","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"香港科學園","d":"運頭塘"},{"s":2,"o":"運頭塘","d":"香港科學園"}]},{"id":2001823,"r":"806B","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"石門","d":"運頭塘"},{"s":2,"o":"運頭塘","d":"石門"}]},{"id":2011226,"r":"806X","g":"NT","desc":"特別班次(不經科學園及白石角)","dirs":[{"s":1,"o":"黃泥頭","d":"運頭塘"},{"s":2,"o":"運頭塘","d":"黃泥頭"}]},{"id":2001230,"r":"807A","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"港鐵大學站巴士總站","d":"馬鞍山站"},{"s":2,"o":"馬鞍山站","d":"港鐵大學站巴士總站"}]},{"id":2001231,"r":"807B","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"馬鞍山站","d":"黃竹灣"}]},{"id":2001232,"r":"807C","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"馬鞍山站","d":"港鐵大學站巴士總站"},{"s":2,"o":"港鐵大學站巴士總站","d":"馬鞍山站"}]},{"id":2001227,"r":"807K","g":"NT","desc":null,"dirs":[{"s":1,"o":"港鐵大學站巴士總站","d":"井頭村"},{"s":2,"o":"井頭村","d":"港鐵大學站巴士總站"}]},{"id":2001228,"r":"807K","g":"NT","desc":"早上額外班次","dirs":[{"s":1,"o":"井頭村","d":"烏溪沙站巴士總站"}]},{"id":2001229,"r":"807K","g":"NT","desc":"黃昏額外班次","dirs":[{"s":1,"o":"馬鞍山站","d":"井頭村"},{"s":2,"o":"井頭村","d":"馬鞍山站"}]},{"id":2001234,"r":"807S","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"港鐵大學站巴士總站","d":"井頭村外"},{"s":2,"o":"井頭村","d":"港鐵大學站巴士總站"}]},{"id":2001233,"r":"807X","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"港鐵大學站巴士總站","d":"烏溪沙站"}]},{"id":2004761,"r":"808P","g":"NT","desc":"額外班次 ","dirs":[{"s":1,"o":"恆安巴士總站","d":"威爾斯親王醫院"},{"s":2,"o":"威爾斯親王醫院","d":"恆安巴士總站"}]},{"id":2004758,"r":"808","g":"NT","desc":null,"dirs":[{"s":1,"o":"錦英苑","d":"威爾斯親王醫院"},{"s":2,"o":"威爾斯親王醫院","d":"錦英苑"}]},{"id":2004891,"r":"808","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"錦英苑","d":"新港城中心"},{"s":2,"o":"新港城中心","d":"錦英苑巴士總站"}]},{"id":2004892,"r":"808","g":"NT","desc":"晨早特別班次1(由西沙路開出)","dirs":[{"s":1,"o":"西沙路, 新港城外","d":"威爾斯親王醫院"}]},{"id":2004893,"r":"808","g":"NT","desc":"晨早特別班次2(由恆康街開出)","dirs":[{"s":1,"o":"西沙路, 恒康街, 曾璧山中學外","d":"威爾斯親王醫院"}]},{"id":2004692,"r":"809K","g":"NT","desc":null,"dirs":[{"s":1,"o":"沙田站(排頭街)","d":"水泉坳街(循環線)"}]},{"id":2010279,"r":"810","g":"NT","desc":null,"dirs":[{"s":1,"o":"沙田市中心","d":"馬鞍山(雅典居)(循環線)"}]},{"id":2010280,"r":"810","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"沙田市中心(不經保泰街)","d":"馬鞍山(雅典居)(循環線)"}]},{"id":2010281,"r":"810A","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"白石","d":"沙田市中心"},{"s":2,"o":"沙田市中心","d":"白石"}]},{"id":2007761,"r":"811","g":"NT","desc":null,"dirs":[{"s":1,"o":"穗禾苑","d":"愉翠苑"},{"s":2,"o":"愉翠苑","d":"穗禾苑"}]},{"id":2005517,"r":"81","g":"NT","desc":null,"dirs":[{"s":1,"o":"荃灣(兆和街)","d":"老圍"},{"s":2,"o":"老圍","d":"荃灣(兆和街)"}]},{"id":2005550,"r":"81","g":"NT","desc":"晚間班次(經老圍)","dirs":[{"s":1,"o":"荃灣(兆和街)","d":"城門水塘"},{"s":2,"o":"城門水塘","d":"荃灣(兆和街)"}]},{"id":2007795,"r":"811B","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"耀安","d":"火炭(長瀝尾街)(循環線)"}]},{"id":2011490,"r":"811B","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"耀安","d":"火炭(長瀝尾街)"}]},{"id":2007763,"r":"811A","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"華翠園","d":"碧濤花園"},{"s":2,"o":"碧濤花園","d":"華翠園"}]},{"id":2007767,"r":"811A","g":"NT","desc":"額外班次 (不經穗禾苑第一期)","dirs":[{"s":1,"o":"華翠園","d":"碧濤花園"},{"s":2,"o":"碧濤花園","d":"華翠園"}]},{"id":2007794,"r":"811P","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"第一城","d":"駿景園"},{"s":2,"o":"駿景園","d":"第一城"}]},{"id":2005329,"r":"812A","g":"NT","desc":null,"dirs":[{"s":1,"o":"水泉澳","d":"沙田圍站(循環線)"}]},{"id":2005330,"r":"812A","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"水泉澳(博泉徑)","d":"沙田圍站(逸泰街)"}]},{"id":2005334,"r":"813A","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"水泉澳","d":"沙田醫院(循環線)"}]},{"id":2005551,"r":"81M","g":"NT","desc":null,"dirs":[{"s":1,"o":"荃灣(兆和街)","d":"石圍角邨"},{"s":2,"o":"石圍角邨","d":"荃灣(兆和街)"}]},{"id":2008596,"r":"88A","g":"NT","desc":null,"dirs":[{"s":1,"o":"担杆山路","d":"美景花園 (循環線)"}]},{"id":2008600,"r":"88A","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"美景花園","d":"長安邨 (循環線)"}]},{"id":2008601,"r":"88A","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"青衣站","d":"担杆山路 (循環線)"}]},{"id":2008602,"r":"88A","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"青衣碼頭","d":"青衣站"},{"s":2,"o":"青衣站","d":"青衣碼頭"}]},{"id":2006680,"r":"87A","g":"NT","desc":null,"dirs":[{"s":1,"o":"貨櫃碼頭路公共運輸交匯處","d":"昂運路"},{"s":2,"o":"昂運路","d":"貨櫃碼頭路公共運輸交匯處"}]},{"id":2005121,"r":"88B","g":"NT","desc":null,"dirs":[{"s":1,"o":"翠怡花園","d":"葵芳站"},{"s":2,"o":"葵芳站","d":"翠怡花園"}]},{"id":2007827,"r":"811K","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"穗禾苑","d":"火炭站(循環線)"}]},{"id":2007828,"r":"811K","g":"NT","desc":"額外班次 (不經黃竹洋街, 桂地街)","dirs":[{"s":1,"o":"穗禾苑","d":"火炭站(循環線)"}]},{"id":2005979,"r":"88D","g":"NT","desc":null,"dirs":[{"s":1,"o":"宏福花園","d":"葵芳站"},{"s":2,"o":"葵芳站","d":"宏福花園"}]},{"id":2009972,"r":"88D","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"涌美路, 近長青邨青荷樓","d":"興寧路,近新都會廣場"}]},{"id":2007830,"r":"811S","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"穗禾苑一期","d":"耀安(恆康街)(循環線)"}]},{"id":2005332,"r":"813","g":"NT","desc":null,"dirs":[{"s":1,"o":"水泉澳","d":"石門站"},{"s":2,"o":"石門站","d":"水泉澳"}]},{"id":2008621,"r":"88M","g":"NT","desc":null,"dirs":[{"s":1,"o":"葵芳站","d":"香港聯合船塢"},{"s":2,"o":"香港聯合船塢","d":"葵芳站"}]},{"id":2008623,"r":"88M","g":"NT","desc":null,"dirs":[{"s":1,"o":"葵芳站","d":"香港聯合船塢 (不經長青)"},{"s":2,"o":"香港聯合船塢 (不經長青)","d":"葵芳站"}]},{"id":2008624,"r":"88M","g":"NT","desc":null,"dirs":[{"s":1,"o":"葵芳站","d":"長青邨"},{"s":2,"o":"長青邨","d":"葵芳站"}]},{"id":2008625,"r":"88M","g":"NT","desc":null,"dirs":[{"s":1,"o":"香港聯合船塢","d":"葵芳站 (不經新都會廣場)"}]},{"id":2008627,"r":"88M","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"葵芳站","d":"青衣南 (循環線)"}]},{"id":2008628,"r":"88M","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"葵芳站","d":"青衣南 (回程不經新都會廣場) (循環線)"}]},{"id":2010077,"r":"814","g":"NT","desc":null,"dirs":[{"s":1,"o":"麗坪路","d":"沙田(白鶴汀街)(循環線)"}]},{"id":2008594,"r":"86M","g":"NT","desc":null,"dirs":[{"s":1,"o":"荃灣(川龍街)","d":"石籬(梨貝街)"},{"s":2,"o":"石籬(梨貝街)","d":"荃灣(川龍街)"}]},{"id":2008589,"r":"85","g":"NT","desc":null,"dirs":[{"s":1,"o":"荃灣(兆和街)","d":"芙蓉山(竹林禪院)"},{"s":2,"o":"芙蓉山(竹林禪院)","d":"荃灣(兆和街)"}]},{"id":2007992,"r":"89A","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"荃灣(河背街)","d":"葵興站"},{"s":2,"o":"葵興站","d":"荃灣(河背街)"}]},{"id":2007993,"r":"89B","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"海貴路公共運輸交匯處","d":"葵盛北(葵孝街)"},{"s":2,"o":"葵盛北(葵孝街)","d":"海貴路公共運輸交匯處"}]},{"id":2007994,"r":"89P","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"石頭街","d":"葵芳(循環線)"}]},{"id":2008629,"r":"88G","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"葵芳站","d":"藍澄灣"},{"s":2,"o":"藍澄灣","d":"葵芳站"}]},{"id":2002547,"r":"9","g":"NT","desc":null,"dirs":[{"s":1,"o":"麥理浩夫人度假村","d":"西貢"},{"s":2,"o":"西貢","d":"麥理浩夫人度假村"}]},{"id":2002548,"r":"9","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"大網仔","d":"西貢"}]},{"id":2008631,"r":"88C","g":"NT","desc":null,"dirs":[{"s":1,"o":"葵芳站","d":"美景花園"},{"s":2,"o":"美景花園","d":"葵芳站"}]},{"id":2006681,"r":"87M","g":"NT","desc":null,"dirs":[{"s":1,"o":"葵芳站","d":"貨櫃碼頭南路(四號貨櫃碼頭)"},{"s":2,"o":"貨櫃碼頭南路(四號貨櫃碼頭)","d":"葵芳站"}]},{"id":2008593,"r":"86A","g":"NT","desc":null,"dirs":[{"s":1,"o":"荃灣(川龍街)","d":"石籬(梨貝街)"},{"s":2,"o":"石籬(梨貝街)","d":"荃灣(川龍街)"}]},{"id":2000987,"r":"901","g":"NT","desc":null,"dirs":[{"s":1,"o":"港珠澳大橋香港口岸","d":"東涌北(循環線)"}]},{"id":2007996,"r":"89S","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"葵芳站","d":"葵盛北(循環線)"}]},{"id":2008604,"r":"88F","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"青衣站","d":"藍澄灣"},{"s":2,"o":"藍澄灣","d":"青衣站"}]},{"id":2008619,"r":"88F","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"藍澄灣","d":"青衣站"},{"s":2,"o":"青衣站","d":"藍澄灣"}]},{"id":2005649,"r":"90P","g":"NT","desc":null,"dirs":[{"s":1,"o":"美孚","d":"瑪嘉烈醫院"},{"s":2,"o":"瑪嘉烈醫院","d":"美孚"}]},{"id":2007773,"r":"93A","g":"NT","desc":"額外服務班次","dirs":[{"s":1,"o":"華景山莊","d":"荃灣(鹹田街)"},{"s":2,"o":"荃灣(鹹田街)","d":"華景山莊"}]},{"id":2005651,"r":"91A","g":"NT","desc":null,"dirs":[{"s":1,"o":"荔崗街","d":"葵芳站"},{"s":2,"o":"葵芳站","d":"荔崗街"}]},{"id":2005682,"r":"91A","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"荔崗街","d":"葵盛圍"},{"s":2,"o":"葵盛圍","d":"荔崗街"}]},{"id":2004330,"r":"94S","g":"NT","desc":"正常班次 ","dirs":[{"s":1,"o":"海貴路公共運輸交匯處","d":"城門水塘"},{"s":2,"o":"城門水塘","d":"海貴路公共運輸交匯處"}]},{"id":2007772,"r":"93","g":"NT","desc":null,"dirs":[{"s":1,"o":"華員邨","d":"荃灣(鹹田街)"},{"s":2,"o":"荃灣(鹹田街)","d":"華員邨"}]},{"id":2005326,"r":"812","g":"NT","desc":null,"dirs":[{"s":1,"o":"水泉澳","d":"顯徑(車公廟路)"},{"s":2,"o":"顯徑(車公廟路)","d":"水泉澳"}]},{"id":2005328,"r":"812","g":"NT","desc":"特別班次","dirs":[{"s":1,"o":"水泉澳","d":"顯徑(車公廟路)"}]},{"id":2008005,"r":"95A","g":"NT","desc":null,"dirs":[{"s":1,"o":"荃德花園","d":"荃灣站(循環線)"}]},{"id":2005583,"r":"82","g":"NT","desc":null,"dirs":[{"s":1,"o":"荃灣(兆和街)","d":"城門水塘"},{"s":2,"o":"城門水塘","d":"荃灣(兆和街)"}]},{"id":2008004,"r":"95K","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"海貴路公共運輸交匯處","d":"荃灣站"},{"s":2,"o":"荃灣站","d":"海貴路公共運輸交匯處"}]},{"id":2007959,"r":"89","g":"NT","desc":null,"dirs":[{"s":1,"o":"荃灣(河背街)","d":"石頭街"},{"s":2,"o":"石頭街","d":"荃灣(河背街)"}]},{"id":2008003,"r":"96","g":"NT","desc":null,"dirs":[{"s":1,"o":"荃灣(海壩街)","d":"青龍頭"},{"s":2,"o":"青龍頭","d":"荃灣(海壩街)"}]},{"id":2008062,"r":"96B","g":"NT","desc":null,"dirs":[{"s":1,"o":"麗城花園","d":"荃灣站(循環線)"}]},{"id":2008061,"r":"96A","g":"NT","desc":null,"dirs":[{"s":1,"o":"油柑頭村","d":"荃灣站(循環線)"}]},{"id":2008058,"r":"95M","g":"NT","desc":null,"dirs":[{"s":1,"o":"荃灣站","d":"荃灣中心"},{"s":2,"o":"荃灣中心","d":"荃灣站"}]},{"id":2000964,"r":"84","g":"NT","desc":null,"dirs":[{"s":1,"o":"荃威花園","d":"荃灣眾安街"},{"s":2,"o":"荃灣眾安街","d":"荃威花園"}]},{"id":2006678,"r":"87","g":"NT","desc":null,"dirs":[{"s":1,"o":"荃灣(鹹田街)","d":"葵盛(盛芳街)"},{"s":2,"o":"葵盛(盛芳街)","d":"荃灣(鹹田街)"}]},{"id":2007995,"r":"89M","g":"NT","desc":null,"dirs":[{"s":1,"o":"葵盛北(葵孝街)","d":"葵芳站(循環線)"}]},{"id":2005055,"r":"97A","g":"NT","desc":null,"dirs":[{"s":1,"o":"華景山莊","d":"長沙灣(長發街)"},{"s":2,"o":"長沙灣(長發街)","d":"華景山莊"}]},{"id":2007771,"r":"92M","g":"NT","desc":null,"dirs":[{"s":1,"o":"華員邨","d":"美孚站(循環線)"}]},{"id":2005088,"r":"88","g":"NT","desc":null,"dirs":[{"s":1,"o":"青衣邨","d":"葵芳站"},{"s":2,"o":"葵芳站","d":"青衣邨"}]},{"id":2006705,"r":"87K","g":"NT","desc":null,"dirs":[{"s":1,"o":"葵芳站","d":"海貴路公共運輸交匯處"},{"s":2,"o":"海貴路公共運輸交匯處","d":"葵芳站"}]},{"id":2008002,"r":"95","g":"NT","desc":null,"dirs":[{"s":1,"o":"荃灣中心","d":"海貴路公共運輸交匯處"},{"s":2,"o":"海貴路公共運輸交匯處","d":"荃灣中心"}]},{"id":2004329,"r":"94","g":"NT","desc":null,"dirs":[{"s":1,"o":"石圍角","d":"葵盛"},{"s":2,"o":"葵盛","d":"石圍角"}]},{"id":2008587,"r":"83A","g":"NT","desc":null,"dirs":[{"s":1,"o":"荃灣(川龍街)","d":"安蔭邨(安捷街)"},{"s":2,"o":"安蔭邨(安捷街)","d":"荃灣(川龍街)"}]},{"id":2007770,"r":"90M","g":"NT","desc":null,"dirs":[{"s":1,"o":"荔崗街","d":"美孚站(循環線)"}]},{"id":2005683,"r":"91","g":"NT","desc":null,"dirs":[{"s":1,"o":"荔崗街","d":"荃灣(鹹田街)"},{"s":2,"o":"荃灣(鹹田街)","d":"荔崗街"}]},{"id":2005650,"r":"90A","g":"NT","desc":null,"dirs":[{"s":1,"o":"美孚","d":"葵涌醫院"},{"s":2,"o":"葵涌醫院","d":"美孚"}]},{"id":2008091,"r":"96M","g":"NT","desc":null,"dirs":[{"s":1,"o":"荃灣站","d":"青龍頭"},{"s":2,"o":"青龍頭","d":"荃灣站"}]},{"id":2004331,"r":"94A","g":"NT","desc":null,"dirs":[{"s":1,"o":"梨木樹邨公共運輸交匯處","d":"葵盛"},{"s":2,"o":"葵盛","d":"梨木樹邨公共運輸交匯處"}]},{"id":2008157,"r":"94A","g":"NT","desc":"額外服務班次","dirs":[{"s":1,"o":"梨木樹邨公共運輸交匯處","d":"葵富路(循環線)"}]},{"id":2007997,"r":"98","g":"NT","desc":null,"dirs":[{"s":1,"o":"荃灣(河背街)","d":"葵盛北(葵孝街)"},{"s":2,"o":"葵盛北(葵孝街)","d":"荃灣(河背街)"}]},{"id":2007998,"r":"98","g":"NT","desc":"短程班次","dirs":[{"s":1,"o":"荃灣(河背街)","d":"高盛臺(循環線)"}]},{"id":2008093,"r":"96C","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"荃灣站","d":"碧堤半島"},{"s":2,"o":"碧堤半島","d":"荃灣站"}]},{"id":2007266,"r":"99","g":"NT","desc":null,"dirs":[{"s":1,"o":"海貴路公共運輸交匯處","d":"海濱花園"},{"s":2,"o":"海濱花園","d":"海貴路公共運輸交匯處"}]},{"id":2004165,"r":"N44B","g":"NT","desc":"通宵服務","dirs":[{"s":1,"o":"落馬洲管制站","d":"屯門碼頭"},{"s":2,"o":"屯門碼頭","d":"落馬洲管制站"}]},{"id":2008059,"r":"96P","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"荃灣西站公共運輸交匯處","d":"麗城花園(循環線)"}]},{"id":2002549,"r":"9A","g":"NT","desc":"額外班次","dirs":[{"s":1,"o":"北潭涌","d":"萬宜水庫東壩 "},{"s":2,"o":"萬宜水庫東壩","d":"北潭涌"}]},{"id":2005616,"r":"82M","g":"NT","desc":null,"dirs":[{"s":1,"o":"荃灣(兆和街)","d":"象山邨"},{"s":2,"o":"象山邨","d":"荃灣(兆和街)"}]},{"id":2008591,"r":"86","g":"NT","desc":null,"dirs":[{"s":1,"o":"荃灣(海貴路)","d":"石籬(梨貝街)"},{"s":2,"o":"石籬(梨貝街)","d":"荃灣(海貴路)"}]}];
+    // 由靜態資料建立 route → regions 索引
+    const GMB_INDEX = (() => {
+      const idx = {};
+      (typeof GMB_STATIC !== 'undefined' ? GMB_STATIC : []).forEach(x => {
+        const c = String(x.r || '').toUpperCase();
+        if (!idx[c]) idx[c] = [];
+        if (x.g && idx[c].indexOf(x.g) < 0) idx[c].push(x.g);
+      });
+      return idx;
+    })();
+
+    let searchSeq = 0;
+    const gmbCache = new Map(); // routeCode -> { items, ts }
+
+    // 小巴 API 無 CORS：本機 file:// 會被瀏覽器攔截。
+    // 路線搜尋改用內建 GMB_STATIC；車站／ETA 直連失敗時用 jina 代理。
+    async function gmbApiFetch(url) {
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (res.ok) {
+          const j = await res.json();
+          if (j) return j;
+        }
+      } catch (e) {
+        console.warn('GMB direct failed', e.message || e);
+      }
+      try {
+        const proxy = 'https://r.jina.ai/' + url;
+        const res = await fetch(proxy, { cache: 'no-store' });
+        const text = await res.text();
+        // jina 回傳可能夾雜 Markdown，抽出 JSON
+        const m = text.match(/\{[\s\S]*\}/);
+        if (m) return JSON.parse(m[0]);
+      } catch (e) {
+        console.warn('GMB proxy failed', e.message || e);
+      }
+      return null;
+    }
+
+    function gmbItemsFromStatic(code) {
+      const found = [];
+      const list = (typeof GMB_STATIC !== 'undefined' ? GMB_STATIC : []).filter(
+        x => String(x.r || '').toUpperCase() === code
+      );
+      list.forEach(rd => {
+        const desc = (rd.desc && String(rd.desc).trim() && !/^正常班次/.test(rd.desc))
+          ? String(rd.desc).trim() : '';
+        const dirs = (rd.dirs && rd.dirs.length) ? rd.dirs : [{ s: 1, o: '', d: code }];
+        dirs.forEach(d => {
+          const bound = d.s === 1 ? 'out' : 'in';
+          found.push({
+            route: code,
+            co: 'gmb',
+            region: rd.g,
+            bound,
+            gmbRouteId: rd.id,
+            gmbRouteSeq: d.s || (bound === 'out' ? 1 : 2),
+            needsDetail: false,
+            orig: d.o || '',
+            dest: d.d || '',
+            gmbDesc: desc,
+            directions: dirs.map(x => ({
+              bound: x.s === 1 ? 'out' : 'in',
+              orig: x.o || '',
+              dest: x.d || '',
+              route_seq: x.s
+            }))
+          });
+        });
+      });
+      return found;
+    }
+
+    async function fetchGmbOnDemand(routeCode) {
+      const code = String(routeCode || '').toUpperCase().trim();
+      if (!code) return [];
+      const cached = gmbCache.get(code);
+      if (cached && cached.items.length && (Date.now() - cached.ts < 30 * 60 * 1000)) {
+        return cached.items.slice();
+      }
+      // 完全本機靜態資料，不依賴網絡／CORS
+      const found = gmbItemsFromStatic(code);
+      if (found.length) {
+        gmbCache.set(code, { items: found, ts: Date.now() });
+      }
+      return found.slice();
+    }
+
+    function sortSearchMatches(matches, query) {
+      matches.sort((a, b) => {
+        const aExact = a.route.toUpperCase() === query ? 0 : 1;
+        const bExact = b.route.toUpperCase() === query ? 0 : 1;
+        if (aExact !== bExact) return aExact - bExact;
+        if (aExact === 0 && bExact === 0) {
+          const aG = a.co === 'gmb' ? 0 : 1;
+          const bG = b.co === 'gmb' ? 0 : 1;
+          if (aG !== bG) return aG - bG;
+        }
+        const cmp = a.route.localeCompare(b.route, 'en', { numeric: true });
+        if (cmp !== 0) return cmp;
+        if (a.bound === 'out' && b.bound === 'in') return -1;
+        if (a.bound === 'in' && b.bound === 'out') return 1;
+        if (a.co === 'gmb' && b.co === 'gmb') {
+          return (a.region || '').localeCompare(b.region || '');
+        }
+        return 0;
+      });
+      return matches;
+    }
+
+    function gmbPlaceholdersFromIndex(query) {
+      if (typeof GMB_INDEX === 'undefined' || !GMB_INDEX[query]) return [];
+      return GMB_INDEX[query].map(region => ({
+        route: query,
+        co: 'gmb',
+        region,
+        bound: 'out',
+        needsDetail: true,
+        orig: '',
+        dest: '',
+        gmbRouteId: null,
+        gmbRouteSeq: 1
+      }));
+    }
+
+    function collectLocalMatches(query) {
+      let matches = routesLoaded
+        ? ALL_ROUTES.filter(r => r.route.toUpperCase().startsWith(query))
+        : [];
+      // 去掉未完成的 exact 小巴，稍後用 live / index 補上
+      matches = matches.filter(m => !(m.co === 'gmb' && m.route.toUpperCase() === query));
+      const cached = gmbCache.get(query);
+      if (cached && cached.items && cached.items.length) {
+        matches = cached.items.concat(matches);
       } else {
-        if (currentInput.length < 6) currentInput += k;
+        matches = gmbPlaceholdersFromIndex(query).concat(matches);
+      }
+      return sortSearchMatches(matches, query).slice(0, 50);
+    }
+
+    let gmbSearchTimer = null;
+
+    function searchRoute(val) {
+      const el = document.getElementById('results');
+      const query = val.trim().toUpperCase();
+      searchSeq++;
+      el.innerHTML = '';
+      if (!query) { renderHome(); return; }
+
+      // 本機巴士路線 + 內建小巴靜態資料（file:// 無需 API）
+      let matches = routesLoaded
+        ? ALL_ROUTES.filter(r => r.route.toUpperCase().startsWith(query))
+        : [];
+      matches = matches.filter(m => !(m.co === 'gmb' && m.route.toUpperCase() === query));
+      const gmbLive = gmbItemsFromStatic(query);
+      if (gmbLive.length) matches = gmbLive.concat(matches);
+      matches = sortSearchMatches(matches, query).slice(0, 50);
+
+      if (matches.length === 0) {
+        el.innerHTML = `<div class="empty-state">找不到「${query}」路線<br><small style="opacity:.7">小巴請輸入完整號碼（如 26、46、16A）</small></div>`;
+        return;
+      }
+      renderSearchResultList(el, matches, query, matches.length >= 50);
+    }
+
+    function renderSearchResultList(el, matches, query, truncated) {
+      let gmbSectionAdded = false;
+      let otherSectionAdded = false;
+      const frag = document.createDocumentFragment();
+      matches.forEach(item => {
+        if (item.co === 'gmb' && !gmbSectionAdded) {
+          const t = document.createElement('div');
+          t.className = 'section-title';
+          t.innerHTML = '<span>專線小巴</span>';
+          frag.appendChild(t);
+          gmbSectionAdded = true;
+        }
+        if (item.co !== 'gmb' && gmbSectionAdded && !otherSectionAdded) {
+          const t = document.createElement('div');
+          t.className = 'section-title';
+          t.innerHTML = '<span>巴士／其他</span>';
+          frag.appendChild(t);
+          otherSectionAdded = true;
+        }
+
+        const div = document.createElement('div');
+        div.className = 'result-item';
+        const plate = plateClass(item);
+
+        let destText, coText;
+        if (item.co === 'gmb') {
+          const regionLabel = { HKI: '港島', KLN: '九龍', NT: '新界' }[item.region] || item.region || '';
+          if (item.dest) {
+            destText = `往 ${item.dest}`;
+          } else if (item.orig) {
+            destText = `往 ${item.orig}`;
+          } else {
+            destText = regionLabel ? `專線小巴 · ${regionLabel}` : '專線小巴';
+          }
+          const desc = item.gmbDesc ? ` · ${item.gmbDesc}` : '';
+          coText = regionLabel
+            ? `專線小巴 · ${regionLabel}${desc}`
+            : `專線小巴${desc}`;
+        } else if (item.co === 'mtrbus') {
+          destText = item.dest ? `往 ${item.dest}` : (item.orig || '港鐵巴士');
+          coText = item.orig && item.dest
+            ? `${item.orig} · 港鐵巴士`
+            : '港鐵巴士';
+        } else {
+          if (item.dest) {
+            destText = `往 ${item.dest}`;
+            coText = item.orig
+              ? `${item.orig} · ${CO_NAMES[item.co] || item.co}`
+              : (CO_NAMES[item.co] || item.co);
+          } else if (item.orig) {
+            destText = `往 ${item.orig}`;
+            coText = CO_NAMES[item.co] || item.co;
+          } else {
+            destText = '—';
+            coText = CO_NAMES[item.co] || item.co;
+          }
+        }
+
+        div.innerHTML = `
+          <div class="result-num ${plate}">${item.route}</div>
+          <div class="result-info">
+            <div class="result-dest">${destText}</div>
+            <div class="result-co">${coText}</div>
+          </div>
+          <div class="result-arrow">›</div>
+        `;
+
+        if ((item.co === 'kmb' || item.co === 'lwb' || item.co === 'ctb') && item.bound) {
+          div.addEventListener('click', () => {
+            selectRouteDirection(
+              item.route, item.co, item.bound, item.dest,
+              null, null, null, item.service_type || '1', null
+            );
+          });
+        } else if (item.co === 'gmb') {
+          div.addEventListener('click', async () => {
+            // 已有完整資料 → 直接入站
+            if (item.gmbRouteId && item.dest) {
+              selectRouteDirection(
+                item.route, item.co, item.bound || 'out', item.dest,
+                item.region, item.gmbRouteId,
+                item.gmbRouteSeq || (item.bound === 'in' ? 2 : 1),
+                '1', null
+              );
+              return;
+            }
+            // 否則先拉詳情再進入
+            el.innerHTML = '<div class="loading-state">載入小巴路線中...</div>';
+            try {
+              const live = await fetchGmbOnDemand(item.route);
+              const same = live.filter(g =>
+                (!item.region || g.region === item.region) &&
+                (!item.bound || g.bound === item.bound)
+              );
+              const pick = same[0] || live[0];
+              if (pick && pick.gmbRouteId) {
+                selectRouteDirection(
+                  pick.route, 'gmb', pick.bound || 'out', pick.dest || pick.route,
+                  pick.region, pick.gmbRouteId, pick.gmbRouteSeq || 1, '1', null
+                );
+              } else if (live.length) {
+                // 多區結果：回到搜尋列表展示
+                renderSearchResultList(el, live, item.route, false);
+              } else {
+                el.innerHTML = `<div class="empty-state">無法載入小巴 ${item.route}<br><small>請檢查網絡後再試</small></div>`;
+              }
+            } catch (e) {
+              console.warn(e);
+              el.innerHTML = `<div class="empty-state">載入小巴失敗<br><small>${e.message || ''}</small></div>`;
+            }
+          });
+        } else if (item.co === 'mtrbus') {
+          div.addEventListener('click', () => {
+            selectRouteDirection(
+              item.route, item.co, item.bound || 'out', item.dest || item.route,
+              null, null, null, '1', null
+            );
+          });
+        } else if (item.co === 'nlb' && item.nlbRouteId) {
+          div.addEventListener('click', () => {
+            selectRouteDirection(
+              item.route, item.co, 'out', item.dest || item.route,
+              null, null, null, '1', item.nlbRouteId
+            );
+          });
+        } else {
+          div.addEventListener('click', () => expandRouteDirections(item));
+        }
+        frag.appendChild(div);
+      });
+
+      el.appendChild(frag);
+      if (truncated) {
+        const tip = document.createElement('div');
+        tip.className = 'empty-state';
+        tip.style.padding = '16px';
+        tip.innerHTML = `<small style="opacity:.7">結果過多，僅顯示前 50 筆<br>請輸入更完整路線號以縮小範圍</small>`;
+        el.appendChild(tip);
+      }
+    }
+
+    async function expandRouteDirections(item) {
+      if (item.co === 'nlb' && item.nlbRouteId) {
+        selectRouteDirection(
+          item.route, item.co, 'out', item.dest || item.route,
+          null, null, null, '1', item.nlbRouteId
+        );
+        return;
+      }
+      if (item.co === 'mtrbus') {
+        selectRouteDirection(
+          item.route, item.co, item.bound || 'out', item.dest || item.route,
+          null, null, null, '1', null
+        );
+        return;
+      }
+      // 小巴：用 on-demand 拉齊所有區／方向
+      if (item.co === 'gmb') {
+        const el = document.getElementById('results');
+        el.innerHTML = '<div class="loading-state">載入小巴路線中...</div>';
+        try {
+          const live = await fetchGmbOnDemand(item.route);
+          if (!live.length) {
+            el.innerHTML = `<div class="empty-state">找不到小巴 ${item.route}<br><small>請檢查網絡或稍後再試</small></div>`;
+            return;
+          }
+          // 若指定了 region，優先該區；否則顯示全部
+          const list = item.region
+            ? (live.filter(g => g.region === item.region).length
+                ? live.filter(g => g.region === item.region)
+                : live)
+            : live;
+          el.innerHTML = '';
+          renderSearchResultList(el, list, item.route, false);
+        } catch (e) {
+          el.innerHTML = `<div class="empty-state">載入小巴失敗<br><small>${e.message || ''}</small></div>`;
+        }
+        return;
       }
 
-      routeInput.value = currentInput;
-      searchRoutes(currentInput);
-    });
+      const el = document.getElementById('results');
+      el.innerHTML = `<div class="section-title">請選擇 ${item.route} 方向</div><div class="loading-state">載入方向資料中...</div>`;
 
-    function selectRoute(route, co, region, bound) {
-      alert(`已選擇: ${CO_NAMES[co] || co} ${route} ${region ? '(' + region + ')' : ''}`);
+      let directions = [];
+      if (item.directions && item.directions.length > 0) {
+        directions = item.directions;
+      } else if (item.orig || item.dest) {
+        directions = [
+          { bound: 'out', orig: item.orig, dest: item.dest, route_seq: 1 },
+          { bound: 'in', orig: item.dest, dest: item.orig, route_seq: 2 }
+        ];
+      } else {
+        directions = [{ bound: 'out', orig: '', dest: item.route || '—', route_seq: 1 }];
+      }
+
+      el.innerHTML = `<div class="section-title">請選擇 ${item.route} 方向</div>`;
+      directions.forEach(d => {
+        const div = document.createElement('div');
+        div.className = 'result-item';
+        const plate = plateClass(item);
+        div.innerHTML = `
+          <div class="result-num ${plate}">${item.route}</div>
+          <div class="result-info">
+            <div class="result-dest">往 ${d.dest || '—'}</div>
+            <div class="result-co">起點: ${d.orig || '—'}</div>
+          </div>
+          <div class="result-arrow">›</div>
+        `;
+        div.addEventListener('click', () => {
+          selectRouteDirection(
+            item.route, item.co, d.bound, d.dest,
+            item.region || null, item.gmbRouteId || null, d.route_seq,
+            item.service_type || '1', item.nlbRouteId || null
+          );
+        });
+        el.appendChild(div);
+      });
     }
 
-    function goSearch() {
+    function selectRouteDirection(route, co, bound, dest, region, gmbRouteId, gmbRouteSeq, serviceType, nlbRouteId) {
+      state.route = route;
+      state.co = co;
+      state.bound = bound;
+      state.region = region || null;
+      state.directionLabel = dest;
+      state.gmbRouteId = gmbRouteId || null;
+      state.gmbRouteSeq = gmbRouteSeq || (bound === 'out' ? 1 : 2);
+      state.service_type = serviceType || '1';
+      state.nlbRouteId = nlbRouteId || null;
+      state.stopId = null;
+      state.stopName = null;
+
+      addHistory({
+        route, co, bound, dest, region: region || null,
+        gmbRouteId: gmbRouteId || null, gmbRouteSeq: gmbRouteSeq || null,
+        service_type: serviceType || '1', nlbRouteId: nlbRouteId || null
+      });
+
+      updateHeaderFavBtns();
+
+      document.getElementById('stopsTitle').textContent = `${route} - 往 ${dest}`;
+      const backBtn = document.querySelector('#pageEta .back-btn');
+      if (backBtn) backBtn.setAttribute('onclick', 'goStops()');
+      showPage('pageStops');
+      renderStops();
+    }
+
+    // ========== 真實車站列表 ==========
+    async function renderStops() {
+      const listEl = document.getElementById('stopList');
+      listEl.innerHTML = '<div class="loading-state">載入車站列表中...</div>';
+
+      try {
+        let stops = [];
+        const co = state.co;
+        const route = state.route;
+        const dir = state.bound === 'out' ? 'outbound' : 'inbound';
+
+        if (co === 'kmb' || co === 'lwb') {
+          const res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${dir}/${state.service_type}`);
+          const json = await res.json();
+          if (json.data && json.data.length) {
+            const stopIds = json.data.map(s => s.stop);
+            const nameMap = {};
+            await Promise.all(stopIds.map(async id => {
+              try {
+                const sr = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop/${id}`);
+                const sj = await sr.json();
+                if (sj.data) nameMap[id] = sj.data.name_tc || sj.data.name_en || id;
+              } catch {}
+            }));
+            stops = json.data.map(s => ({
+              id: s.stop,
+              name: nameMap[s.stop] || s.stop,
+              seq: parseInt(s.seq, 10)
+            })).sort((a, b) => a.seq - b.seq);
+          }
+        } else if (co === 'ctb') {
+          const res = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${route}/${dir}`);
+          const json = await res.json();
+          if (json.data && json.data.length) {
+            const stopIds = json.data.map(s => s.stop);
+            const nameMap = {};
+            await Promise.all(stopIds.map(async id => {
+              try {
+                const sr = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/stop/${id}`);
+                const sj = await sr.json();
+                if (sj.data) nameMap[id] = sj.data.name_tc || sj.data.name_en || id;
+              } catch {}
+            }));
+            stops = json.data.map(s => ({
+              id: s.stop,
+              name: nameMap[s.stop] || s.stop,
+              seq: s.seq
+            })).sort((a, b) => a.seq - b.seq);
+          }
+        } else if (co === 'gmb') {
+          // 若缺少 route_id，先向三區／指定區域查路線詳情
+          // 若缺 route_id，從靜態資料補上
+          if (!state.gmbRouteId && state.route) {
+            const staticItems = gmbItemsFromStatic(String(state.route).toUpperCase());
+            const match = staticItems.find(x =>
+              (!state.region || x.region === state.region) &&
+              (!state.bound || x.bound === state.bound)
+            ) || staticItems[0];
+            if (match) {
+              state.gmbRouteId = match.gmbRouteId;
+              state.gmbRouteSeq = match.gmbRouteSeq || state.gmbRouteSeq;
+              state.region = state.region || match.region;
+            }
+          }
+
+          const routeId = state.gmbRouteId;
+          const seq = Number(state.gmbRouteSeq) || (state.bound === 'in' ? 2 : 1);
+          if (routeId) {
+            const seqsToTry = [seq, seq === 1 ? 2 : 1];
+            for (const trySeq of seqsToTry) {
+              const json = await gmbApiFetch(
+                `https://data.etagmb.gov.hk/route-stop/${routeId}/${trySeq}`
+              );
+              const routeStops = (json && json.data && json.data.route_stops) || [];
+              if (routeStops.length) {
+                state.gmbRouteSeq = trySeq;
+                stops = routeStops.map(s => ({
+                  id: String(s.stop_id),
+                  name: s.name_tc || s.name_en || String(s.stop_id),
+                  seq: s.stop_seq
+                })).sort((a, b) => a.seq - b.seq);
+                break;
+              }
+            }
+          }
+        } else if (co === 'nlb' && state.nlbRouteId) {
+          const res = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=list&routeId=${state.nlbRouteId}`);
+          const json = await res.json();
+          if (json.stops && json.stops.length) {
+            stops = json.stops.map((s, idx) => ({
+              id: String(s.stopId),
+              name: s.stopName_c || s.stopName_e || String(s.stopId),
+              seq: idx + 1
+            }));
+          }
+        } else if (co === 'mtrbus') {
+          // 依方向取內建車站列表（O=out 往目的地，I=in 回程），同序號去重
+          const dirKey = (state.bound === 'in' ? 'I' : 'O');
+          const key = state.route + '_' + dirKey;
+          let list = (typeof MTR_STOPS !== 'undefined' && MTR_STOPS[key]) ? MTR_STOPS[key] : [];
+          if (!list.length) {
+            list = (typeof MTR_STOPS !== 'undefined' && MTR_STOPS[state.route + '_' + (dirKey === 'O' ? 'I' : 'O')]) || [];
+          }
+          const seenSeq = new Set();
+          stops = [];
+          list.forEach(s => {
+            if (seenSeq.has(s.s)) return;
+            seenSeq.add(s.s);
+            stops.push({ id: s.i, name: s.n, seq: s.s });
+          });
+          stops.sort((a, b) => a.seq - b.seq);
+        }
+
+        listEl.innerHTML = '';
+        if (stops.length === 0) {
+          listEl.innerHTML = `
+            <div class="empty-state">
+              此路線暫無車站資料<br>
+              <small style="opacity:.7">可能非服務時間，或 API 暫時無法連線</small><br>
+              <button class="eta-btn" style="margin-top:16px;max-width:160px;display:inline-block" onclick="renderStops()">重新載入</button>
+            </div>`;
+          return;
+        }
+        stops.forEach(s => {
+          const div = document.createElement('div');
+          div.className = 'stop-item';
+          div.innerHTML = `
+            <div class="stop-seq">${s.seq}</div>
+            <div class="stop-name">${s.name}</div>
+            <div class="result-arrow">›</div>
+          `;
+          div.addEventListener('click', () => selectStop(s));
+          listEl.appendChild(div);
+        });
+      } catch (e) {
+        console.error('renderStops error', e);
+        const isTimeout = e.name === 'AbortError';
+        listEl.innerHTML = `
+          <div class="empty-state">
+            ${isTimeout ? '載入逾時' : '載入車站失敗'}<br>
+            <small style="opacity:.7">請檢查網絡後再試</small><br>
+            <button class="eta-btn" style="margin-top:16px;max-width:160px;display:inline-block" onclick="renderStops()">重新載入</button>
+          </div>`;
+      }
+    }
+
+    function selectStop(stop) {
+      state.stopId = stop.id;
+      state.stopName = stop.name;
+      document.getElementById('etaRoute').textContent = state.route;
+      document.getElementById('etaRoute').className = `eta-route-num ${plateClass({ co: state.co, region: state.region })}`;
+      document.getElementById('etaDest').textContent = `往 ${state.directionLabel}`;
+      document.getElementById('etaStopName').textContent = `📍 ${state.stopName}`;
+      document.getElementById('etaCo').textContent = CO_NAMES[state.co] || state.co;
+      showPage('pageEta');
+      fetchETA();
+    }
+
+    // ========== 真實 ETA ==========
+    async function fetchETA() {
+      const rowsEl = document.getElementById('etaRows');
+      const infoEl = document.getElementById('etaInfo');
+      rowsEl.innerHTML = '<div class="loading-state">更新到站時間...</div>';
+
+      try {
+        let etas = [];
+        const co = state.co;
+        const route = state.route;
+        const stopId = state.stopId;
+
+        if (co === 'kmb' || co === 'lwb') {
+          const res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/eta/${stopId}/${route}/${state.service_type}`);
+          const json = await res.json();
+          if (json.data) {
+            etas = json.data
+              .filter(e => e.eta)
+              .map(e => ({
+                eta: e.eta,
+                rmk: e.rmk_tc || e.rmk_en || '',
+                dest: e.dest_tc || e.dest_en || ''
+              }));
+          }
+        } else if (co === 'ctb') {
+          const res = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/${stopId}/${route}`);
+          const json = await res.json();
+          if (json.data) {
+            etas = json.data
+              .filter(e => e.eta)
+              .map(e => ({
+                eta: e.eta,
+                rmk: e.rmk_tc || e.rmk_en || '',
+                dest: e.dest_tc || e.dest_en || ''
+              }));
+          }
+        } else if (co === 'gmb') {
+          // 小巴 ETA（直連無 CORS，失敗時走代理）
+          const wantSeq = Number(state.gmbRouteSeq) || (state.bound === 'in' ? 2 : 1);
+          let gmbEtaList = [];
+          if (state.gmbRouteId) {
+            const json = await gmbApiFetch(
+              `https://data.etagmb.gov.hk/eta/route-stop/${state.gmbRouteId}/${stopId}`
+            );
+            if (json && json.data && Array.isArray(json.data)) gmbEtaList = json.data;
+          }
+          if (!gmbEtaList.length) {
+            const json = await gmbApiFetch(`https://data.etagmb.gov.hk/eta/stop/${stopId}`);
+            if (json && json.data && Array.isArray(json.data)) {
+              gmbEtaList = json.data.filter(item => {
+                if (state.gmbRouteId && item.route_id && item.route_id !== state.gmbRouteId) return false;
+                return true;
+              });
+            }
+          }
+          gmbEtaList.forEach(item => {
+            // 只取目前所選方向（route_seq）
+            if (item.route_seq != null && Number(item.route_seq) !== wantSeq) return;
+            if (item.enabled === false) return;
+            if (!item.eta || !item.eta.length) return;
+            item.eta.forEach(e => {
+              // diff = 距離到站分鐘數；timestamp = 預計到站時刻
+              const diff = (typeof e.diff === 'number') ? e.diff : null;
+              let etaIso = e.timestamp || null;
+              if (!etaIso && diff != null) {
+                etaIso = new Date(Date.now() + Math.max(0, diff) * 60000).toISOString();
+              }
+              if (!etaIso) return;
+              const rmk = e.remarks_tc || e.remarks_en || '';
+              // 「未開出」：用 scheduled 標記，顯示備註而非「即將到站」
+              const scheduled = /未開出|Scheduled/i.test(rmk);
+              etas.push({
+                eta: etaIso,
+                rmk: rmk || (diff != null ? `${diff} 分鐘` : ''),
+                dest: '',
+                gmbDiff: diff,
+                gmbScheduled: scheduled
+              });
+            });
+          });
+        } else if (co === 'nlb' && state.nlbRouteId) {
+          const res = await fetch(
+            `https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=estimatedArrivals&routeId=${state.nlbRouteId}&stopId=${stopId}&language=zh`
+          );
+          const json = await res.json();
+          if (json.estimatedArrivals) {
+            json.estimatedArrivals.forEach(e => {
+              if (e.estimatedArrivalTime) {
+                const iso = e.estimatedArrivalTime.replace(' ', 'T') + '+08:00';
+                etas.push({
+                  eta: iso,
+                  rmk: e.routeVariantName || '',
+                  dest: ''
+                });
+              }
+            });
+          }
+        } else if (co === 'mtrbus') {
+          // 港鐵巴士：只顯示所選車站的到站／開出時間
+          // 108000 = API 表示無實時／已離開，應改用 departureTimeInSecond
+          const res = await fetch('https://rt.data.gov.hk/v1/transport/mtr/bus/getSchedule', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ language: 'zh', routeName: route })
+          });
+          const json = await res.json();
+          if (json.busStop && json.busStop.length) {
+            // 精確匹配 → 後綴匹配 → 第一個有有效班次的站
+            let target = json.busStop.find(bs => bs.busStopId === stopId);
+            if (!target) {
+              target = json.busStop.find(bs => stopId && bs.busStopId && (
+                bs.busStopId.endsWith(stopId.replace(/^.*-/, '-')) ||
+                stopId.endsWith(bs.busStopId.replace(/^.*-/, '-'))
+              ));
+            }
+            if (!target || !target.bus || !target.bus.length) {
+              target = json.busStop.find(bs => {
+                if (!bs.bus || !bs.bus.length) return false;
+                return bs.bus.some(b => {
+                  const a = parseInt(b.arrivalTimeInSecond || '108000', 10);
+                  const d = parseInt(b.departureTimeInSecond || '108000', 10);
+                  return (a > 0 && a < 108000) || (d > 0 && d < 108000);
+                });
+              }) || json.busStop[0];
+            }
+            if (target && target.bus) {
+              const seenBus = new Set();
+              target.bus.forEach(b => {
+                let arr = parseInt(b.arrivalTimeInSecond, 10);
+                let dep = parseInt(b.departureTimeInSecond, 10);
+                if (isNaN(arr)) arr = 108000;
+                if (isNaN(dep)) dep = 108000;
+                // 優先有效到站秒數，否則用開出秒數；0 視為即將到站
+                let sec = 108000;
+                if (arr >= 0 && arr < 108000) sec = arr;
+                else if (dep >= 0 && dep < 108000) sec = dep;
+                else return;
+                const key = (b.busId || '') + '_' + sec;
+                if (seenBus.has(key)) return;
+                seenBus.add(key);
+                const t = new Date(Date.now() + Math.max(0, sec) * 1000);
+                const text = b.arrivalTimeText || b.departureTimeText || '';
+                etas.push({
+                  eta: t.toISOString(),
+                  rmk: [b.busId ? `車號 ${b.busId}` : '', text].filter(Boolean).join(' · ') || '',
+                  dest: ''
+                });
+              });
+            }
+          }
+        }
+
+        etas.sort((a, b) => new Date(a.eta) - new Date(b.eta));
+        etas = etas.slice(0, 5);
+
+        rowsEl.innerHTML = '';
+        if (etas.length === 0) {
+          rowsEl.innerHTML = `
+            <div class="no-eta">
+              暫時沒有到站資料<br>
+              <small>可能非服務時間或資料暫缺</small><br>
+              <button class="eta-btn" style="margin-top:12px;max-width:140px;display:inline-block" onclick="fetchETA()">再試一次</button>
+            </div>`;
+        } else {
+          const now = Date.now();
+          etas.forEach((e, idx) => {
+            const t = new Date(e.eta);
+            // 小巴優先用 API 提供的 diff（分鐘）
+            let mins = (typeof e.gmbDiff === 'number')
+              ? e.gmbDiff
+              : Math.round((t.getTime() - now) / 60000);
+            let minText, minClass = 'eta-mins';
+            if (e.gmbScheduled && mins <= 0) {
+              // 未開出且 diff=0：顯示預計開出時間，不要寫「即將到站」
+              minText = t.toTimeString().substring(0, 5);
+              minClass += ' soon';
+            } else if (mins <= 0) {
+              minText = '即將到站';
+              minClass += ' arrived';
+            } else if (mins <= 2) {
+              minText = `${mins} 分鐘`;
+              minClass += ' arrived';
+            } else if (mins <= 5) {
+              minText = `${mins} 分鐘`;
+              minClass += ' soon';
+            } else {
+              minText = `${mins} 分鐘`;
+            }
+            const timeStr = t.toTimeString().substring(0, 5);
+            const div = document.createElement('div');
+            div.className = 'eta-row';
+            div.innerHTML = `
+              <div>
+                <div class="${minClass}">${minText}</div>
+                <div class="eta-rmk">${e.rmk || ('班次 ' + (idx + 1))}</div>
+              </div>
+              <div class="eta-clock">${timeStr}</div>
+            `;
+            rowsEl.appendChild(div);
+          });
+        }
+        const updatedStr = new Date().toTimeString().substring(0, 8);
+        infoEl.textContent = `最後更新時間: ${updatedStr}`;
+      } catch (e) {
+        console.error('fetchETA error', e);
+        const isTimeout = e.name === 'AbortError';
+        rowsEl.innerHTML = `
+          <div class="no-eta">
+            ${isTimeout ? '連線逾時' : '無法取得到站資料'}<br>
+            <small>請檢查網絡後再試</small><br>
+            <button class="eta-btn" style="margin-top:12px;max-width:140px;display:inline-block" onclick="fetchETA()">再試一次</button>
+          </div>`;
+        infoEl.textContent = '';
+      }
+    }
+
+    function toggleAuto() {
+      state.auto = !state.auto;
+      const btn = document.getElementById('btnAuto');
+      btn.classList.toggle('active-refresh', state.auto);
+      btn.textContent = state.auto ? '⏸ 停止自動' : '▶ 自動刷新';
+      if (state.auto) state.timer = setInterval(fetchETA, 15000);
+      else clearInterval(state.timer);
+    }
+
+    function showPage(pageId) {
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      document.getElementById('pageSearch').classList.add('active');
+      document.getElementById(pageId).classList.add('active');
+    }
+    function goSearch() {
+      if (state.timer) { clearInterval(state.timer); state.auto = false; }
+      showPage('pageSearch');
+    }
+    function goStops() {
+      if (state.timer) { clearInterval(state.timer); state.auto = false; }
+      showPage('pageStops');
     }
 
-    // 初始化
-    window.addEventListener('DOMContentLoaded', () => {
-      initAllRoutes();
-    });
+    // ========== 天氣（香港天文台） ==========
+    const WX_ICON_NAME = {
+      50: '陽光充沛', 51: '間有陽光', 52: '短暫陽光', 53: '間有陽光幾陣驟雨',
+      54: '短暫陽光幾陣驟雨', 60: '多雲', 61: '密雲', 62: '微雨', 63: '雨',
+      64: '大雨', 65: '雷暴', 70: '微雨', 71: '微雨', 72: '微雨', 73: '雨',
+      74: '大雨', 75: '大雨', 76: '大雨', 77: '大雨', 80: '大風', 81: '大風',
+      82: '大風', 83: '大風', 84: '大風', 85: '大風', 90: '熱', 91: '冷', 92: '冷', 93: '冷'
+    };
+
+    function wxWarnClass(code) {
+      const c = String(code || '').toUpperCase();
+      if (c.includes('BLACK') || c.includes('黑')) return 'black';
+      if (c.includes('RED') || c.includes('紅')) return 'red';
+      if (c.includes('AMBER') || c.includes('黃') || c.includes('AMBER')) return 'amber';
+      if (c.includes('YELLOW') || c.includes('黃')) return 'yellow';
+      if (c.includes('BLUE') || c.includes('藍')) return 'blue';
+      return '';
+    }
+
+    async function loadWeather() {
+      const bar = document.getElementById('weatherBar');
+      if (!bar) return;
+      try {
+        const [rhr, flw, warn] = await Promise.all([
+          fetchJSON('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=tc'),
+          fetchJSON('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=flw&lang=tc').catch(() => ({})),
+          fetchJSON('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=tc').catch(() => ({}))
+        ]);
+
+        // 氣溫：優先天文台
+        let temp = '—';
+        if (rhr.temperature && rhr.temperature.data) {
+          const hko = rhr.temperature.data.find(t => t.place === '香港天文台') || rhr.temperature.data[0];
+          if (hko) temp = hko.value;
+        }
+        let humidity = '—';
+        if (rhr.humidity && rhr.humidity.data && rhr.humidity.data[0]) {
+          humidity = rhr.humidity.data[0].value;
+        }
+        const iconNum = (rhr.icon && rhr.icon[0]) ? rhr.icon[0] : 60;
+        const iconName = WX_ICON_NAME[iconNum] || '天氣';
+        const iconUrl = `https://www.hko.gov.hk/images/HKOWxIconOutline/pic${iconNum}.png`;
+
+        // 警告
+        const warnBadges = [];
+        if (warn && typeof warn === 'object') {
+          Object.keys(warn).forEach(k => {
+            const w = warn[k];
+            if (!w) return;
+            const name = w.name || w.code || k;
+            const type = w.type || w.actionCode || '';
+            const label = type ? `${name} ${type}` : name;
+            warnBadges.push({ label, cls: wxWarnClass(w.code || name) });
+          });
+        }
+        // rhr 也可能有 warningMessage 字串
+        if ((!warnBadges.length) && rhr.warningMessage) {
+          const msgs = Array.isArray(rhr.warningMessage) ? rhr.warningMessage : [rhr.warningMessage];
+          msgs.filter(Boolean).forEach(m => warnBadges.push({ label: m, cls: 'red' }));
+        }
+
+        const forecast = (flw && flw.forecastDesc) ? flw.forecastDesc : '';
+        const outlook = (flw && flw.outlook) ? flw.outlook : '';
+        const forecastText = forecast || outlook || '';
+        const updatedAt = new Date().toTimeString().substring(0, 5);
+
+        bar.classList.remove('wx-loading');
+        bar.innerHTML = `
+          <div class="weather-main">
+            <img class="weather-icon" src="${iconUrl}" alt="${iconName}" onerror="this.style.display='none'">
+            <div class="weather-temp">${temp}<span style="font-size:.7rem;font-weight:500">°C</span></div>
+            <div class="weather-meta">
+              <div class="wx-line"><strong>${iconName}</strong> · 濕度 ${humidity}%</div>
+              <div class="wx-line">天文台 · 更新 ${updatedAt} · 每10分鐘自動更新</div>
+            </div>
+          </div>
+          ${warnBadges.length ? `<div class="weather-warns">${warnBadges.map(b =>
+            `<span class="wx-warn-badge ${b.cls}">${b.label}</span>`
+          ).join('')}</div>` : ''}
+          ${forecastText ? `<div class="wx-forecast">${forecastText}</div>` : ''}
+        `;
+      } catch (e) {
+        console.warn('Weather load failed', e);
+        bar.classList.add('wx-loading');
+        bar.textContent = '天氣資料暫時無法載入';
+      }
+    }
+
+    loadAllRoutes();
+    loadWeather();
+    // 每 10 分鐘自動更新天氣
+    setInterval(loadWeather, 10 * 60 * 1000);
   </script>
 </body>
 </html>
