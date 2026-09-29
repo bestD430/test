@@ -296,6 +296,69 @@
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       background: white;
+      min-height: 0;
+    }
+    .stops-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      position: relative;
+    }
+    .map-wrap {
+      height: 42%;
+      min-height: 180px;
+      max-height: 320px;
+      position: relative;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+      background: #e8eef3;
+    }
+    .map-wrap.collapsed { height: 0; min-height: 0; max-height: 0; border: none; overflow: hidden; }
+    #routeMap { width: 100%; height: 100%; z-index: 1; }
+    .map-controls {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .map-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: none;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,.18);
+      font-size: 1.15rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .map-btn:active { background: #f0f0f0; }
+    .map-btn.active { background: var(--primary); color: white; }
+    .map-toggle-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 12px;
+      background: #f8f8f8;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+    .map-toggle-bar button {
+      border: none;
+      background: none;
+      color: var(--primary);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 4px 8px;
     }
     .stop-item {
       padding: 14px 16px;
@@ -306,6 +369,8 @@
       gap: 12px;
     }
     .stop-item:active { background: #f2f2f7; }
+    .stop-item.nearest { background: #e8f6ff; }
+    .stop-item.selected-stop { background: #d6f0ff; }
     .stop-seq {
       font-size: 0.85rem;
       color: var(--muted);
@@ -313,6 +378,34 @@
       font-weight: 600;
     }
     .stop-name { font-size: 0.98rem; font-weight: 500; flex: 1; }
+    .stop-dist {
+      font-size: 0.72rem;
+      color: var(--primary);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .gm-style .gm-style-iw-c { border-radius: 10px !important; }
+    .map-key-hint {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      background: #e8eef3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: #555;
+      line-height: 1.5;
+    }
+    .map-key-hint code {
+      background: #fff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
     .eta-header-info {
       background: #1c1c1e;
       color: white;
@@ -499,8 +592,21 @@
         <div class="page-title" id="stopsTitle">選擇車站</div>
         <button class="fav-btn" id="stopsFavBtn" onclick="toggleFavFromStops()" title="收藏此路線">☆</button>
       </div>
-      <div class="stop-list" id="stopList">
-        <div class="loading-state">載入車站中...</div>
+      <div class="stops-body">
+        <div class="map-toggle-bar">
+          <span id="mapStatusText">地圖 · GPS</span>
+          <button type="button" onclick="toggleMapPanel()">顯示／隱藏地圖</button>
+        </div>
+        <div class="map-wrap" id="mapWrap">
+          <div id="routeMap"></div>
+          <div class="map-controls">
+            <button type="button" class="map-btn" id="btnGps" onclick="locateUser()" title="我的位置">📍</button>
+            <button type="button" class="map-btn" onclick="fitRouteBounds()" title="路線全覽">🗺️</button>
+          </div>
+        </div>
+        <div class="stop-list" id="stopList">
+          <div class="loading-state">載入車站中...</div>
+        </div>
       </div>
     </div>
 
@@ -980,7 +1086,8 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
       directionLabel: null, stopId: null, stopName: null,
       service_type: '1', gmbRouteId: null, gmbRouteSeq: null,
       nlbRouteId: null,
-      auto: false, timer: null
+      auto: false, timer: null,
+      userLat: null, userLng: null, currentStops: []
     };
 
     document.getElementById('keypad').addEventListener('click', e => {
@@ -1427,18 +1534,26 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
           const json = await res.json();
           if (json.data && json.data.length) {
             const stopIds = json.data.map(s => s.stop);
-            const nameMap = {};
+            const detailMap = {};
             await Promise.all(stopIds.map(async id => {
               try {
                 const sr = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop/${id}`);
                 const sj = await sr.json();
-                if (sj.data) nameMap[id] = sj.data.name_tc || sj.data.name_en || id;
+                if (sj.data) {
+                  detailMap[id] = {
+                    name: sj.data.name_tc || sj.data.name_en || id,
+                    lat: parseFloat(sj.data.lat),
+                    lng: parseFloat(sj.data.long)
+                  };
+                }
               } catch {}
             }));
             stops = json.data.map(s => ({
               id: s.stop,
-              name: nameMap[s.stop] || s.stop,
-              seq: parseInt(s.seq, 10)
+              name: (detailMap[s.stop] && detailMap[s.stop].name) || s.stop,
+              seq: parseInt(s.seq, 10),
+              lat: detailMap[s.stop] ? detailMap[s.stop].lat : null,
+              lng: detailMap[s.stop] ? detailMap[s.stop].lng : null
             })).sort((a, b) => a.seq - b.seq);
           }
         } else if (co === 'ctb') {
@@ -1446,18 +1561,26 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
           const json = await res.json();
           if (json.data && json.data.length) {
             const stopIds = json.data.map(s => s.stop);
-            const nameMap = {};
+            const detailMap = {};
             await Promise.all(stopIds.map(async id => {
               try {
                 const sr = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/stop/${id}`);
                 const sj = await sr.json();
-                if (sj.data) nameMap[id] = sj.data.name_tc || sj.data.name_en || id;
+                if (sj.data) {
+                  detailMap[id] = {
+                    name: sj.data.name_tc || sj.data.name_en || id,
+                    lat: parseFloat(sj.data.lat),
+                    lng: parseFloat(sj.data.long)
+                  };
+                }
               } catch {}
             }));
             stops = json.data.map(s => ({
               id: s.stop,
-              name: nameMap[s.stop] || s.stop,
-              seq: s.seq
+              name: (detailMap[s.stop] && detailMap[s.stop].name) || s.stop,
+              seq: s.seq,
+              lat: detailMap[s.stop] ? detailMap[s.stop].lat : null,
+              lng: detailMap[s.stop] ? detailMap[s.stop].lng : null
             })).sort((a, b) => a.seq - b.seq);
           }
         } else if (co === 'gmb') {
@@ -1490,8 +1613,21 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
                 stops = routeStops.map(s => ({
                   id: String(s.stop_id),
                   name: s.name_tc || s.name_en || String(s.stop_id),
-                  seq: s.stop_seq
+                  seq: s.stop_seq,
+                  lat: null,
+                  lng: null
                 })).sort((a, b) => a.seq - b.seq);
+                // 補座標（並行，最多 20 站以免過慢）
+                await Promise.all(stops.slice(0, 40).map(async st => {
+                  try {
+                    const j = await gmbApiFetch(`https://data.etagmb.gov.hk/stop/${st.id}`);
+                    const c = j && j.data && j.data.coordinates && j.data.coordinates.wgs84;
+                    if (c) {
+                      st.lat = parseFloat(c.latitude);
+                      st.lng = parseFloat(c.longitude);
+                    }
+                  } catch {}
+                }));
                 break;
               }
             }
@@ -1503,7 +1639,9 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
             stops = json.stops.map((s, idx) => ({
               id: String(s.stopId),
               name: s.stopName_c || s.stopName_e || String(s.stopId),
-              seq: idx + 1
+              seq: idx + 1,
+              lat: s.latitude ? parseFloat(s.latitude) : (s.lat ? parseFloat(s.lat) : null),
+              lng: s.longitude ? parseFloat(s.longitude) : (s.long ? parseFloat(s.long) : null)
             }));
           }
         } else if (co === 'mtrbus') {
@@ -1532,19 +1670,45 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
               <small style="opacity:.7">可能非服務時間，或 API 暫時無法連線</small><br>
               <button class="eta-btn" style="margin-top:16px;max-width:160px;display:inline-block" onclick="renderStops()">重新載入</button>
             </div>`;
+          state.currentStops = [];
           return;
         }
+
+        // 若有 GPS，計算距離並標示最近站
+        if (state.userLat != null && state.userLng != null) {
+          stops.forEach(s => {
+            if (s.lat != null && s.lng != null) {
+              s.distM = haversineM(state.userLat, state.userLng, s.lat, s.lng);
+            }
+          });
+        }
+        let nearestId = null;
+        const withDist = stops.filter(s => s.distM != null);
+        if (withDist.length) {
+          withDist.sort((a, b) => a.distM - b.distM);
+          nearestId = withDist[0].id;
+        }
+
+        state.currentStops = stops;
         stops.forEach(s => {
           const div = document.createElement('div');
-          div.className = 'stop-item';
+          div.className = 'stop-item' + (s.id === nearestId ? ' nearest' : '');
+          div.dataset.stopId = s.id;
+          const distHtml = (s.distM != null)
+            ? `<div class="stop-dist">${s.distM < 1000 ? Math.round(s.distM) + ' m' : (s.distM / 1000).toFixed(1) + ' km'}</div>`
+            : '';
           div.innerHTML = `
             <div class="stop-seq">${s.seq}</div>
             <div class="stop-name">${s.name}</div>
+            ${distHtml}
             <div class="result-arrow">›</div>
           `;
           div.addEventListener('click', () => selectStop(s));
           listEl.appendChild(div);
         });
+
+        // 更新地圖
+        setTimeout(() => updateRouteMap(stops, nearestId), 50);
       } catch (e) {
         console.error('renderStops error', e);
         const isTimeout = e.name === 'AbortError';
@@ -1555,6 +1719,350 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
             <button class="eta-btn" style="margin-top:16px;max-width:160px;display:inline-block" onclick="renderStops()">重新載入</button>
           </div>`;
       }
+    }
+
+    // ========== 地圖 / GPS（Google Maps） ==========
+    // 請到 Google Cloud Console 建立「Maps JavaScript API」金鑰後填入：
+    // https://console.cloud.google.com/google/maps-apis
+    const GOOGLE_MAPS_API_KEY = localStorage.getItem('gmaps_key') || '';
+
+    let routeMap = null;
+    let mapMarkers = [];
+    let mapRouteLine = null;
+    let mapUserMarker = null;
+    let mapVisible = true;
+    let mapInfoWindow = null;
+    let googleMapsLoading = null;
+
+    function haversineM(lat1, lng1, lat2, lng2) {
+      const R = 6371000;
+      const toRad = d => d * Math.PI / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLng = toRad(lng2 - lng1);
+      const a = Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+      return 2 * R * Math.asin(Math.sqrt(a));
+    }
+
+    function getGoogleMapsKey() {
+      if (GOOGLE_MAPS_API_KEY && GOOGLE_MAPS_API_KEY.length > 10) return GOOGLE_MAPS_API_KEY;
+      try {
+        const k = localStorage.getItem('gmaps_key');
+        if (k && k.length > 10) return k;
+      } catch (e) {}
+      return '';
+    }
+
+    function showMapKeyHint() {
+      const el = document.getElementById('routeMap');
+      if (!el) return;
+      el.innerHTML = `
+        <div class="map-key-hint">
+          <div style="font-size:1.4rem;margin-bottom:8px">🗺️ Google 地圖</div>
+          <div>需設定 Maps JavaScript API 金鑰</div>
+          <div style="margin-top:10px">
+            <input id="gmapsKeyInput" type="text" placeholder="貼上 API Key"
+              style="width:min(280px,90%);padding:8px 10px;border:1px solid #ccc;border-radius:8px;font-size:0.85rem">
+          </div>
+          <button type="button" onclick="saveGoogleMapsKey()"
+            style="margin-top:10px;padding:8px 16px;border:none;background:#00A0E9;color:#fff;border-radius:8px;font-weight:600;cursor:pointer">
+            儲存並載入地圖
+          </button>
+          <div style="margin-top:12px;font-size:0.72rem;color:#888;max-width:300px">
+            到 <b>Google Cloud Console</b> 啟用 Maps JavaScript API，建立金鑰後貼上。<br>
+            金鑰只存在本機瀏覽器。
+          </div>
+        </div>`;
+      document.getElementById('mapStatusText').textContent = '地圖 · 待設定 API Key';
+    }
+
+    function saveGoogleMapsKey() {
+      const input = document.getElementById('gmapsKeyInput');
+      const key = (input && input.value || '').trim();
+      if (key.length < 10) {
+        alert('請輸入有效的 Google Maps API Key');
+        return;
+      }
+      try { localStorage.setItem('gmaps_key', key); } catch (e) {}
+      document.getElementById('routeMap').innerHTML = '';
+      googleMapsLoading = null;
+      routeMap = null;
+      loadGoogleMaps().then(() => {
+        if (state.currentStops && state.currentStops.length) {
+          updateRouteMap(state.currentStops, null);
+        } else {
+          ensureRouteMap();
+        }
+      }).catch(() => showMapKeyHint());
+    }
+
+    function loadGoogleMaps() {
+      if (typeof google !== 'undefined' && google.maps) return Promise.resolve();
+      if (googleMapsLoading) return googleMapsLoading;
+      const key = getGoogleMapsKey();
+      if (!key) {
+        showMapKeyHint();
+        return Promise.reject(new Error('no key'));
+      }
+      googleMapsLoading = new Promise((resolve, reject) => {
+        const cb = '__gmapsReady_' + Date.now();
+        window[cb] = () => {
+          resolve();
+          try { delete window[cb]; } catch (e) {}
+        };
+        const s = document.createElement('script');
+        s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&callback=${cb}&language=zh-HK`;
+        s.async = true;
+        s.onerror = () => {
+          document.getElementById('mapStatusText').textContent = 'Google 地圖載入失敗';
+          reject(new Error('script error'));
+        };
+        document.head.appendChild(s);
+      });
+      return googleMapsLoading;
+    }
+
+    function ensureRouteMap() {
+      if (routeMap) return routeMap;
+      if (typeof google === 'undefined' || !google.maps) {
+        loadGoogleMaps().then(() => {
+          ensureRouteMap();
+          if (state.currentStops) updateRouteMap(state.currentStops, null);
+        }).catch(() => {});
+        return null;
+      }
+      const el = document.getElementById('routeMap');
+      if (!el) return null;
+      el.innerHTML = '';
+      routeMap = new google.maps.Map(el, {
+        center: { lat: 22.3193, lng: 114.1694 },
+        zoom: 12,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+        zoomControl: true,
+        zoomControlOptions: { position: google.maps.ControlPosition.LEFT_TOP },
+        gestureHandling: 'greedy'
+      });
+      mapInfoWindow = new google.maps.InfoWindow();
+      return routeMap;
+    }
+
+    function clearMapOverlays() {
+      mapMarkers.forEach(m => m.setMap(null));
+      mapMarkers = [];
+      if (mapRouteLine) {
+        mapRouteLine.setMap(null);
+        mapRouteLine = null;
+      }
+    }
+
+    function stopMarkerIcon(seq, isNear) {
+      const bg = isNear ? '#ff3b30' : '#00A0E9';
+      const size = isNear ? 32 : 28;
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
+          <circle cx="${size/2}" cy="${size/2}" r="${size/2 - 2}" fill="${bg}" stroke="#fff" stroke-width="2"/>
+          <text x="50%" y="54%" text-anchor="middle" dominant-baseline="middle"
+            fill="#fff" font-size="${isNear ? 12 : 11}" font-weight="700" font-family="Arial,sans-serif">${seq}</text>
+        </svg>`;
+      return {
+        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+        scaledSize: new google.maps.Size(size, size),
+        anchor: new google.maps.Point(size / 2, size / 2)
+      };
+    }
+
+    function toggleMapPanel() {
+      mapVisible = !mapVisible;
+      const wrap = document.getElementById('mapWrap');
+      wrap.classList.toggle('collapsed', !mapVisible);
+      if (mapVisible && routeMap) {
+        setTimeout(() => {
+          google.maps.event.trigger(routeMap, 'resize');
+          fitRouteBounds();
+        }, 200);
+      }
+    }
+
+    async function updateRouteMap(stops, nearestId) {
+      try {
+        await loadGoogleMaps();
+      } catch (e) {
+        showMapKeyHint();
+        return;
+      }
+      const map = ensureRouteMap();
+      if (!map) return;
+      setTimeout(() => google.maps.event.trigger(map, 'resize'), 80);
+
+      clearMapOverlays();
+      const path = [];
+      (stops || []).forEach(s => {
+        if (s.lat == null || s.lng == null || isNaN(s.lat) || isNaN(s.lng)) return;
+        const pos = { lat: s.lat, lng: s.lng };
+        path.push(pos);
+        const isNear = s.id === nearestId;
+        const marker = new google.maps.Marker({
+          position: pos,
+          map,
+          title: `${s.seq}. ${s.name}`,
+          icon: stopMarkerIcon(s.seq, isNear),
+          zIndex: isNear ? 999 : s.seq
+        });
+        marker.addListener('click', () => {
+          document.querySelectorAll('.stop-item').forEach(el => {
+            el.classList.toggle('selected-stop', el.dataset.stopId === String(s.id));
+          });
+          const safeId = String(s.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+          mapInfoWindow.setContent(
+            `<div style="font-size:0.9rem;padding:2px 0"><b>${s.seq}. ${s.name}</b><br>
+             <button type="button" onclick="selectStopById('${safeId}')"
+               style="margin-top:6px;padding:4px 10px;border:none;background:#00A0E9;color:#fff;border-radius:6px;cursor:pointer">查看到站</button></div>`
+          );
+          mapInfoWindow.open(map, marker);
+        });
+        mapMarkers.push(marker);
+      });
+
+      if (path.length >= 2) {
+        mapRouteLine = new google.maps.Polyline({
+          path,
+          geodesic: true,
+          strokeColor: '#E4002B',
+          strokeOpacity: 0.9,
+          strokeWeight: 4,
+          map
+        });
+      }
+
+      if (state.userLat != null && state.userLng != null) {
+        if (mapUserMarker) mapUserMarker.setMap(null);
+        mapUserMarker = new google.maps.Marker({
+          position: { lat: state.userLat, lng: state.userLng },
+          map,
+          title: '我的位置',
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 9,
+            fillColor: '#007AFF',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 2
+          },
+          zIndex: 1000
+        });
+      }
+
+      const n = path.length;
+      document.getElementById('mapStatusText').textContent =
+        n ? `Google 地圖 · ${n} 個車站` : 'Google 地圖 · 此路線暫無座標';
+
+      if (path.length) {
+        const bounds = new google.maps.LatLngBounds();
+        path.forEach(p => bounds.extend(p));
+        if (state.userLat != null) bounds.extend({ lat: state.userLat, lng: state.userLng });
+        map.fitBounds(bounds, 48);
+      }
+    }
+
+    function fitRouteBounds() {
+      if (!routeMap || !state.currentStops) return;
+      const pts = state.currentStops.filter(s => s.lat != null && s.lng != null);
+      if (!pts.length) return;
+      const bounds = new google.maps.LatLngBounds();
+      pts.forEach(s => bounds.extend({ lat: s.lat, lng: s.lng }));
+      if (state.userLat != null) bounds.extend({ lat: state.userLat, lng: state.userLng });
+      routeMap.fitBounds(bounds, 48);
+    }
+
+    function locateUser() {
+      const btn = document.getElementById('btnGps');
+      const status = document.getElementById('mapStatusText');
+      if (!navigator.geolocation) {
+        status.textContent = '此裝置不支援 GPS';
+        return;
+      }
+      btn.classList.add('active');
+      status.textContent = '定位中…';
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          state.userLat = pos.coords.latitude;
+          state.userLng = pos.coords.longitude;
+          btn.classList.remove('active');
+          status.textContent = '已定位 · 計算距離中';
+          loadGoogleMaps().then(() => {
+            const map = ensureRouteMap();
+            if (mapUserMarker) mapUserMarker.setMap(null);
+            if (map) {
+              mapUserMarker = new google.maps.Marker({
+                position: { lat: state.userLat, lng: state.userLng },
+                map,
+                title: '我的位置',
+                icon: {
+                  path: google.maps.SymbolPath.CIRCLE,
+                  scale: 9,
+                  fillColor: '#007AFF',
+                  fillOpacity: 1,
+                  strokeColor: '#ffffff',
+                  strokeWeight: 2
+                },
+                zIndex: 1000
+              });
+              map.setCenter({ lat: state.userLat, lng: state.userLng });
+              map.setZoom(16);
+            }
+            if (state.currentStops && state.currentStops.length) renderStopsFromCache();
+          }).catch(() => showMapKeyHint());
+        },
+        err => {
+          btn.classList.remove('active');
+          status.textContent = err.code === 1 ? '請允許位置權限' : '定位失敗';
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 }
+      );
+    }
+
+    function renderStopsFromCache() {
+      const stops = state.currentStops || [];
+      if (!stops.length) return;
+      const listEl = document.getElementById('stopList');
+      if (state.userLat != null) {
+        stops.forEach(s => {
+          if (s.lat != null && s.lng != null) {
+            s.distM = haversineM(state.userLat, state.userLng, s.lat, s.lng);
+          }
+        });
+      }
+      let nearestId = null;
+      const withDist = stops.filter(s => s.distM != null);
+      if (withDist.length) {
+        withDist.sort((a, b) => a.distM - b.distM);
+        nearestId = withDist[0].id;
+      }
+      listEl.innerHTML = '';
+      stops.forEach(s => {
+        const div = document.createElement('div');
+        div.className = 'stop-item' + (s.id === nearestId ? ' nearest' : '');
+        div.dataset.stopId = s.id;
+        const distHtml = (s.distM != null)
+          ? `<div class="stop-dist">${s.distM < 1000 ? Math.round(s.distM) + ' m' : (s.distM / 1000).toFixed(1) + ' km'}</div>`
+          : '';
+        div.innerHTML = `
+          <div class="stop-seq">${s.seq}</div>
+          <div class="stop-name">${s.name}</div>
+          ${distHtml}
+          <div class="result-arrow">›</div>
+        `;
+        div.addEventListener('click', () => selectStop(s));
+        listEl.appendChild(div);
+      });
+      updateRouteMap(stops, nearestId);
+    }
+
+    function selectStopById(id) {
+      const s = (state.currentStops || []).find(x => String(x.id) === String(id));
+      if (s) selectStop(s);
     }
 
     function selectStop(stop) {
