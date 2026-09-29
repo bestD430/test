@@ -317,7 +317,30 @@
       background: #e8eef3;
     }
     .map-wrap.collapsed { height: 0; min-height: 0; max-height: 0; border: none; overflow: hidden; }
-    #routeMap { width: 100%; height: 100%; z-index: 1; }
+    #routeMap, #etaMap { width: 100%; height: 100%; z-index: 1; }
+    .eta-map-wrap {
+      height: 36%;
+      min-height: 160px;
+      max-height: 280px;
+      position: relative;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+      background: #e8eef3;
+    }
+    .map-dir-badge {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      z-index: 1000;
+      background: rgba(28,28,30,.88);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 8px;
+      max-width: 70%;
+      pointer-events: none;
+    }
     .map-controls {
       position: absolute;
       right: 10px;
@@ -600,6 +623,7 @@
         </div>
         <div class="map-wrap" id="mapWrap">
           <div id="routeMap"></div>
+          <div class="map-dir-badge" id="mapDirBadge">—</div>
           <div class="map-controls">
             <button type="button" class="map-btn" id="btnGps" onclick="locateUser()" title="我的位置">📍</button>
             <button type="button" class="map-btn" onclick="fitRouteBounds()" title="路線全覽">🗺️</button>
@@ -616,6 +640,12 @@
         <button class="back-btn" onclick="goStops()">‹</button>
         <div class="page-title">預計到站</div>
         <button class="fav-btn" id="etaFavBtn" onclick="toggleFavFromStops()" title="收藏此路線">☆</button>
+      </div>
+      <div class="eta-map-wrap" id="etaMapWrap">
+        <div id="etaMap"></div>
+        <div class="map-controls" style="bottom:8px;right:8px">
+          <button type="button" class="map-btn" onclick="locateUserOnEta()" title="我的位置">📍</button>
+        </div>
       </div>
       <div class="eta-area" id="etaArea">
         <div class="eta-header-info">
@@ -1690,7 +1720,15 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
           nearestId = withDist[0].id;
         }
 
+        // 依方向排序並重新編號 1..n
+        stops.sort((a, b) => (a.seq || 0) - (b.seq || 0));
+        stops.forEach((s, i) => { s.displaySeq = i + 1; });
         state.currentStops = stops;
+
+        const boundText = state.bound === 'in' ? '回程' : '去程';
+        document.getElementById('stopsTitle').textContent =
+          `${state.route} ${boundText} · 往 ${state.directionLabel || ''}`;
+
         stops.forEach(s => {
           const div = document.createElement('div');
           div.className = 'stop-item' + (s.id === nearestId ? ' nearest' : '');
@@ -1699,7 +1737,7 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
             ? `<div class="stop-dist">${s.distM < 1000 ? Math.round(s.distM) + ' m' : (s.distM / 1000).toFixed(1) + ' km'}</div>`
             : '';
           div.innerHTML = `
-            <div class="stop-seq">${s.seq}</div>
+            <div class="stop-seq">${s.displaySeq}</div>
             <div class="stop-name">${s.name}</div>
             ${distHtml}
             <div class="result-arrow">›</div>
@@ -1708,7 +1746,7 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
           listEl.appendChild(div);
         });
 
-        // 更新地圖
+        // 更新地圖（只含此方向車站）
         setTimeout(() => updateRouteMap(stops, nearestId), 50);
       } catch (e) {
         console.error('renderStops error', e);
@@ -1775,27 +1813,43 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
       if (!map) return;
       setTimeout(() => map.invalidateSize(), 100);
 
+      // 方向標籤：只顯示目前所選方向
+      const dirBadge = document.getElementById('mapDirBadge');
+      if (dirBadge) {
+        const dirLabel = state.directionLabel || '';
+        const boundText = state.bound === 'in' ? '回程' : '去程';
+        dirBadge.textContent = dirLabel
+          ? `${state.route || ''} ${boundText} · 往 ${dirLabel}`
+          : `${state.route || ''} · ${boundText}`;
+      }
+
       if (mapStopsLayer) mapStopsLayer.clearLayers();
       if (mapRouteLine) {
         map.removeLayer(mapRouteLine);
         mapRouteLine = null;
       }
 
+      // 依目前方向排序後重新編號 1..n（分開方向顯示）
+      const ordered = (stops || []).slice().sort((a, b) => (a.seq || 0) - (b.seq || 0));
+      ordered.forEach((s, idx) => { s.displaySeq = idx + 1; });
+
       const latlngs = [];
-      (stops || []).forEach(s => {
+      ordered.forEach(s => {
         if (s.lat == null || s.lng == null || isNaN(s.lat) || isNaN(s.lng)) return;
         latlngs.push([s.lat, s.lng]);
         const isNear = s.id === nearestId;
+        const num = s.displaySeq || s.seq;
         const icon = L.divIcon({
           className: '',
-          html: `<div class="stop-marker-icon${isNear ? ' active' : ''}">${s.seq}</div>`,
+          html: `<div class="stop-marker-icon${isNear ? ' active' : ''}">${num}</div>`,
           iconSize: [isNear ? 30 : 26, isNear ? 30 : 26],
           iconAnchor: [isNear ? 15 : 13, isNear ? 15 : 13]
         });
         const m = L.marker([s.lat, s.lng], { icon });
         const safeId = String(s.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         m.bindPopup(
-          `<b>${s.seq}. ${s.name}</b><br>` +
+          `<b>${num}. ${s.name}</b><br>` +
+          `<small>${state.bound === 'in' ? '回程' : '去程'} · 往 ${state.directionLabel || ''}</small><br>` +
           `<button type="button" onclick="selectStopById('${safeId}')" ` +
           `style="margin-top:6px;padding:4px 10px;border:none;background:#00A0E9;color:#fff;border-radius:6px;cursor:pointer">查看到站</button>`
         );
@@ -1828,8 +1882,9 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
       }
 
       const n = latlngs.length;
+      const boundText = state.bound === 'in' ? '回程' : '去程';
       document.getElementById('mapStatusText').textContent =
-        n ? `OpenStreetMap · ${n} 個車站` : 'OpenStreetMap · 此路線暫無座標';
+        n ? `${boundText} · ${n} 站有座標` : `${boundText} · 暫無座標`;
 
       if (latlngs.length) {
         const bounds = L.latLngBounds(latlngs);
@@ -1899,6 +1954,8 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
         withDist.sort((a, b) => a.distM - b.distM);
         nearestId = withDist[0].id;
       }
+      stops.sort((a, b) => (a.seq || 0) - (b.seq || 0));
+      stops.forEach((s, i) => { s.displaySeq = i + 1; });
       listEl.innerHTML = '';
       stops.forEach(s => {
         const div = document.createElement('div');
@@ -1908,7 +1965,7 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
           ? `<div class="stop-dist">${s.distM < 1000 ? Math.round(s.distM) + ' m' : (s.distM / 1000).toFixed(1) + ' km'}</div>`
           : '';
         div.innerHTML = `
-          <div class="stop-seq">${s.seq}</div>
+          <div class="stop-seq">${s.displaySeq}</div>
           <div class="stop-name">${s.name}</div>
           ${distHtml}
           <div class="result-arrow">›</div>
@@ -1924,15 +1981,95 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
       if (s) selectStop(s);
     }
 
+    // ——— 到站頁地圖（顯示所選車站實際位置）———
+    let etaMap = null;
+    let etaStopMarker = null;
+    let etaUserMarker = null;
+
+    function ensureEtaMap() {
+      if (etaMap) return etaMap;
+      if (typeof L === 'undefined') return null;
+      const el = document.getElementById('etaMap');
+      if (!el) return null;
+      el.innerHTML = '';
+      etaMap = L.map(el, { zoomControl: false, attributionControl: true })
+        .setView([22.3193, 114.1694], 16);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(etaMap);
+      L.control.zoom({ position: 'topleft' }).addTo(etaMap);
+      return etaMap;
+    }
+
+    function updateEtaStopMap(stop) {
+      const map = ensureEtaMap();
+      if (!map) return;
+      setTimeout(() => map.invalidateSize(), 120);
+
+      if (etaStopMarker) { map.removeLayer(etaStopMarker); etaStopMarker = null; }
+      if (etaUserMarker) { map.removeLayer(etaUserMarker); etaUserMarker = null; }
+
+      const hasStop = stop && stop.lat != null && stop.lng != null && !isNaN(stop.lat) && !isNaN(stop.lng);
+      if (hasStop) {
+        const num = stop.displaySeq || stop.seq || '';
+        const icon = L.divIcon({
+          className: '',
+          html: `<div class="stop-marker-icon active">${num || '站'}</div>`,
+          iconSize: [30, 30],
+          iconAnchor: [15, 15]
+        });
+        etaStopMarker = L.marker([stop.lat, stop.lng], { icon })
+          .addTo(map)
+          .bindPopup(`<b>${num}. ${stop.name || ''}</b><br>往 ${state.directionLabel || ''}`);
+        map.setView([stop.lat, stop.lng], 17);
+      }
+
+      if (state.userLat != null && state.userLng != null) {
+        etaUserMarker = L.circleMarker([state.userLat, state.userLng], {
+          radius: 8, color: '#fff', weight: 2, fillColor: '#007AFF', fillOpacity: 1
+        }).addTo(map).bindPopup('我的位置');
+        if (hasStop) {
+          const b = L.latLngBounds([[stop.lat, stop.lng], [state.userLat, state.userLng]]);
+          map.fitBounds(b.pad(0.35));
+        } else {
+          map.setView([state.userLat, state.userLng], 16);
+        }
+      }
+
+      if (!hasStop && state.userLat == null) {
+        map.setView([22.3193, 114.1694], 12);
+      }
+    }
+
+    function locateUserOnEta() {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          state.userLat = pos.coords.latitude;
+          state.userLng = pos.coords.longitude;
+          const stop = (state.currentStops || []).find(x => String(x.id) === String(state.stopId));
+          updateEtaStopMap(stop || { id: state.stopId, name: state.stopName });
+        },
+        () => {},
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+      );
+    }
+
     function selectStop(stop) {
       state.stopId = stop.id;
       state.stopName = stop.name;
+      state.selectedStop = stop;
       document.getElementById('etaRoute').textContent = state.route;
       document.getElementById('etaRoute').className = `eta-route-num ${plateClass({ co: state.co, region: state.region })}`;
       document.getElementById('etaDest').textContent = `往 ${state.directionLabel}`;
-      document.getElementById('etaStopName').textContent = `📍 ${state.stopName}`;
+      const num = stop.displaySeq || stop.seq;
+      document.getElementById('etaStopName').textContent =
+        num != null ? `📍 ${num}. ${state.stopName}` : `📍 ${state.stopName}`;
       document.getElementById('etaCo').textContent = CO_NAMES[state.co] || state.co;
       showPage('pageEta');
+      // 顯示該站在地圖上的實際位置
+      setTimeout(() => updateEtaStopMap(stop), 80);
       fetchETA();
     }
 
