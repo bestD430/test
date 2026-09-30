@@ -385,17 +385,23 @@
       cursor: pointer;
       padding: 4px 8px;
     }
+    .stop-item-wrap {
+      border-bottom: 1px solid var(--border);
+      background: white;
+    }
     .stop-item {
       padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 12px;
     }
     .stop-item:active { background: #f2f2f7; }
-    .stop-item.nearest { background: #e8f6ff; }
-    .stop-item.selected-stop { background: #d6f0ff; }
+    .stop-item-wrap.nearest .stop-item { background: #e8f6ff; }
+    .stop-item-wrap.selected-stop .stop-item { background: #d6f0ff; }
+    .stop-item-wrap.selected-stop {
+      box-shadow: inset 3px 0 0 var(--primary);
+    }
     .stop-seq {
       font-size: 0.85rem;
       color: var(--muted);
@@ -408,6 +414,56 @@
       color: var(--primary);
       font-weight: 600;
       white-space: nowrap;
+    }
+    .stop-inline-eta {
+      padding: 0 16px 12px 56px;
+      display: none;
+    }
+    .stop-item-wrap.selected-stop .stop-inline-eta { display: block; }
+    .inline-eta-row {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      padding: 4px 0;
+    }
+    .inline-eta-mins {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--green);
+      min-width: 4.5em;
+      font-variant-numeric: tabular-nums;
+    }
+    .inline-eta-mins.soon { color: var(--green); }
+    .inline-eta-mins.arrived { color: var(--green); }
+    .inline-eta-time {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--green);
+      font-variant-numeric: tabular-nums;
+    }
+    .inline-eta-rmk {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .inline-eta-actions {
+      margin-top: 6px;
+      display: flex;
+      gap: 8px;
+    }
+    .inline-eta-actions button {
+      border: none;
+      background: #f2f2f7;
+      color: var(--primary);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .inline-eta-loading, .inline-eta-empty {
+      font-size: 0.82rem;
+      color: var(--muted);
+      padding: 4px 0 2px;
     }
     .leaflet-container { font: inherit; background: #e8eef3; }
     .stop-marker-icon {
@@ -468,12 +524,16 @@
       color: var(--green);
       font-variant-numeric: tabular-nums;
     }
-    .eta-mins.soon { color: var(--amber); }
-    .eta-mins.arrived { color: var(--red); }
+    .eta-mins.soon { color: var(--green); }
+    .eta-mins.arrived { color: var(--green); }
+    .eta-time-pair { display: flex; flex-direction: column; gap: 2px; align-items: flex-end; }
+    .eta-time-label { font-size: 0.68rem; color: var(--muted); }
     .eta-clock {
-      font-size: 0.88rem;
-      color: var(--muted);
+      font-size: 1.05rem;
+      color: var(--green);
+      font-weight: 600;
       text-align: right;
+      font-variant-numeric: tabular-nums;
     }
     .eta-rmk {
       font-size: 0.72rem;
@@ -1730,20 +1790,23 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
           `${state.route} ${boundText} · 往 ${state.directionLabel || ''}`;
 
         stops.forEach(s => {
-          const div = document.createElement('div');
-          div.className = 'stop-item' + (s.id === nearestId ? ' nearest' : '');
-          div.dataset.stopId = s.id;
+          const wrap = document.createElement('div');
+          wrap.className = 'stop-item-wrap' + (s.id === nearestId ? ' nearest' : '');
+          wrap.dataset.stopId = s.id;
           const distHtml = (s.distM != null)
             ? `<div class="stop-dist">${s.distM < 1000 ? Math.round(s.distM) + ' m' : (s.distM / 1000).toFixed(1) + ' km'}</div>`
             : '';
-          div.innerHTML = `
-            <div class="stop-seq">${s.displaySeq}</div>
-            <div class="stop-name">${s.name}</div>
-            ${distHtml}
-            <div class="result-arrow">›</div>
+          wrap.innerHTML = `
+            <div class="stop-item">
+              <div class="stop-seq">${s.displaySeq}</div>
+              <div class="stop-name">${s.name}</div>
+              ${distHtml}
+              <div class="result-arrow">›</div>
+            </div>
+            <div class="stop-inline-eta" data-inline-eta></div>
           `;
-          div.addEventListener('click', () => selectStop(s));
-          listEl.appendChild(div);
+          wrap.querySelector('.stop-item').addEventListener('click', () => selectStopOnList(s, wrap));
+          listEl.appendChild(wrap);
         });
 
         // 更新地圖（只含此方向車站）
@@ -1808,7 +1871,46 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
       }
     }
 
-    function updateRouteMap(stops, nearestId) {
+    // 以 OSRM 沿道路路徑繪製（非直線）；過長時分段請求
+    async function fetchRoadPath(latlngs) {
+      if (!latlngs || latlngs.length < 2) return latlngs || [];
+      // 簡化過密站點，避免 URL 過長（最多約 80 個 waypoint）
+      let pts = latlngs;
+      if (pts.length > 80) {
+        const step = Math.ceil(pts.length / 80);
+        pts = pts.filter((_, i) => i === 0 || i === pts.length - 1 || i % step === 0);
+      }
+      const chunks = [];
+      const chunkSize = 40; // 每段最多 40 點
+      for (let i = 0; i < pts.length - 1; i += chunkSize - 1) {
+        chunks.push(pts.slice(i, Math.min(i + chunkSize, pts.length)));
+      }
+      const all = [];
+      for (const chunk of chunks) {
+        if (chunk.length < 2) continue;
+        const coordStr = chunk.map(p => `${p[1]},${p[0]}`).join(';'); // lng,lat
+        const url = `https://router.project-osrm.org/route/v1/driving/${coordStr}?overview=full&geometries=geojson&continue_straight=true`;
+        try {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error('osrm ' + res.status);
+          const json = await res.json();
+          const coords = json.routes && json.routes[0] && json.routes[0].geometry
+            && json.routes[0].geometry.coordinates;
+          if (coords && coords.length) {
+            // geojson 為 [lng,lat] → Leaflet [lat,lng]
+            const path = coords.map(c => [c[1], c[0]]);
+            if (all.length && path.length) path.shift(); // 避免段接點重複
+            all.push(...path);
+          }
+        } catch (e) {
+          console.warn('OSRM path failed, use straight segment', e);
+          all.push(...chunk);
+        }
+      }
+      return all.length >= 2 ? all : latlngs;
+    }
+
+    async function updateRouteMap(stops, nearestId) {
       const map = ensureRouteMap();
       if (!map) return;
       setTimeout(() => map.invalidateSize(), 100);
@@ -1854,19 +1956,26 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
           `style="margin-top:6px;padding:4px 10px;border:none;background:#00A0E9;color:#fff;border-radius:6px;cursor:pointer">查看到站</button>`
         );
         m.on('click', () => {
-          document.querySelectorAll('.stop-item').forEach(el => {
+          document.querySelectorAll('.stop-item-wrap').forEach(el => {
             el.classList.toggle('selected-stop', el.dataset.stopId === String(s.id));
           });
         });
         mapStopsLayer.addLayer(m);
       });
 
+      // 沿實際行車路線繪製（OSRM），失敗則退回直線
       if (latlngs.length >= 2) {
-        mapRouteLine = L.polyline(latlngs, {
+        const statusEl = document.getElementById('mapStatusText');
+        const boundText = state.bound === 'in' ? '回程' : '去程';
+        if (statusEl) statusEl.textContent = `${boundText} · 繪製行車路線中…`;
+        const roadPath = await fetchRoadPath(latlngs);
+        if (mapRouteLine) { map.removeLayer(mapRouteLine); mapRouteLine = null; }
+        mapRouteLine = L.polyline(roadPath, {
           color: '#E4002B',
-          weight: 4,
-          opacity: 0.85,
-          lineJoin: 'round'
+          weight: 5,
+          opacity: 0.9,
+          lineJoin: 'round',
+          lineCap: 'round'
         }).addTo(map);
       }
 
@@ -1884,7 +1993,7 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
       const n = latlngs.length;
       const boundText = state.bound === 'in' ? '回程' : '去程';
       document.getElementById('mapStatusText').textContent =
-        n ? `${boundText} · ${n} 站有座標` : `${boundText} · 暫無座標`;
+        n ? `${boundText} · ${n} 站 · 沿道路` : `${boundText} · 暫無座標`;
 
       if (latlngs.length) {
         const bounds = L.latLngBounds(latlngs);
@@ -1958,26 +2067,124 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
       stops.forEach((s, i) => { s.displaySeq = i + 1; });
       listEl.innerHTML = '';
       stops.forEach(s => {
-        const div = document.createElement('div');
-        div.className = 'stop-item' + (s.id === nearestId ? ' nearest' : '');
-        div.dataset.stopId = s.id;
+        const wrap = document.createElement('div');
+        wrap.className = 'stop-item-wrap' + (s.id === nearestId ? ' nearest' : '');
+        wrap.dataset.stopId = s.id;
         const distHtml = (s.distM != null)
           ? `<div class="stop-dist">${s.distM < 1000 ? Math.round(s.distM) + ' m' : (s.distM / 1000).toFixed(1) + ' km'}</div>`
           : '';
-        div.innerHTML = `
-          <div class="stop-seq">${s.displaySeq}</div>
-          <div class="stop-name">${s.name}</div>
-          ${distHtml}
-          <div class="result-arrow">›</div>
+        wrap.innerHTML = `
+          <div class="stop-item">
+            <div class="stop-seq">${s.displaySeq}</div>
+            <div class="stop-name">${s.name}</div>
+            ${distHtml}
+            <div class="result-arrow">›</div>
+          </div>
+          <div class="stop-inline-eta" data-inline-eta></div>
         `;
-        div.addEventListener('click', () => selectStop(s));
-        listEl.appendChild(div);
+        wrap.querySelector('.stop-item').addEventListener('click', () => selectStopOnList(s, wrap));
+        listEl.appendChild(wrap);
       });
       updateRouteMap(stops, nearestId);
     }
 
     function selectStopById(id) {
       const s = (state.currentStops || []).find(x => String(x.id) === String(id));
+      if (!s) return;
+      const wrap = document.querySelector(`.stop-item-wrap[data-stop-id="${CSS.escape(String(s.id))}"]`);
+      if (wrap) selectStopOnList(s, wrap);
+      else selectStop(s);
+    }
+
+    function formatEtaDisplay(e, now) {
+      const t = new Date(e.eta);
+      let mins = (typeof e.gmbDiff === 'number')
+        ? e.gmbDiff
+        : Math.round((t.getTime() - now) / 60000);
+      let minClass = '';
+      let minText;
+      if (e.gmbScheduled && mins <= 0) {
+        minText = '預定';
+        minClass = 'soon';
+      } else if (mins <= 0) {
+        minText = '即將到站';
+        minClass = 'arrived';
+      } else {
+        minText = `${mins} 分鐘`;
+        if (mins <= 2) minClass = 'arrived';
+        else if (mins <= 5) minClass = 'soon';
+      }
+      const timeStr = t.toTimeString().substring(0, 5);
+      return { mins, minText, minClass, timeStr, rmk: e.rmk || '' };
+    }
+
+    async function selectStopOnList(stop, wrapEl) {
+      // 在車站列表內展開到站，方便快速切換其他站（保留路線圖）
+      document.querySelectorAll('.stop-item-wrap').forEach(el => {
+        el.classList.remove('selected-stop');
+        const box = el.querySelector('[data-inline-eta]');
+        if (box) box.innerHTML = '';
+      });
+      wrapEl.classList.add('selected-stop');
+      state.stopId = stop.id;
+      state.stopName = stop.name;
+      state.selectedStop = stop;
+
+      // 地圖聚焦此站
+      if (routeMap && stop.lat != null && stop.lng != null) {
+        routeMap.setView([stop.lat, stop.lng], 17);
+        if (mapStopsLayer) {
+          mapStopsLayer.eachLayer(layer => {
+            if (layer.getPopup && layer.getPopup()) {
+              const c = layer.getPopup().getContent() || '';
+              if (c.includes(String(stop.name))) layer.openPopup();
+            }
+          });
+        }
+      }
+
+      const box = wrapEl.querySelector('[data-inline-eta]');
+      if (box) {
+        box.innerHTML = '<div class="inline-eta-loading">載入到站時間…</div>';
+        try {
+          const etas = await fetchEtaDataForStop(stop.id);
+          if (!wrapEl.classList.contains('selected-stop')) return; // 已改選其他站
+          if (!etas.length) {
+            box.innerHTML = '<div class="inline-eta-empty">暫時沒有到站資料</div>';
+          } else {
+            const now = Date.now();
+            box.innerHTML = etas.slice(0, 4).map((e, idx) => {
+              const d = formatEtaDisplay(e, now);
+              // 第1班綠色，第2~4班藍色
+              const colorStyle = idx === 0 ? 'color:var(--green)' : 'color:#007AFF';
+              return `<div class="inline-eta-row">
+                <span class="inline-eta-mins" style="${colorStyle}">${d.minText}</span>
+                <span class="inline-eta-time" style="${colorStyle}">${d.timeStr}</span>
+                ${d.rmk ? `<span class="inline-eta-rmk">${d.rmk}</span>` : ''}
+              </div>`;
+            }).join('') + `
+              <div class="inline-eta-actions">
+                <button type="button" onclick='openEtaPage(${JSON.stringify(String(stop.id))})'>詳細頁面</button>
+                <button type="button" onclick="refreshInlineEta()">刷新</button>
+              </div>`;
+          }
+        } catch (err) {
+          console.warn(err);
+          box.innerHTML = '<div class="inline-eta-empty">載入失敗，請再試</div>';
+        }
+      }
+    }
+
+    function refreshInlineEta() {
+      const stop = state.selectedStop;
+      if (!stop) return;
+      const wrap = document.querySelector(`.stop-item-wrap[data-stop-id="${CSS.escape(String(stop.id))}"]`);
+      if (wrap) selectStopOnList(stop, wrap);
+    }
+
+    function openEtaPage(stopId) {
+      const s = (state.currentStops || []).find(x => String(x.id) === String(stopId))
+        || state.selectedStop;
       if (s) selectStop(s);
     }
 
@@ -2074,10 +2281,24 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
     }
 
     // ========== 真實 ETA ==========
+    async function fetchEtaDataForStop(stopId) {
+      const prev = state.stopId;
+      state.stopId = stopId;
+      state._etaSilent = true;
+      try {
+        await fetchETA();
+        return (state._lastEtas || []).slice();
+      } finally {
+        state.stopId = prev;
+        state._etaSilent = false;
+      }
+    }
+
     async function fetchETA() {
+      const silent = !!state._etaSilent;
       const rowsEl = document.getElementById('etaRows');
       const infoEl = document.getElementById('etaInfo');
-      rowsEl.innerHTML = '<div class="loading-state">更新到站時間...</div>';
+      if (!silent && rowsEl) rowsEl.innerHTML = '<div class="loading-state">更新到站時間...</div>';
 
       try {
         let etas = [];
@@ -2226,7 +2447,9 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
         }
 
         etas.sort((a, b) => new Date(a.eta) - new Date(b.eta));
-        etas = etas.slice(0, 5);
+        etas = etas.slice(0, 4); // 最近 4 班
+        state._lastEtas = etas;
+        if (silent) return;
 
         rowsEl.innerHTML = '';
         if (etas.length === 0) {
@@ -2239,53 +2462,39 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
         } else {
           const now = Date.now();
           etas.forEach((e, idx) => {
-            const t = new Date(e.eta);
-            // 小巴優先用 API 提供的 diff（分鐘）
-            let mins = (typeof e.gmbDiff === 'number')
-              ? e.gmbDiff
-              : Math.round((t.getTime() - now) / 60000);
-            let minText, minClass = 'eta-mins';
-            if (e.gmbScheduled && mins <= 0) {
-              // 未開出且 diff=0：顯示預計開出時間，不要寫「即將到站」
-              minText = t.toTimeString().substring(0, 5);
-              minClass += ' soon';
-            } else if (mins <= 0) {
-              minText = '即將到站';
-              minClass += ' arrived';
-            } else if (mins <= 2) {
-              minText = `${mins} 分鐘`;
-              minClass += ' arrived';
-            } else if (mins <= 5) {
-              minText = `${mins} 分鐘`;
-              minClass += ' soon';
-            } else {
-              minText = `${mins} 分鐘`;
-            }
-            const timeStr = t.toTimeString().substring(0, 5);
+            const d = formatEtaDisplay(e, now);
             const div = document.createElement('div');
             div.className = 'eta-row';
+            // 第1班綠色，第2~4班藍色
+            const colorStyle = idx === 0 ? 'color:var(--green)' : 'color:#007AFF';
             div.innerHTML = `
-              <div>
-                <div class="${minClass}">${minText}</div>
-                <div class="eta-rmk">${e.rmk || ('班次 ' + (idx + 1))}</div>
+              <div class="eta-time-pair" style="align-items:flex-start">
+                <div class="eta-time-label">倒數</div>
+                <div class="eta-mins" style="${colorStyle}">${d.minText}</div>
+                <div class="eta-rmk">${d.rmk || ('班次 ' + (idx + 1))}</div>
               </div>
-              <div class="eta-clock">${timeStr}</div>
+              <div class="eta-time-pair">
+                <div class="eta-time-label">預計到站</div>
+                <div class="eta-clock" style="${colorStyle}">${d.timeStr}</div>
+              </div>
             `;
             rowsEl.appendChild(div);
           });
         }
         const updatedStr = new Date().toTimeString().substring(0, 8);
-        infoEl.textContent = `最後更新時間: ${updatedStr}`;
+        if (infoEl) infoEl.textContent = `最後更新時間: ${updatedStr}`;
       } catch (e) {
         console.error('fetchETA error', e);
+        state._lastEtas = [];
+        if (silent) return;
         const isTimeout = e.name === 'AbortError';
-        rowsEl.innerHTML = `
+        if (rowsEl) rowsEl.innerHTML = `
           <div class="no-eta">
             ${isTimeout ? '連線逾時' : '無法取得到站資料'}<br>
             <small>請檢查網絡後再試</small><br>
             <button class="eta-btn" style="margin-top:12px;max-width:140px;display:inline-block" onclick="fetchETA()">再試一次</button>
           </div>`;
-        infoEl.textContent = '';
+        if (infoEl) infoEl.textContent = '';
       }
     }
 
