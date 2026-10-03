@@ -219,7 +219,7 @@
     .weather-bar.wx-loading { color: #8e8e93; text-align: center; padding: 12px; }
     .bus-ticker {
       flex-shrink: 0;
-      height: 56px;
+      height: 40px;
       background: #0d1117;
       overflow: hidden;
       position: relative;
@@ -229,7 +229,7 @@
       position: absolute;
       top: 2px;
       left: 0;
-      height: 52px;
+      height: 36px;
       display: flex;
       align-items: center;
       width: max-content;
@@ -238,7 +238,7 @@
     }
     .bus-ticker img {
       display: block;
-      height: 52px;
+      height: 36px;
       width: auto;
       flex-shrink: 0;
       filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4));
@@ -1574,142 +1574,355 @@
     }
 
     /* —— 智能問路 —— */
-    #pagePlan { background: #f2f2f7; }
+    #pagePlan { background: #f5f6f8; }
     .plan-header {
-      background: #00A0E9;
+      background: #0066cc;
       color: #fff;
       display: flex;
       align-items: center;
-      padding: 12px 8px;
+      padding: 12px 10px;
       flex-shrink: 0;
-      gap: 4px;
+      gap: 6px;
     }
-    .plan-header .page-title { margin-right: 36px; }
-    .plan-od {
-      background: #fff;
-      padding: 12px 14px 10px;
-      flex-shrink: 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .plan-od-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 6px 0;
-    }
-    .plan-od-dot {
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .plan-od-dot.from { background: #00A0E9; box-shadow: 0 0 0 3px rgba(0,160,233,0.25); }
-    .plan-od-dot.to {
-      background: #fff;
-      border: 3px solid #007AFF;
-      box-sizing: border-box;
-    }
-    .plan-od-line {
-      width: 2px;
-      height: 12px;
-      background: #d1d1d6;
-      margin-left: 6px;
-    }
-    .plan-od-input {
+    .plan-header .page-title {
       flex: 1;
-      border: none;
-      outline: none;
-      font-size: 1rem;
-      font-weight: 600;
-      font-family: inherit;
-      background: transparent;
-      color: var(--text);
-      min-width: 0;
-    }
-    .plan-od-input::placeholder { color: #c7c7cc; font-weight: 400; }
-    .plan-swap {
-      border: none;
-      background: #f2f2f7;
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      font-size: 1.1rem;
-      cursor: pointer;
-      flex-shrink: 0;
-      color: #007AFF;
-    }
-    .plan-swap:active { background: #e5e5ea; }
-    .plan-od-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
-    .plan-od-actions button {
-      flex: 1;
-      border: none;
-      border-radius: 10px;
-      padding: 10px;
-      font-size: 0.9rem;
+      text-align: center;
+      font-size: 1.05rem;
       font-weight: 700;
-      font-family: inherit;
-      cursor: pointer;
+      margin: 0;
     }
-    .plan-btn-search {
-      background: #00A0E9;
-      color: #fff;
-    }
-    .plan-btn-search:active { opacity: 0.9; }
-    .plan-btn-loc {
-      background: #f2f2f7;
-      color: #007AFF;
-      flex: 0 0 auto;
-      padding: 10px 14px;
-    }
-    .plan-suggest {
-      background: #fff;
-      border-bottom: 1px solid var(--border);
-      max-height: 200px;
-      overflow-y: auto;
-      display: none;
-    }
-    .plan-suggest.show { display: block; }
-    .plan-suggest-item {
-      padding: 12px 16px;
-      border-bottom: 1px solid #f2f2f7;
-      cursor: pointer;
-      font-size: 0.92rem;
-    }
-    .plan-suggest-item:active { background: #f2f2f7; }
-    .plan-suggest-item small { color: var(--muted); display: block; margin-top: 2px; }
-    .plan-tabs {
-      display: flex;
-      background: #6b7280;
-      flex-shrink: 0;
-    }
-    .plan-tab {
-      flex: 1;
-      border: none;
+    .plan-header .plan-reset {
+      border: 1.5px solid rgba(255,255,255,0.85);
       background: transparent;
-      color: rgba(255,255,255,0.65);
-      padding: 12px 6px;
+      color: #fff;
+      border-radius: 16px;
+      padding: 5px 12px;
       font-size: 0.82rem;
       font-weight: 600;
       font-family: inherit;
       cursor: pointer;
-      position: relative;
     }
-    .plan-tab.active {
+    .plan-header .back-btn { color: #fff; }
+    .plan-body {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .plan-od-card {
+      background: #fff;
+      padding: 16px 14px 12px;
+      flex-shrink: 0;
+    }
+    .plan-leg {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .plan-leg-badge {
+      flex-shrink: 0;
+      margin-top: 10px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
       color: #fff;
     }
-    .plan-tab.active::after {
+    .plan-leg-badge.from { background: #2e7d32; }
+    .plan-leg-badge.to { background: #c62828; }
+    .plan-leg-main { flex: 1; min-width: 0; }
+    .plan-search-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f0f1f3;
+      border-radius: 24px;
+      padding: 10px 12px;
+      cursor: pointer;
+    }
+    .plan-search-pill:active { background: #e5e6e8; }
+    .plan-search-pill .ico { color: #8e8e93; font-size: 1rem; }
+    .plan-search-pill input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 0.98rem;
+      font-weight: 600;
+      font-family: inherit;
+      color: #1c1c1e;
+      min-width: 0;
+      cursor: pointer;
+    }
+    .plan-search-pill input::placeholder { color: #a1a1a6; font-weight: 400; }
+    .plan-search-pill .clear {
+      border: none;
+      background: #c7c7cc;
+      color: #fff;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      font-size: 0.75rem;
+      line-height: 22px;
+      text-align: center;
+      cursor: pointer;
+      padding: 0;
+      flex-shrink: 0;
+    }
+    .plan-quick {
+      display: flex;
+      justify-content: space-around;
+      gap: 6px;
+      padding: 10px 4px 4px;
+    }
+    .plan-quick-btn {
+      flex: 1;
+      border: 1.5px solid #d1d1d6;
+      background: #fff;
+      border-radius: 12px;
+      padding: 10px 4px 8px;
+      cursor: pointer;
+      font-family: inherit;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+    }
+    .plan-quick-btn:active { background: #f2f2f7; }
+    .plan-quick-btn .qi {
+      font-size: 1.35rem;
+      line-height: 1;
+      height: 28px;
+      display: flex;
+      align-items: center;
+    }
+    .plan-quick-btn span {
+      font-size: 0.68rem;
+      color: #3a3a3c;
+      font-weight: 600;
+      text-align: center;
+      line-height: 1.2;
+    }
+    .plan-swap-row {
+      display: flex;
+      justify-content: flex-start;
+      padding: 2px 0 6px 52px;
+    }
+    .plan-swap {
+      border: none;
+      background: transparent;
+      color: #e65100;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 4px 8px;
+      font-family: inherit;
+    }
+    .plan-depart-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 12px 0 0;
+    }
+    .plan-depart-row .clock {
+      font-size: 1.2rem;
+      color: #6b6b70;
+      flex-shrink: 0;
+    }
+    .plan-depart-btn {
+      flex: 1;
+      border: none;
+      background: #f0f1f3;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: inherit;
+      color: #1c1c1e;
+      cursor: pointer;
+      text-align: center;
+    }
+    .plan-depart-btn:active { background: #e5e6e8; }
+    .plan-depart-panel {
+      display: none;
+      margin-top: 8px;
+      padding: 12px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      border: 1px solid #e5e5ea;
+    }
+    .plan-depart-panel.show { display: block; }
+    .plan-depart-panel label {
+      display: block;
+      font-size: 0.82rem;
+      color: #6b6b70;
+      margin-bottom: 6px;
+    }
+    .plan-depart-panel input[type="datetime-local"] {
+      width: 100%;
+      border: 1px solid #d1d1d6;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+    }
+    .plan-depart-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .plan-depart-actions button {
+      flex: 1;
+      border: none;
+      border-radius: 10px;
+      padding: 10px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      font-size: 0.88rem;
+    }
+    .plan-depart-now {
+      background: #eef0f3;
+      color: #1c1c1e;
+    }
+    .plan-depart-ok {
+      background: #0066cc;
+      color: #fff;
+    }
+    .plan-mode-row {
+      display: flex;
+      gap: 0;
+      margin: 12px 0 8px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #d1d1d6;
+    }
+    .plan-mode-btn {
+      flex: 1;
+      border: none;
+      background: #eef0f3;
+      color: #6b6b70;
+      padding: 12px 6px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .plan-mode-btn.active {
+      background: #0066cc;
+      color: #fff;
+    }
+    .plan-go-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .plan-btn-pref {
+      flex: 0 0 38%;
+      border: 1.5px solid #c7c7cc;
+      background: #fff;
+      border-radius: 10px;
+      padding: 14px 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      color: #1c1c1e;
+    }
+    .plan-btn-go {
+      flex: 1;
+      border: none;
+      background: #ffd100;
+      color: #1a1a1a;
+      border-radius: 10px;
+      padding: 14px 8px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .plan-btn-go:active { filter: brightness(0.95); }
+    .plan-hot {
+      background: #fff;
+      margin-top: 8px;
+      flex-shrink: 0;
+      padding-bottom: 12px;
+    }
+    .plan-hot-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid #e5e5ea;
+      padding: 0 8px;
+    }
+    .plan-hot-tab {
+      border: none;
+      background: transparent;
+      padding: 12px 14px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #8e8e93;
+      font-family: inherit;
+      cursor: pointer;
+      position: relative;
+    }
+    .plan-hot-tab.active {
+      color: #1c1c1e;
+    }
+    .plan-hot-tab.active::after {
       content: '';
       position: absolute;
-      left: 16%;
-      right: 16%;
-      bottom: 6px;
+      left: 12px; right: 12px; bottom: 0;
       height: 3px;
+      background: #0066cc;
+      border-radius: 2px 2px 0 0;
+    }
+    .plan-hot-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+    }
+    .plan-hot-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border-bottom: 1px solid #f0f0f2;
+      border-right: 1px solid #f0f0f2;
+      cursor: pointer;
       background: #fff;
-      border-radius: 2px;
+    }
+    .plan-hot-item:active { background: #f5f6f8; }
+    .plan-hot-item .ph {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      background: linear-gradient(135deg, #e8f4fc, #d0e8f8);
+    }
+    .plan-hot-item .pn {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: #1c1c1e;
+    }
+    .plan-results-wrap {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: #1c1c1e;
+    }
+    .plan-results-wrap.hidden { display: none; }
+    .plan-hot.hidden { display: none; }
+    .plan-tabs {
+      display: none;
     }
     .plan-summary {
       background: #e8eaed;
@@ -1748,6 +1961,7 @@
       gap: 8px;
       padding: 14px 14px 10px;
       cursor: pointer;
+      flex-wrap: wrap;
     }
     .plan-route-chip {
       font-weight: 900;
@@ -1770,6 +1984,9 @@
     .plan-route-chip.plate-gmb-kln { background: #39FF14; color: #1a1a1a; }
     .plan-route-chip.plate-gmb-nt  { background: #C5A3FF; color: #1a1a1a; }
     .plan-route-chip.plate-mtrbus { background: #0077C8; color: #fff; }
+    .plan-route-chip.plate-mtr { background: #9b2d1f; color: #fff; }
+    .plan-route-chip.plate-lightrail { background: #d4a017; color: #1a1a1a; }
+    .plan-route-chip.plate-tram { background: #6b4c9a; color: #fff; }
     .plan-plus {
       color: #34c759;
       font-weight: 800;
@@ -1810,7 +2027,11 @@
       padding: 48px 20px;
       color: #aeaeb2;
     }
-
+    .plan-btn-search {
+      background: #0066cc;
+      color: #fff;
+    }
+    .plan-suggest { display: none; }
 
     /* 地點選擇／地圖 */
     .plan-pick-mask {
@@ -1868,11 +2089,27 @@
     #planPickMap {
       flex: 1; min-height: 240px; background: #e8eef3;
     }
+    .plan-map-place-name {
+      flex-shrink: 0;
+      padding: 10px 16px 4px;
+      background: #fff;
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #1c1c1e;
+      border-top: 1px solid #e5e5ea;
+      min-height: 1.4em;
+    }
+    .plan-map-place-name small {
+      display: block;
+      font-weight: 400;
+      color: #8e8e93;
+      font-size: 0.78rem;
+      margin-top: 2px;
+    }
     .plan-map-confirm {
       flex-shrink: 0;
-      padding: 12px 16px 20px;
+      padding: 8px 16px 20px;
       background: #fff;
-      border-top: 1px solid #e5e5ea;
     }
     .plan-map-confirm button {
       width: 100%;
@@ -1888,6 +2125,18 @@
     }
     .plan-map-confirm button:active { opacity: 0.9; }
     .plan-od-row { cursor: pointer; }
+    .plan-pick-item mark {
+      background: #fff3bf;
+      color: inherit;
+      padding: 0 1px;
+      border-radius: 2px;
+    }
+    .plan-pick-item small {
+      display: block;
+      margin-top: 2px;
+      font-size: 0.78rem;
+    }
+
 
   </style>
 </head>
@@ -1948,37 +2197,81 @@
     <div class="page" id="pagePlan">
       <div class="plan-header">
         <button type="button" class="back-btn" onclick="goSearch()">‹</button>
-        <div class="page-title">搜尋結果</div>
+        <div class="page-title">點對點搜尋</div>
+        <button type="button" class="plan-reset" id="planResetBtn">重設</button>
       </div>
-      <div class="plan-od">
-        <div style="display:flex;align-items:stretch;gap:8px">
-          <div style="flex:1;min-width:0">
-            <div class="plan-od-row">
-              <span class="plan-od-dot from"></span>
-              <input class="plan-od-input" id="planFromInput" placeholder="起點（請輸入或點選）" autocomplete="off" readonly>
-            </div>
-            <div class="plan-od-line"></div>
-            <div class="plan-od-row">
-              <span class="plan-od-dot to"></span>
-              <input class="plan-od-input" id="planToInput" placeholder="終點（請輸入或點選）" autocomplete="off" readonly>
+      <div class="plan-body">
+        <div class="plan-od-card">
+          <div class="plan-leg">
+            <span class="plan-leg-badge from">起點</span>
+            <div class="plan-leg-main">
+              <div class="plan-search-pill" id="planFromPill">
+                <span class="ico">🔍</span>
+                <input class="plan-od-input" id="planFromInput" placeholder="輸入起點" autocomplete="off" readonly>
+                <button type="button" class="clear" id="planFromClear" title="清除" style="display:none">×</button>
+              </div>
+              <div class="plan-quick" data-for="from">
+                <button type="button" class="plan-quick-btn" data-act="region"><span class="qi">🏘</span><span>分區/建築物</span></button>
+                <button type="button" class="plan-quick-btn" data-act="fav"><span class="qi">🔖</span><span>書籤</span></button>
+                <button type="button" class="plan-quick-btn" data-act="map"><span class="qi">🗺</span><span>地圖</span></button>
+                <button type="button" class="plan-quick-btn" data-act="loc"><span class="qi">◎</span><span>現在位置</span></button>
+              </div>
             </div>
           </div>
-          <button type="button" class="plan-swap" id="planSwapBtn" title="交換起終點">⇅</button>
+          <div class="plan-swap-row">
+            <button type="button" class="plan-swap" id="planSwapBtn" title="交換">⇅</button>
+          </div>
+          <div class="plan-leg">
+            <span class="plan-leg-badge to">終點</span>
+            <div class="plan-leg-main">
+              <div class="plan-search-pill" id="planToPill">
+                <span class="ico">🔍</span>
+                <input class="plan-od-input" id="planToInput" placeholder="輸入終點" autocomplete="off" readonly>
+                <button type="button" class="clear" id="planToClear" title="清除" style="display:none">×</button>
+              </div>
+              <div class="plan-quick" data-for="to">
+                <button type="button" class="plan-quick-btn" data-act="region"><span class="qi">🏘</span><span>分區/建築物</span></button>
+                <button type="button" class="plan-quick-btn" data-act="fav"><span class="qi">🔖</span><span>書籤</span></button>
+                <button type="button" class="plan-quick-btn" data-act="map"><span class="qi">🗺</span><span>地圖</span></button>
+                <button type="button" class="plan-quick-btn" data-act="loc"><span class="qi">◎</span><span>現在位置</span></button>
+              </div>
+            </div>
+          </div>
+          <div class="plan-depart-row">
+            <span class="clock">🕒</span>
+            <button type="button" class="plan-depart-btn" id="planDepartBtn">現在出發</button>
+          </div>
+          <div class="plan-depart-panel" id="planDepartPanel">
+            <label>選擇出發時間</label>
+            <input type="datetime-local" id="planDepartInput">
+            <div class="plan-depart-actions">
+              <button type="button" class="plan-depart-now" id="planDepartNowBtn">現在出發</button>
+              <button type="button" class="plan-depart-ok" id="planDepartOkBtn">確定</button>
+            </div>
+          </div>
+          <div class="plan-mode-row">
+            <button type="button" class="plan-mode-btn active" data-mode="fast">最快 ⏱</button>
+            <button type="button" class="plan-mode-btn" data-mode="cheap">最便宜 $</button>
+            <button type="button" class="plan-mode-btn" data-mode="smart">較短 🚶</button>
+          </div>
+          <div class="plan-go-row">
+            <button type="button" class="plan-btn-pref" id="planPrefBtn">搜尋偏好設定</button>
+            <button type="button" class="plan-btn-go" id="planSearchBtn">前往 →</button>
+          </div>
         </div>
-        <div class="plan-od-actions">
-          <button type="button" class="plan-btn-loc" id="planUseLocBtn">📍 起點用我的位置</button>
-          <button type="button" class="plan-btn-search" id="planSearchBtn">搜尋路線</button>
+        <div class="plan-hot" id="planHot">
+          <div class="plan-hot-tabs">
+            <button type="button" class="plan-hot-tab active" data-hot="熱門">熱門</button>
+            <button type="button" class="plan-hot-tab" data-hot="香港">香港</button>
+            <button type="button" class="plan-hot-tab" data-hot="九龍">九龍</button>
+            <button type="button" class="plan-hot-tab" data-hot="新界">新界</button>
+          </div>
+          <div class="plan-hot-grid" id="planHotGrid"></div>
         </div>
-      </div>
-      <div class="plan-suggest" id="planSuggest"></div>
-      <div class="plan-tabs">
-        <button type="button" class="plan-tab active" data-mode="smart">✨ AI 建議行程</button>
-        <button type="button" class="plan-tab" data-mode="fast">⏱ 最短行程</button>
-        <button type="button" class="plan-tab" data-mode="cheap">$ 最便宜行程</button>
-      </div>
-      <div class="plan-summary" id="planSummary" style="display:none"></div>
-      <div class="plan-results" id="planResults">
-        <div class="plan-empty">輸入起點與終點<strong>地點</strong>（屋苑、商場、地鐵站、街道等）<br>即可搜尋跨公司最短／最便宜／AI 建議行程</div>
+        <div class="plan-results-wrap hidden" id="planResultsWrap">
+          <div class="plan-summary" id="planSummary" style="display:none"></div>
+          <div class="plan-results" id="planResults"></div>
+        </div>
       </div>
     </div>
 
@@ -2404,13 +2697,37 @@
     }
 
 function plateClass(item) {
-      if (item.co === 'gmb' && item.region) {
+      const co = String(item.co || 'kmb').toLowerCase();
+      if (co === 'gmb' && item.region) {
         const r = (item.region || '').toUpperCase();
         if (r === 'HKI') return 'plate-gmb-hki';
         if (r === 'KLN') return 'plate-gmb-kln';
         if (r === 'NT')  return 'plate-gmb-nt';
       }
-      return 'plate-' + (item.co || 'kmb');
+      if (co === 'lightrail' || co === 'light_rail') return 'plate-lightrail';
+      if (co === 'mtr') return 'plate-mtr';
+      if (co === 'tram') return 'plate-tram';
+      return 'plate-' + (co || 'kmb');
+    }
+
+    /** 港鐵線中文名稱 */
+    const MTR_LINE_ZH = {
+      AEL: '機場快線', TCL: '東涌線', TML: '屯馬線', EAL: '東鐵線',
+      TWL: '荃灣線', ISL: '港島線', KTL: '觀塘線', TKL: '將軍澳線',
+      SIL: '南港島線', DRL: '迪士尼線', MOL: '東涌線', WRL: '屯馬線',
+      '機場快線': '機場快線', '東涌線': '東涌線', '屯馬線': '屯馬線',
+      '東鐵線': '東鐵線', '荃灣線': '荃灣線', '港島線': '港島線',
+      '觀塘線': '觀塘線', '將軍澳線': '將軍澳線', '南港島線': '南港島線',
+      '迪士尼線': '迪士尼線'
+    };
+
+    function planDisplayRoute(leg) {
+      const co = String(leg.co || '').toLowerCase();
+      const r = String(leg.route || '');
+      if (co === 'mtr') return MTR_LINE_ZH[r] || MTR_LINE_ZH[r.toUpperCase()] || r;
+      if (co === 'lightrail' || co === 'lightRail') return '輕鐵' + r;
+      if (co === 'tram') return '電車';
+      return r;
     }
 
     let ALL_ROUTES = [];
@@ -5205,8 +5522,219 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
     let _planToStop = null;
     let _planFocus = 'from'; // which input is being typed
     let _planResults = [];
-    let _planMode = 'smart';
+    let _planMode = 'fast';
+    let _planDepartAt = null; // Date or null = now
     let _planSuggestTimer = null;
+
+
+    const PLAN_HOT = {
+      '熱門': [
+        { name: '銅鑼灣', emoji: '🛍' }, { name: '中環', emoji: '🏙' },
+        { name: '金鐘', emoji: '🏢' }, { name: '灣仔', emoji: '🏛' },
+        { name: '會展', emoji: '🎪' }, { name: '旺角', emoji: '🌃' },
+        { name: '油麻地', emoji: '🎭' }, { name: '深水埗', emoji: '🛒' },
+        { name: '觀塘', emoji: '🏭' }, { name: '機場', emoji: '✈️' },
+        { name: '紅磡站', emoji: '🚄' }, { name: '海洋公園', emoji: '🎢' }
+      ],
+      '香港': [
+        { name: '中環', emoji: '🏙' }, { name: '銅鑼灣', emoji: '🛍' },
+        { name: '金鐘', emoji: '🏢' }, { name: '灣仔', emoji: '🏛' },
+        { name: '北角', emoji: '⛴' }, { name: '香港仔', emoji: '🐟' },
+        { name: '柴灣', emoji: '📦' }, { name: '薄扶林', emoji: '🌳' }
+      ],
+      '九龍': [
+        { name: '尖沙咀', emoji: '💎' }, { name: '旺角', emoji: '🌃' },
+        { name: '深水埗', emoji: '🛒' }, { name: '九龍灣', emoji: '🏢' },
+        { name: '觀塘', emoji: '🏭' }, { name: '紅磡', emoji: '🚄' },
+        { name: '鑽石山', emoji: '💎' }, { name: '美孚', emoji: '🏘' }
+      ],
+      '新界': [
+        { name: '沙田', emoji: '🏇' }, { name: '大埔', emoji: '🌲' },
+        { name: '屯門', emoji: '🏗' }, { name: '元朗', emoji: '🌾' },
+        { name: '東涌', emoji: '🚠' }, { name: '逸東邨', emoji: '🏠' },
+        { name: '將軍澳', emoji: '🏙' }, { name: '機場', emoji: '✈️' }
+      ]
+    };
+
+    function initPlanHotPlaces() {
+      renderPlanHotGrid('熱門');
+    }
+
+    function renderPlanHotGrid(key) {
+      const grid = document.getElementById('planHotGrid');
+      if (!grid) return;
+      const items = PLAN_HOT[key] || PLAN_HOT['熱門'];
+      grid.innerHTML = items.map(it =>
+        `<div class="plan-hot-item" data-name="${it.name}">
+          <div class="ph">${it.emoji}</div>
+          <div class="pn">${it.name}</div>
+        </div>`
+      ).join('');
+      grid.querySelectorAll('.plan-hot-item').forEach(el => {
+        el.onclick = async () => {
+          const name = el.dataset.name;
+          // 預設填入終點；若終點已有則填起點空位
+          const which = (!_planTo) ? 'to' : (!_planFrom ? 'from' : 'to');
+          _planPickWhich = which;
+          const list = document.getElementById('planPickList');
+          // resolve
+          const [stops, places] = await Promise.all([
+            planSearchLocalStops(name, 5),
+            planSearchPhoton(name, 4)
+          ]);
+          const hit = places[0] || stops[0];
+          if (hit) {
+            hit.name = name;
+            if (which === 'from') {
+              _planFrom = hit;
+              document.getElementById('planFromInput').value = name;
+              document.getElementById('planFromClear').style.display = '';
+            } else {
+              _planTo = hit;
+              document.getElementById('planToInput').value = name;
+              document.getElementById('planToClear').style.display = '';
+            }
+          } else {
+            openPlanPlacePicker(which);
+          }
+        };
+      });
+    }
+
+    function planFormatDepartLabel() {
+      if (!_planDepartAt) return '現在出發';
+      const d = _planDepartAt;
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      const hm = pad(d.getHours()) + ':' + pad(d.getMinutes());
+      const sameDay = d.toDateString() === now.toDateString();
+      const tom = new Date(now); tom.setDate(tom.getDate() + 1);
+      if (sameDay) return '今天 ' + hm + ' 出發';
+      if (d.toDateString() === tom.toDateString()) return '明天 ' + hm + ' 出發';
+      return (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + hm + ' 出發';
+    }
+
+    function planSyncDepartBtn() {
+      const btn = document.getElementById('planDepartBtn');
+      if (btn) btn.textContent = planFormatDepartLabel();
+    }
+
+    function planResetAll() {
+      _planDepartAt = null;
+      planSyncDepartBtn();
+      const panel = document.getElementById('planDepartPanel');
+      if (panel) panel.classList.remove('show');
+
+      _planFrom = null;
+      _planTo = null;
+      _planResults = [];
+      document.getElementById('planFromInput').value = '';
+      document.getElementById('planToInput').value = '';
+      document.getElementById('planFromClear').style.display = 'none';
+      document.getElementById('planToClear').style.display = 'none';
+      const sum = document.getElementById('planSummary');
+      if (sum) sum.style.display = 'none';
+      planShowHotOrResults();
+    }
+
+    function planShowHotOrResults() {
+      const hot = document.getElementById('planHot');
+      const wrap = document.getElementById('planResultsWrap');
+      if (_planResults && _planResults.length) {
+        if (hot) hot.classList.add('hidden');
+        if (wrap) wrap.classList.remove('hidden');
+      } else {
+        if (hot) hot.classList.remove('hidden');
+        if (wrap) wrap.classList.add('hidden');
+      }
+    }
+
+    function planUseMyLocationFor(which) {
+      if (!navigator.geolocation) {
+        alert('此裝置不支援定位');
+        return;
+      }
+      const inputId = which === 'to' ? 'planToInput' : 'planFromInput';
+      document.getElementById(inputId).value = '定位中…';
+      navigator.geolocation.getCurrentPosition(async pos => {
+        const lat = pos.coords.latitude, lng = pos.coords.longitude;
+        try {
+          const { stopList } = await ensureStopIndex();
+          let best = null, bestD = Infinity;
+          for (const [id, info] of Object.entries(stopList)) {
+            const loc = info.location || {};
+            const slat = parseFloat(loc.lat), slng = parseFloat(loc.lng);
+            if (isNaN(slat)) continue;
+            const d = haversineM(lat, lng, slat, slng);
+            if (d < bestD) {
+              bestD = d;
+              best = {
+                kind: 'stop', id, label: '巴士站',
+                name: (info.name && (info.name.zh || info.name.en)) || id,
+                lat: slat, lng: slng
+              };
+            }
+          }
+          if (!best) {
+            best = { kind: 'place', id: 'gps', name: '我的位置', lat, lng, label: '定位' };
+          } else if (bestD < 1000) {
+            best.name = best.name + '（約 ' + Math.round(bestD) + ' 米）';
+          }
+          if (which === 'to') {
+            _planTo = best;
+            document.getElementById('planToInput').value = best.name;
+            document.getElementById('planToClear').style.display = '';
+          } else {
+            _planFrom = best;
+            document.getElementById('planFromInput').value = best.name;
+            document.getElementById('planFromClear').style.display = '';
+          }
+        } catch (e) {
+          document.getElementById(inputId).value = '';
+          alert('定位失敗');
+        }
+      }, () => {
+        document.getElementById(inputId).value = '';
+        alert('定位失敗，請允許位置權限');
+      }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 });
+    }
+
+    function openPlanFavPicker(which) {
+      try {
+        const favs = (typeof getFavs === 'function' ? getFavs() : []) || [];
+        if (!favs.length) {
+          alert('尚未有收藏車站，請先在到站頁按 ★ 加入');
+          return;
+        }
+        _planPickWhich = which;
+        const mask = document.getElementById('planPickMask');
+        const list = document.getElementById('planPickList');
+        const mapWrap = document.getElementById('planPickMapWrap');
+        document.getElementById('planPickInput').value = '';
+        if (mapWrap) mapWrap.style.display = 'none';
+        list.style.display = 'block';
+        const hits = favs.slice(0, 30).map((f) => ({
+          kind: 'stop',
+          id: f.stopId || f.id,
+          name: (f.stopName || f.name || '收藏') + (f.route ? ' · ' + f.route : ''),
+          lat: f.lat != null ? f.lat : null,
+          lng: f.lng != null ? f.lng : null,
+          label: '書籤',
+          _fav: f,
+          _needResolve: true
+        }));
+        // resolve coords from stop list if missing later on hit
+        list._hits = hits.map(h => Object.assign(h, { _needResolve: h.lat == null }));
+        list.innerHTML = '<div class="plan-pick-sec">書籤</div>' + hits.map((s, i) =>
+          `<div class="plan-pick-item" data-act="hit" data-i="${i}"><span>${s.name}</span><small style="color:#8e8e93">書籤</small></div>`
+        ).join('');
+        mask.classList.add('show');
+        bindPlanPickList();
+      } catch (e) {
+        alert('讀取書籤失敗');
+      }
+    }
+
 
     function openPlanPage() {
       showPage('pagePlan');
@@ -5323,7 +5851,21 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
           } else if (act === 'hit') {
             const hits = list._hits || [];
             const s = hits[Number(el.dataset.i)];
-            if (s) applyPlanPick(s);
+            if (!s) return;
+            if (s._needResolve || s.lat == null || s.lng == null) {
+              list.innerHTML = '<div class="plan-pick-item">定位「' + s.name + '」中…</div>';
+              const places = await planSearchPhoton(s.name, 5);
+              const stops = await planSearchLocalStops(s.name, 5);
+              const resolved = places[0] || stops[0];
+              if (resolved) {
+                resolved.name = s.name || resolved.name;
+                applyPlanPick(resolved);
+              } else {
+                openPlanMapPick(22.3193, 114.1694, s.name);
+              }
+              return;
+            }
+            applyPlanPick(s);
           }
         };
       });
@@ -5365,14 +5907,106 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
     }
 
     function applyPlanPick(s) {
+      if (!s || s.lat == null || s.lng == null || isNaN(Number(s.lat)) || isNaN(Number(s.lng))) {
+        alert('請在地圖上選擇位置');
+        return;
+      }
+      s = Object.assign({}, s, { lat: Number(s.lat), lng: Number(s.lng) });
       if (_planPickWhich === 'from') {
         _planFrom = s;
-        document.getElementById('planFromInput').value = s.name;
+        document.getElementById('planFromInput').value = s.name || '所選位置';
+        const c = document.getElementById('planFromClear');
+        if (c) c.style.display = '';
       } else {
         _planTo = s;
-        document.getElementById('planToInput').value = s.name;
+        document.getElementById('planToInput').value = s.name || '所選位置';
+        const c = document.getElementById('planToClear');
+        if (c) c.style.display = '';
       }
       closePlanPlacePicker();
+    }
+
+    async function confirmPlanMapPick() {
+      try {
+        if (_planPickMarker && typeof _planPickMarker.getLatLng === 'function') {
+          const p = _planPickMarker.getLatLng();
+          let name = (_planPickTemp && _planPickTemp.name) || '地圖選點';
+          let label = (_planPickTemp && _planPickTemp.label) || '地圖';
+          // 若仍是泛稱，再反查一次
+          if (!name || name === '地圖選點' || name === '所選位置' || name === '移動地圖選點…') {
+            const info = await planUpdateMapPlaceName(p.lat, p.lng, name);
+            name = info.name;
+            label = info.label || label;
+          }
+          _planPickTemp = {
+            kind: 'place',
+            id: 'map:' + p.lat.toFixed(5) + ',' + p.lng.toFixed(5),
+            name: name,
+            lat: p.lat,
+            lng: p.lng,
+            label: label
+          };
+        }
+        if (!_planPickTemp || _planPickTemp.lat == null) {
+          alert('請先在地圖上選擇位置');
+          return;
+        }
+        applyPlanPick(_planPickTemp);
+      } catch (e) {
+        console.error(e);
+        alert('確認位置失敗，請再試一次');
+      }
+    }
+
+    let _planRevGeoTimer = null;
+
+    async function planReverseGeocode(lat, lng) {
+      try {
+        const url = 'https://photon.komoot.io/reverse?lon=' + encodeURIComponent(lng) +
+          '&lat=' + encodeURIComponent(lat) + '&lang=zh';
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        const json = await res.json();
+        const f = (json.features || [])[0];
+        if (!f) return null;
+        const p = f.properties || {};
+        const parts = [p.name, p.street, p.district, p.city, p.county].filter(Boolean);
+        const uniq = [];
+        parts.forEach(x => { if (x && !uniq.includes(x)) uniq.push(x); });
+        const name = uniq.slice(0, 3).join('，') || null;
+        return name ? { name, label: p.type || p.osm_value || '地點' } : null;
+      } catch (e) {
+        console.warn('reverse geo', e);
+        return null;
+      }
+    }
+
+    async function planUpdateMapPlaceName(lat, lng, fallbackName) {
+      const el = document.getElementById('planMapPlaceName');
+      if (el) el.innerHTML = '查詢地點名稱中…';
+      const rev = await planReverseGeocode(lat, lng);
+      // also nearest bus stop
+      let stopHint = '';
+      try {
+        const { stopList } = await ensureStopIndex();
+        let best = null, bestD = Infinity;
+        for (const [id, info] of Object.entries(stopList)) {
+          const loc = info.location || {};
+          const slat = parseFloat(loc.lat), slng = parseFloat(loc.lng);
+          if (isNaN(slat)) continue;
+          const d = haversineM(lat, lng, slat, slng);
+          if (d < bestD) {
+            bestD = d;
+            best = (info.name && (info.name.zh || info.name.en)) || id;
+          }
+        }
+        if (best && bestD < 400) stopHint = '附近巴士站：' + best + '（約 ' + Math.round(bestD) + ' 米）';
+      } catch (_) {}
+      const name = (rev && rev.name) || fallbackName || '地圖選點';
+      if (el) {
+        el.innerHTML = name + (stopHint ? '<small>' + stopHint + '</small>' : '');
+      }
+      return { name, label: (rev && rev.label) || '地圖' };
     }
 
     function openPlanMapPick(lat, lng, name, preset) {
@@ -5380,42 +6014,64 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
       const mapWrap = document.getElementById('planPickMapWrap');
       list.style.display = 'none';
       mapWrap.style.display = 'flex';
-      _planPickTemp = preset || { kind: 'place', id: 'map:' + lat + ',' + lng, name: name || '所選位置', lat, lng, label: '地圖' };
+      _planPickTemp = preset || {
+        kind: 'place',
+        id: 'map:' + Number(lat).toFixed(5) + ',' + Number(lng).toFixed(5),
+        name: name || '所選位置',
+        lat: Number(lat),
+        lng: Number(lng),
+        label: '地圖'
+      };
+      const nameEl = document.getElementById('planMapPlaceName');
+      if (nameEl) nameEl.textContent = _planPickTemp.name || '移動地圖選點…';
 
       setTimeout(() => {
-        if (typeof L === 'undefined') return;
+        if (typeof L === 'undefined') {
+          if (nameEl) nameEl.textContent = '地圖載入失敗';
+          return;
+        }
         if (_planPickMap) {
-          _planPickMap.remove();
+          try { _planPickMap.remove(); } catch (_) {}
           _planPickMap = null;
         }
         const el = document.getElementById('planPickMap');
         el.innerHTML = '';
-        _planPickMap = L.map(el, { zoomControl: true }).setView([lat, lng], 15);
+        _planPickMap = L.map(el, { zoomControl: true }).setView([lat, lng], 16);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 19, attribution: '&copy; OpenStreetMap'
         }).addTo(_planPickMap);
         _planPickMarker = L.marker([lat, lng], { draggable: true }).addTo(_planPickMap);
+
+        const onPos = (plat, plng) => {
+          clearTimeout(_planRevGeoTimer);
+          _planRevGeoTimer = setTimeout(async () => {
+            const info = await planUpdateMapPlaceName(plat, plng, _planPickTemp && _planPickTemp.name);
+            _planPickTemp = {
+              kind: 'place',
+              id: 'map:' + plat.toFixed(5) + ',' + plng.toFixed(5),
+              name: info.name,
+              lat: plat,
+              lng: plng,
+              label: info.label || '地圖'
+            };
+          }, 350);
+        };
+
         _planPickMarker.on('dragend', () => {
           const p = _planPickMarker.getLatLng();
-          _planPickTemp = {
-            kind: 'place',
-            id: 'map:' + p.lat.toFixed(5) + ',' + p.lng.toFixed(5),
-            name: (_planPickTemp && _planPickTemp.name) || '地圖選點',
-            lat: p.lat, lng: p.lng, label: '地圖'
-          };
+          onPos(p.lat, p.lng);
         });
         _planPickMap.on('click', (e) => {
           _planPickMarker.setLatLng(e.latlng);
-          _planPickTemp = {
-            kind: 'place',
-            id: 'map:' + e.latlng.lat.toFixed(5) + ',' + e.latlng.lng.toFixed(5),
-            name: (_planPickTemp && _planPickTemp.name) || '地圖選點',
-            lat: e.latlng.lat, lng: e.latlng.lng, label: '地圖'
-          };
+          onPos(e.latlng.lat, e.latlng.lng);
         });
-        setTimeout(() => _planPickMap.invalidateSize(), 200);
+        setTimeout(() => {
+          _planPickMap.invalidateSize();
+          onPos(Number(lat), Number(lng));
+        }, 200);
       }, 50);
     }
+
 
     function initPlanPage() {
       const fromIn = document.getElementById('planFromInput');
@@ -5433,53 +6089,166 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
         fromIn.value = bv; toIn.value = av;
       };
       document.getElementById('planSearchBtn').onclick = () => runPlanSearch();
-      document.getElementById('planUseLocBtn').onclick = () => planUseMyLocation();
-
-      document.querySelectorAll('.plan-tab').forEach(tab => {
+      
+      document.querySelectorAll('.plan-mode-btn').forEach(tab => {
         tab.onclick = () => {
-          document.querySelectorAll('.plan-tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.plan-mode-btn').forEach(t => t.classList.remove('active'));
           tab.classList.add('active');
-          _planMode = tab.dataset.mode || 'smart';
+          _planMode = tab.dataset.mode || 'fast';
           renderPlanResults();
         };
       });
+
+      // 快捷鍵：分區 / 書籤 / 地圖 / 定位
+      document.querySelectorAll('.plan-quick-btn').forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const which = btn.closest('.plan-quick').dataset.for || 'from';
+          _planPickWhich = which;
+          const act = btn.dataset.act;
+          if (act === 'region') openPlanPlacePicker(which);
+          else if (act === 'map') {
+            _planPickWhich = which;
+            openPlanPlacePicker(which);
+            setTimeout(() => openPlanMapPick(22.3193, 114.1694, '地圖選點'), 100);
+          } else if (act === 'loc') {
+            if (which === 'from') planUseMyLocation();
+            else planUseMyLocationFor('to');
+          } else if (act === 'fav') {
+            openPlanFavPicker(which);
+          }
+        };
+      });
+
+      const resetBtn = document.getElementById('planResetBtn');
+      if (resetBtn) resetBtn.onclick = () => planResetAll();
+
+      document.getElementById('planFromClear').onclick = (e) => {
+        e.stopPropagation();
+        _planFrom = null;
+        document.getElementById('planFromInput').value = '';
+        document.getElementById('planFromClear').style.display = 'none';
+        planShowHotOrResults();
+      };
+      document.getElementById('planToClear').onclick = (e) => {
+        e.stopPropagation();
+        _planTo = null;
+        document.getElementById('planToInput').value = '';
+        document.getElementById('planToClear').style.display = 'none';
+        planShowHotOrResults();
+      };
+
+      // 熱門地點
+      initPlanHotPlaces();
+      document.querySelectorAll('.plan-hot-tab').forEach(tab => {
+        tab.onclick = () => {
+          document.querySelectorAll('.plan-hot-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          renderPlanHotGrid(tab.dataset.hot || '熱門');
+        };
+      });
+
+      
+      // 出發時間
+      const depBtn = document.getElementById('planDepartBtn');
+      const depPanel = document.getElementById('planDepartPanel');
+      const depInput = document.getElementById('planDepartInput');
+      if (depBtn && depPanel) {
+        depBtn.onclick = () => {
+          depPanel.classList.toggle('show');
+          if (depPanel.classList.contains('show') && depInput) {
+            const base = _planDepartAt || new Date();
+            const pad = n => String(n).padStart(2, '0');
+            const local = base.getFullYear() + '-' + pad(base.getMonth() + 1) + '-' + pad(base.getDate()) +
+              'T' + pad(base.getHours()) + ':' + pad(base.getMinutes());
+            depInput.value = local;
+          }
+        };
+      }
+      const depNow = document.getElementById('planDepartNowBtn');
+      if (depNow) depNow.onclick = () => {
+        _planDepartAt = null;
+        planSyncDepartBtn();
+        if (depPanel) depPanel.classList.remove('show');
+      };
+      const depOk = document.getElementById('planDepartOkBtn');
+      if (depOk) depOk.onclick = () => {
+        if (depInput && depInput.value) {
+          const d = new Date(depInput.value);
+          if (!isNaN(d.getTime())) _planDepartAt = d;
+        }
+        planSyncDepartBtn();
+        if (depPanel) depPanel.classList.remove('show');
+      };
+      planSyncDepartBtn();
+
+const prefBtn = document.getElementById('planPrefBtn');
+      if (prefBtn) prefBtn.onclick = () => {
+        alert('搜尋偏好：\n• 最快：優先總車程最短\n• 最便宜：優先車費較低\n• 較短：綜合步行與轉乘（AI 建議）\n\n可於上方切換。');
+      };
+
 
       const pickCancel = document.getElementById('planPickCancel');
       if (pickCancel) pickCancel.onclick = () => closePlanPlacePicker();
       const pickInput = document.getElementById('planPickInput');
       if (pickInput) {
-        let t = null;
+        let tLocal = null;
+        let tRemote = null;
+        let _suggestGen = 0;
         pickInput.addEventListener('input', () => {
-          clearTimeout(t);
-          t = setTimeout(async () => {
-            const q = pickInput.value.trim();
-            if (!q) { renderPlanRegionList(); return; }
-            const list = document.getElementById('planPickList');
-            document.getElementById('planPickMapWrap').style.display = 'none';
-            list.style.display = 'block';
-            list.innerHTML = '<div class="plan-pick-item">搜尋中…</div>';
-            const [stops, places] = await Promise.all([
-              planSearchLocalStops(q, 12),
-              planSearchPhoton(q, 8)
-            ]);
-            const hits = [];
-            const seen = new Set();
-            for (const s of places.concat(stops)) {
-              const key = s.name + '|' + (s.lat && s.lat.toFixed(4));
-              if (seen.has(key)) continue;
-              seen.add(key);
-              hits.push(s);
-            }
-            list._hits = hits;
-            if (!hits.length) {
-              list.innerHTML = '<div class="plan-pick-item">無結果</div>';
-              return;
-            }
-            list.innerHTML = '<div class="plan-pick-sec">搜尋結果</div>' + hits.map((s, i) =>
-              `<div class="plan-pick-item" data-act="hit" data-i="${i}"><span>${s.name}</span><small style="color:#8e8e93">${s.label || ''}</small></div>`
-            ).join('');
-            bindPlanPickList();
-          }, 280);
+          const q = pickInput.value.trim();
+          const list = document.getElementById('planPickList');
+          const mapWrap = document.getElementById('planPickMapWrap');
+          if (mapWrap) mapWrap.style.display = 'none';
+          if (list) list.style.display = 'block';
+          if (!q) {
+            clearTimeout(tLocal);
+            clearTimeout(tRemote);
+            renderPlanRegionList();
+            return;
+          }
+          const gen = ++_suggestGen;
+          // 漸進第 1 步：本地巴士站 + 分區地名（快速）
+          clearTimeout(tLocal);
+          tLocal = setTimeout(async () => {
+            if (gen !== _suggestGen) return;
+            try {
+              const stops = await planSearchLocalStops(q, 15);
+              const regions = planSearchRegionPlaces(q, 8);
+              if (gen !== _suggestGen) return;
+              const hits = [];
+              const seen = new Set();
+              for (const s of regions.concat(stops)) {
+                const key = (s.name || '') + '|' + (s.kind || '');
+                if (seen.has(key)) continue;
+                seen.add(key);
+                hits.push(s);
+              }
+              planRenderSuggestList(hits, q, '搜尋地點中…');
+            } catch (e) { console.warn(e); }
+          }, 60);
+          // 漸進第 2 步：合併網絡地點結果
+          clearTimeout(tRemote);
+          tRemote = setTimeout(async () => {
+            if (gen !== _suggestGen) return;
+            try {
+              const [stops, places] = await Promise.all([
+                planSearchLocalStops(q, 15),
+                planSearchPhoton(q, 8)
+              ]);
+              const regions = planSearchRegionPlaces(q, 8);
+              if (gen !== _suggestGen) return;
+              const hits = [];
+              const seen = new Set();
+              for (const s of places.concat(regions).concat(stops)) {
+                const key = (s.name || '') + '|' + (s.lat != null ? Number(s.lat).toFixed(4) : s.kind);
+                if (seen.has(key)) continue;
+                seen.add(key);
+                hits.push(s);
+              }
+              planRenderSuggestList(hits, q, '無結果，可試地圖選點');
+            } catch (e) { console.warn(e); }
+          }, 200);
         });
       }
       const mapConfirm = document.getElementById('planPickMapConfirm');
@@ -5494,25 +6263,109 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
       limit = limit || 12;
       const { stopList } = await ensureStopIndex();
       const ql = q.toLowerCase();
-      const hits = [];
+      const scored = [];
       for (const [id, info] of Object.entries(stopList)) {
-        const name = (info.name && (info.name.zh || info.name.en)) || '';
+        const nameZh = (info.name && info.name.zh) || '';
+        const nameEn = (info.name && info.name.en) || '';
+        const name = nameZh || nameEn;
         if (!name) continue;
-        if (name.includes(q) || name.toLowerCase().includes(ql)) {
-          const loc = info.location || {};
-          const lat = parseFloat(loc.lat), lng = parseFloat(loc.lng);
-          if (isNaN(lat) || isNaN(lng)) continue;
-          hits.push({
-            kind: 'stop',
-            id: String(id),
-            name,
-            lat, lng,
-            label: '巴士站'
-          });
-          if (hits.length >= limit) break;
+        const nl = name.toLowerCase();
+        const en = nameEn.toLowerCase();
+        let score = -1;
+        if (name.startsWith(q) || nl.startsWith(ql)) score = 100;
+        else if (en.startsWith(ql)) score = 90;
+        else if (name.includes(q) || nl.includes(ql)) score = 50;
+        else if (en.includes(ql)) score = 40;
+        else continue;
+        const idx = Math.max(0, nl.indexOf(ql));
+        score -= Math.min(idx, 20);
+        const loc = info.location || {};
+        const lat = parseFloat(loc.lat), lng = parseFloat(loc.lng);
+        if (isNaN(lat) || isNaN(lng)) continue;
+        scored.push({
+          kind: 'stop',
+          id: String(id),
+          name,
+          lat, lng,
+          label: '巴士站',
+          _score: score
+        });
+      }
+      scored.sort((a, b) => b._score - a._score);
+      return scored.slice(0, limit);
+    }
+
+    function planSearchRegionPlaces(q, limit) {
+      limit = limit || 8;
+      const ql = q.toLowerCase();
+      const scored = [];
+      if (typeof PLAN_REGIONS === 'undefined') return scored;
+      for (const [region, districts] of Object.entries(PLAN_REGIONS)) {
+        for (const [dist, places] of Object.entries(districts || {})) {
+          for (const p of places) {
+            const pl = p.toLowerCase();
+            let score = -1;
+            if (p.startsWith(q) || pl.startsWith(ql)) score = 95;
+            else if (p.includes(q) || pl.includes(ql)) score = 45;
+            else continue;
+            scored.push({
+              kind: 'region',
+              id: 'region:' + p,
+              name: p,
+              lat: null,
+              lng: null,
+              label: region + ' · ' + dist,
+              _score: score,
+              _needResolve: true
+            });
+          }
         }
       }
-      return hits;
+      scored.sort((a, b) => b._score - a._score);
+      return scored.slice(0, limit);
+    }
+
+    function planHighlightMatch(name, q) {
+      if (!q) return name;
+      try {
+        const esc = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return String(name).replace(new RegExp('(' + esc + ')', 'ig'), '<mark>$1</mark>');
+      } catch (_) {
+        return name;
+      }
+    }
+
+    function planRenderSuggestList(hits, q, emptyMsg) {
+      const list = document.getElementById('planPickList');
+      if (!list) return;
+      list._hits = hits;
+      if (!hits.length) {
+        list.innerHTML = '<div class="plan-pick-item">' + (emptyMsg || '無結果') + '</div>';
+        return;
+      }
+      const places = hits.filter(h => h.kind !== 'stop');
+      const stops = hits.filter(h => h.kind === 'stop');
+      let html = '';
+      if (places.length) {
+        html += '<div class="plan-pick-sec">地點</div>';
+        places.forEach((s) => {
+          const i = hits.indexOf(s);
+          html += '<div class="plan-pick-item" data-act="hit" data-i="' + i + '">' +
+            '<span>' + planHighlightMatch(s.name, q) + '</span>' +
+            '<small style="color:#8e8e93">' + (s.label || '') + '</small></div>';
+        });
+      }
+      if (stops.length) {
+        html += '<div class="plan-pick-sec">巴士站</div>';
+        stops.forEach((s) => {
+          const i = hits.indexOf(s);
+          html += '<div class="plan-pick-item" data-act="hit" data-i="' + i + '">' +
+            '<span>' + planHighlightMatch(s.name, q) + '</span>' +
+            '<small style="color:#8e8e93">' + (s.label || '巴士站') + '</small></div>';
+        });
+      }
+      list.innerHTML = html;
+      bindPlanPickList();
     }
 
     /** 地點搜尋（OpenStreetMap Photon，香港範圍） */
@@ -5674,8 +6527,14 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
     }
 
     function planCoLabel(co) {
-      const m = { kmb: '九巴', lwb: '龍運', ctb: '城巴', nlb: '嶼巴', gmb: '小巴', mtrbus: '港鐵巴士', mtr: '港鐵' };
-      return m[String(co || '').toLowerCase()] || String(co || '').toUpperCase();
+      const m = {
+        kmb: '九巴', lwb: '龍運', ctb: '城巴', nlb: '嶼巴',
+        gmb: '小巴', mtrbus: '港鐵巴士', mtr: '港鐵',
+        lightrail: '輕鐵', lightRail: '輕鐵', tram: '電車',
+        lrtfeeder: '港鐵接駁巴士'
+      };
+      const c = String(co || '');
+      return m[c] || m[c.toLowerCase()] || c.toUpperCase();
     }
 
     function planEstimateMins(distM, stopsBetween) {
@@ -5714,6 +6573,11 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
       // 盡量用分段車費；否則用全程票價作參考
       try {
         const fares = info.fares || info.fare || null;
+        if (Array.isArray(fares) && fares.length) {
+          const i = Math.max(0, Math.min(fromIdx, fares.length - 1));
+          const v = parseFloat(fares[i]);
+          if (!isNaN(v)) return roundFare(v);
+        }
         if (fares && typeof fares === 'object') {
           // common shapes vary; try numeric full
           if (typeof fares.full === 'number') return fares.full;
@@ -5722,8 +6586,17 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
         // hkbus routeList sometimes has fare in nested form
         if (info.freq && info.fare) return Number(info.fare);
       } catch (_) {}
-      // 粗估：每站約 $0.8，下限 $4.5
+      const cos = (info && info.co) ? info.co : [];
+      const co0 = String((cos[0] || info && info._co) || '').toLowerCase();
       const n = Math.max(1, (toIdx - fromIdx));
+      if (co0 === 'mtr') {
+        // 港鐵粗估：起程約 $5，每站約 $1.2
+        return Math.round(Math.max(5, Math.min(35, 4 + n * 1.2)) * 10) / 10;
+      }
+      if (co0 === 'lightrail') {
+        return Math.round(Math.max(3, Math.min(12, 2.5 + n * 0.6)) * 10) / 10;
+      }
+      // 巴士粗估
       return Math.round(Math.max(4.5, Math.min(28, 3.5 + n * 0.75)) * 10) / 10;
     }
 
@@ -5737,7 +6610,6 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
       const TRANSFER_M = 500;
       const options = [];
 
-      // stop id -> coord
       const stopCoord = new Map();
       for (const [id, info] of Object.entries(stopList)) {
         const loc = info.location || {};
@@ -5749,36 +6621,39 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
         });
       }
 
-      // 空間格：轉乘用
-      const cellSize = 0.004; // ~400m
-      const grid = new Map();
+      const cellSize = 0.004;
       function cellKey(lat, lng) {
         return Math.floor(lat / cellSize) + ':' + Math.floor(lng / cellSize);
       }
-      function addGrid(lat, lng, item) {
-        const k = cellKey(lat, lng);
-        if (!grid.has(k)) grid.set(k, []);
-        grid.get(k).push(item);
-      }
-      function queryGrid(lat, lng, maxM) {
-        const out = [];
-        const ci = Math.floor(lat / cellSize), cj = Math.floor(lng / cellSize);
-        for (let di = -1; di <= 1; di++) {
-          for (let dj = -1; dj <= 1; dj++) {
-            const arr = grid.get((ci + di) + ':' + (cj + dj));
-            if (!arr) continue;
-            for (const it of arr) {
-              const d = haversineM(lat, lng, it.lat, it.lng);
-              if (d <= maxM) out.push(Object.assign({ d }, it));
+      function makeGrid() {
+        return {
+          map: new Map(),
+          add(lat, lng, item) {
+            const k = cellKey(lat, lng);
+            if (!this.map.has(k)) this.map.set(k, []);
+            this.map.get(k).push(item);
+          },
+          query(lat, lng, maxM) {
+            const out = [];
+            const ci = Math.floor(lat / cellSize), cj = Math.floor(lng / cellSize);
+            for (let di = -1; di <= 1; di++) {
+              for (let dj = -1; dj <= 1; dj++) {
+                const arr = this.map.get((ci + di) + ':' + (cj + dj));
+                if (!arr) continue;
+                for (const it of arr) {
+                  const d = haversineM(lat, lng, it.lat, it.lng);
+                  if (d <= maxM) out.push(Object.assign({ d }, it));
+                }
+              }
             }
+            return out;
           }
-        }
-        return out;
+        };
       }
 
-      // 第一程：起點附近可上車的路線段；同時收集落車站入 grid
-      const leg1 = []; // { route, co, info, board, alightCandidates... }
-      const leg2Boards = []; // 第二程可上車點（終點線）
+      const destGrid = makeGrid();   // 通往終點的第二／末程上車點
+      const passGrid = makeGrid();   // 全線站點（中轉用）
+      const leg1 = [];
 
       for (const [key, info] of Object.entries(routeList)) {
         const cos = (info.co && info.co.length) ? info.co : [planPickCo(info)];
@@ -5801,11 +6676,14 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
             const dt = haversineM(toLat, toLng, s.lat, s.lng);
             if (df <= NEAR_M) nearFrom.push(Object.assign({ d: df }, s));
             if (dt <= NEAR_M) nearTo.push(Object.assign({ d: dt }, s));
+            // 中轉索引：每站
+            passGrid.add(s.lat, s.lng, {
+              key, co, info, route: info.route || key.split('+')[0],
+              stop: s, seq
+            });
           }
-          if (!nearFrom.length && !nearTo.length) continue;
           nearFrom.sort((a, b) => a.d - b.d);
           nearTo.sort((a, b) => a.d - b.d);
-
           const routeName = info.route || key.split('+')[0];
 
           // 直達
@@ -5817,6 +6695,7 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
               const fare = planFareGuess(info, a.i, b.i);
               options.push({
                 type: 'direct',
+                transfers: 0,
                 scoreSmart: mins + fare * 0.75,
                 scoreFast: mins,
                 scoreCheap: fare * 10 + mins * 0.05,
@@ -5835,51 +6714,49 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
             }
           }
 
-          // 第一程候選：起點上車，線上稍後站可作轉乘落車
+          // 第一程
           for (const a of nearFrom.slice(0, 3)) {
             const alights = [];
             for (const s of seq) {
               if (s.i <= a.i) continue;
-              if (s.i - a.i > 50) break;
+              if (s.i - a.i > 55) break;
               alights.push(s);
-              // 每 2 站取一個減少計算量
-              if (alights.length >= 18) break;
+              if (alights.length >= 20) break;
             }
-            // 均勻抽樣
-            const sampled = alights.length <= 12 ? alights :
-              alights.filter((_, idx) => idx % Math.ceil(alights.length / 12) === 0);
+            const sampled = alights.length <= 10 ? alights :
+              alights.filter((_, idx) => idx % Math.ceil(alights.length / 10) === 0);
             leg1.push({ key, co, info, route: routeName, board: a, alights: sampled });
           }
 
-          // 第二程：終點落車，線上稍前站可作轉乘上車 → 入 grid
+          // 末程：終點落車前的上車點
           for (const b of nearTo.slice(0, 3)) {
             let count = 0;
             for (let si = seq.length - 1; si >= 0; si--) {
               const s = seq[si];
               if (s.i >= b.i) continue;
-              if (b.i - s.i > 50) break;
-              addGrid(s.lat, s.lng, {
+              if (b.i - s.i > 55) break;
+              destGrid.add(s.lat, s.lng, {
                 key, co, info, route: routeName,
                 board: s, alight: b
               });
               count++;
-              if (count >= 14) break;
+              if (count >= 12) break;
             }
           }
         }
       }
 
-      // 轉乘配對
-      const transferSeen = new Set();
+      // —— 一次轉乘 ——
+      const transfer1Seen = new Set();
       for (const L of leg1) {
         for (const al of L.alights) {
-          const matches = queryGrid(al.lat, al.lng, TRANSFER_M);
+          const matches = destGrid.query(al.lat, al.lng, TRANSFER_M);
           for (const m of matches) {
             if (m.key === L.key && m.co === L.co) continue;
-            const sig = L.route + L.co + al.sid + m.route + m.co + m.board.sid + m.alight.sid;
-            if (transferSeen.has(sig)) continue;
-            transferSeen.add(sig);
-            if (transferSeen.size > 120) break;
+            const sig = '1|' + L.route + L.co + al.sid + m.route + m.co + m.board.sid;
+            if (transfer1Seen.has(sig)) continue;
+            transfer1Seen.add(sig);
+            if (transfer1Seen.size > 100) break;
 
             const d1 = haversineM(L.board.lat, L.board.lng, al.lat, al.lng);
             const d2 = haversineM(m.board.lat, m.board.lng, m.alight.lat, m.alight.lng);
@@ -5892,6 +6769,7 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
             const totalFare = Math.round((f1 + f2) * 10) / 10;
             options.push({
               type: 'transfer',
+              transfers: 1,
               scoreSmart: totalMins + totalFare * 0.7 + 3,
               scoreFast: totalMins,
               scoreCheap: totalFare * 10 + totalMins * 0.04,
@@ -5919,18 +6797,122 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
               ]
             });
           }
-          if (transferSeen.size > 120) break;
+          if (transfer1Seen.size > 100) break;
         }
-        if (transferSeen.size > 120) break;
+        if (transfer1Seen.size > 100) break;
       }
 
-      // 去重
+      // —— 兩次轉乘（起點線 → 中轉線 → 終點線）——
+      const transfer2Seen = new Set();
+      const leg1For2 = leg1.slice(0, 35);
+      for (const L of leg1For2) {
+        // 每條第一程只取少數落車點
+        const alights = L.alights.filter((_, i) => i % 2 === 0).slice(0, 5);
+        for (const al of alights) {
+          // 在落車點附近找可轉的其他路線（中轉程）
+          const midHits = passGrid.query(al.lat, al.lng, TRANSFER_M);
+          // 去重路線
+          const midRoutes = [];
+          const midSeen = new Set();
+          for (const h of midHits) {
+            if (h.key === L.key && h.co === L.co) continue;
+            const mk = h.key + '|' + h.co;
+            if (midSeen.has(mk)) continue;
+            midSeen.add(mk);
+            // 上車點為 h.stop，需在路線上其後仍有站
+            const seq = h.seq;
+            const boardIdx = h.stop.i;
+            const later = [];
+            for (const s of seq) {
+              if (s.i <= boardIdx) continue;
+              if (s.i - boardIdx > 40) break;
+              later.push(s);
+              if (later.length >= 10) break;
+            }
+            if (!later.length) continue;
+            const sampled = later.length <= 5 ? later :
+              later.filter((_, idx) => idx % Math.ceil(later.length / 5) === 0);
+            midRoutes.push({
+              key: h.key, co: h.co, info: h.info, route: h.route,
+              board: h.stop, walk1: h.d, alights: sampled
+            });
+            if (midRoutes.length >= 8) break;
+          }
+
+          for (const mid of midRoutes) {
+            for (const midAl of mid.alights) {
+              const endHits = destGrid.query(midAl.lat, midAl.lng, TRANSFER_M);
+              for (const m of endHits) {
+                if ((m.key === L.key && m.co === L.co) || (m.key === mid.key && m.co === mid.co)) continue;
+                const sig = '2|' + L.route + mid.route + m.route + al.sid + midAl.sid + m.board.sid;
+                if (transfer2Seen.has(sig)) continue;
+                transfer2Seen.add(sig);
+                if (transfer2Seen.size > 60) break;
+
+                const d1 = haversineM(L.board.lat, L.board.lng, al.lat, al.lng);
+                const d2 = haversineM(mid.board.lat, mid.board.lng, midAl.lat, midAl.lng);
+                const d3 = haversineM(m.board.lat, m.board.lng, m.alight.lat, m.alight.lng);
+                const m1 = planEstimateMins(d1, al.i - L.board.i);
+                const m2 = planEstimateMins(d2, midAl.i - mid.board.i);
+                const m3 = planEstimateMins(d3, m.alight.i - m.board.i);
+                const w1 = planWalkMins(mid.walk1);
+                const w2 = planWalkMins(m.d);
+                const f1 = planFareGuess(L.info, L.board.i, al.i);
+                const f2 = planFareGuess(mid.info, mid.board.i, midAl.i);
+                const f3 = planFareGuess(m.info, m.board.i, m.alight.i);
+                const totalMins = m1 + m2 + m3 + w1 + w2 + 8;
+                const totalFare = Math.round((f1 + f2 + f3) * 10) / 10;
+                options.push({
+                  type: 'transfer',
+                  transfers: 2,
+                  scoreSmart: totalMins + totalFare * 0.7 + 8,
+                  scoreFast: totalMins,
+                  scoreCheap: totalFare * 10 + totalMins * 0.04,
+                  totalMins,
+                  walkM: Math.round(mid.walk1 + m.d + L.board.d + m.alight.d),
+                  totalFare,
+                  legs: [
+                    {
+                      route: L.route, co: L.co, dest: planDestOf(L.info),
+                      boardId: L.board.sid, boardName: L.board.name,
+                      alightId: al.sid, alightName: al.name,
+                      mins: m1, fare: f1,
+                      service_type: String(L.info.serviceType || 1),
+                      nlbId: L.info.nlbId || null
+                    },
+                    {
+                      route: mid.route, co: mid.co, dest: planDestOf(mid.info),
+                      boardId: mid.board.sid, boardName: mid.board.name,
+                      alightId: midAl.sid, alightName: midAl.name,
+                      mins: m2, fare: f2,
+                      service_type: String(mid.info.serviceType || 1),
+                      nlbId: mid.info.nlbId || null,
+                      walkFromPrevM: Math.round(mid.walk1)
+                    },
+                    {
+                      route: m.route, co: m.co, dest: planDestOf(m.info),
+                      boardId: m.board.sid, boardName: m.board.name,
+                      alightId: m.alight.sid, alightName: m.alight.name,
+                      mins: m3, fare: f3,
+                      service_type: String(m.info.serviceType || 1),
+                      nlbId: m.info.nlbId || null,
+                      walkFromPrevM: Math.round(m.d)
+                    }
+                  ]
+                });
+              }
+              if (transfer2Seen.size > 60) break;
+            }
+            if (transfer2Seen.size > 60) break;
+          }
+          if (transfer2Seen.size > 60) break;
+        }
+        if (transfer2Seen.size > 60) break;
+      }
+
+      // 去重：同路線組合留最快
       const bestMap = new Map();
       for (const o of options) {
-        // fix possible undefined fare
-        if (o.legs[1] && (o.legs[1].fare == null)) {
-          o.legs[1].fare = planFareGuess({ fares: null }, 0, 5);
-        }
         const k = o.legs.map(l => l.route + '/' + l.co).join('+');
         const prev = bestMap.get(k);
         if (!prev || o.scoreFast < prev.scoreFast) bestMap.set(k, o);
@@ -5947,13 +6929,19 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
       opt.legs.forEach((leg, i) => {
         const co = planCoLabel(leg.co);
         if (i === 0) {
+          const rname = planDisplayRoute(leg);
+          const isRail = ['mtr','lightrail','lightRail','tram'].includes(String(leg.co));
+          const ride = isRail ? rname : (rname + ' 號線');
           lines.push(
-            `建議乘搭 ${leg.route} 號線（${co}），喺${leg.boardName}上車，車費約 $${leg.fare}，車程約 ${leg.mins} 分鐘，喺${leg.alightName}落車。`
+            `建議乘搭${ride}（${co}），喺${leg.boardName}上車，車費約 $${leg.fare}，車程約 ${leg.mins} 分鐘，喺${leg.alightName}落車。`
           );
         } else {
           const walk = leg.walkFromPrevM != null ? `轉車步行約 ${leg.walkFromPrevM} 米，` : '';
+          const rname = planDisplayRoute(leg);
+          const isRail = ['mtr','lightrail','lightRail','tram'].includes(String(leg.co));
+          const ride = isRail ? rname : (rname + ' 號線');
           lines.push(
-            `然後${walk}轉乘 ${leg.route} 號線（${co}），喺${leg.boardName}上車，車費約 $${leg.fare}，車程約 ${leg.mins} 分鐘，喺${leg.alightName}落車。`
+            `然後${walk}轉乘${ride}（${co}），喺${leg.boardName}上車，車費約 $${leg.fare}，車程約 ${leg.mins} 分鐘，喺${leg.alightName}落車。`
           );
         }
       });
@@ -5982,9 +6970,14 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
         alert('請選擇起點與終點地點');
         return;
       }
-      box.innerHTML = '<div class="plan-loading">正在解析地點並搜尋跨公司路線…</div>';
+      const hot = document.getElementById('planHot');
+      const wrap = document.getElementById('planResultsWrap');
+      if (hot) hot.classList.add('hidden');
+      if (wrap) wrap.classList.remove('hidden');
+      box.innerHTML = '<div class="plan-loading">正在搜尋跨公司路線…</div>';
       sum.style.display = 'none';
-      document.getElementById('planSuggest').classList.remove('show');
+      const sug = document.getElementById('planSuggest');
+      if (sug) sug.classList.remove('show');
       try {
         // 用地點座標規劃（演算法以附近站點座標匹配，不強依賴單一站 id）
         const fromPt = {
@@ -6044,16 +7037,22 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
       }
       const top = list[0];
       sum.style.display = 'flex';
+      const depart = _planDepartAt ? new Date(_planDepartAt) : new Date();
+      const arrive = new Date(depart.getTime() + top.totalMins * 60000);
+      const pad = n => String(n).padStart(2, '0');
+      const arrLabel = pad(arrive.getHours()) + ':' + pad(arrive.getMinutes());
       sum.innerHTML = `
         <span>⏱ ${top.totalMins} 分鐘</span>
         <span>🚶 ${top.walkM} 米</span>
         <span>$ ${top.totalFare}</span>
+        <span>抵達約 ${arrLabel}</span>
       `;
       box.innerHTML = list.map((o, idx) => {
         const chips = o.legs.map((l, i) => {
           const plate = plateClass({ co: l.co, region: l.region });
+          const label = planDisplayRoute(l);
           return (i ? '<span class="plan-plus">+</span>' : '') +
-            `<span class="plan-route-chip ${plate}">${l.route}</span>`;
+            `<span class="plan-route-chip ${plate}">${label}</span>`;
         }).join('');
         const desc = planDescribe(o).split(String.fromCharCode(10)).join('<br>');
         return `<div class="plan-card" data-idx="${idx}">
@@ -6065,7 +7064,7 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
             <span>⏱ ${o.totalMins} 分</span>
             <span>🚶 ${o.walkM} 米</span>
             <span>$ ${o.totalFare}</span>
-            <span>${o.type === 'direct' ? '直達' : '轉乘 1 次'}</span>
+            <span>${o.transfers === 0 || o.type === 'direct' ? '直達' : ('轉乘 ' + (o.transfers || o.legs.length - 1) + ' 次')}</span>
           </div>
           <div class="plan-card-body">${desc}
             <div style="margin-top:10px">
@@ -6199,6 +7198,9 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
     loadAllRoutes();
     ensureFareData().catch(() => {});
     initStopActionSheet();
+    window.confirmPlanMapPick = confirmPlanMapPick;
+    window.closePlanPlacePicker = closePlanPlacePicker;
+    window.openPlanPlacePicker = openPlanPlacePicker;
     initPlanPage();
     loadWeather();
     // 每 10 分鐘自動更新天氣
@@ -6208,13 +7210,14 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
   <div class="plan-pick-mask" id="planPickMask">
     <div class="plan-pick-bar">
       <input type="search" id="planPickInput" placeholder="起點（請輸入）" autocomplete="off">
-      <button type="button" class="cancel" id="planPickCancel">取消</button>
+      <button type="button" class="cancel" id="planPickCancel" onclick="closePlanPlacePicker()">取消</button>
     </div>
     <div class="plan-pick-body" id="planPickList"></div>
     <div id="planPickMapWrap" style="display:none;flex-direction:column;flex:1;min-height:0">
       <div id="planPickMap"></div>
+      <div class="plan-map-place-name" id="planMapPlaceName">移動地圖選點…</div>
       <div class="plan-map-confirm">
-        <button type="button" id="planPickMapConfirm">確認</button>
+        <button type="button" id="planPickMapConfirm" onclick="confirmPlanMapPick()">確認</button>
       </div>
     </div>
   </div>
