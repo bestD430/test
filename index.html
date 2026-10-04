@@ -2471,8 +2471,8 @@
           <h3>點對點巴士路線搜尋</h3>
           <div class="sub">搜尋由起點到終點的跨公司路線</div>
           <ol id="planRulesList">
-            <li>巴士／小巴最多轉乘 <strong id="ruleXfer">1</strong> 班；港鐵／輕鐵轉乘不限</li>
-            <li>起終點與車站最大步行距離 <strong id="ruleWalk">500</strong> 米</li>
+            <li>巴士／小巴最多轉乘 <strong id="ruleXfer">2</strong> 班；港鐵／輕鐵轉乘不限</li>
+            <li>起終點與車站最大步行距離 <strong id="ruleWalk">600</strong> 米</li>
             <li id="ruleNLine">可選擇顯示／隱藏 N 線通宵巴士</li>
             <li id="ruleNoSvc">可選擇不顯示無班次路線</li>
           </ol>
@@ -5841,8 +5841,8 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
 
     const LS_PLAN_PREFS = 'hkbus_plan_prefs_v1';
     let PLAN_PREFS = {
-      alightM: 500,
-      maxTransfers: 1,
+      alightM: 600,
+      maxTransfers: 2,
       showNRoute: true,
       hideNoService: false,
       theme: 'system'
@@ -7435,14 +7435,18 @@ const prefBtn = document.getElementById('planPrefBtn');
 
       // 步行距離／轉乘由搜尋偏好控制
       const walkPref = (typeof PLAN_PREFS !== 'undefined' && PLAN_PREFS.alightM != null)
-        ? PLAN_PREFS.alightM : 500;
-      const NEAR_BOARD_M = Math.max(80, Math.min(1000, walkPref || 500));
-      const NEAR_BOARD_MAX = NEAR_BOARD_M;
-      const NEAR_ALIGHT_PREF = Math.min(150, NEAR_BOARD_M);
-      const NEAR_ALIGHT_USE = NEAR_BOARD_M;
-      const TRANSFER_M = Math.min(650, Math.max(400, Math.round(NEAR_BOARD_M * 0.9)));
+        ? PLAN_PREFS.alightM : 600;
+      // 長途起終點：自動略為放寬上車／落車範圍
+      const odDist = haversineM(fromLat, fromLng, toLat, toLng);
+      const longHaul = odDist > 15000;
+      const NEAR_BOARD_M = Math.max(80, Math.min(1000, walkPref || 600));
+      const NEAR_BOARD_MAX = longHaul ? Math.min(1000, NEAR_BOARD_M + 200) : NEAR_BOARD_M;
+      const NEAR_ALIGHT_PREF = Math.min(200, NEAR_BOARD_M);
+      const NEAR_ALIGHT_USE = longHaul ? Math.min(1000, NEAR_BOARD_M + 150) : NEAR_BOARD_M;
+      // 轉車步行：至少 700m，長途可至 900m（例如 TM121→TM956）
+      const TRANSFER_M = Math.max(700, Math.min(900, Math.round((walkPref || 600) * 1.2)));
       const maxXfer = (typeof PLAN_PREFS !== 'undefined' && PLAN_PREFS.maxTransfers != null)
-        ? PLAN_PREFS.maxTransfers : 1;
+        ? PLAN_PREFS.maxTransfers : 2;
       const showN = (typeof PLAN_PREFS === 'undefined') ? true : !!PLAN_PREFS.showNRoute;
       const options = [];
 
@@ -7563,33 +7567,52 @@ const prefBtn = document.getElementById('planPrefBtn');
             }
           }
 
-          // 第一程（只從最近上車站出發）
+          // 第一程：沿途落車點盡量覆蓋（長途轉乘如 E36A→B9）
           for (const a of boardCandidates) {
-            const alights = [];
+            const later = [];
             for (const s of seq) {
               if (s.i <= a.i) continue;
-              if (s.i - a.i > 55) break;
-              alights.push(s);
-              if (alights.length >= 20) break;
+              later.push(s);
             }
-            const sampled = alights.length <= 10 ? alights :
-              alights.filter((_, idx) => idx % Math.ceil(alights.length / 10) === 0);
+            // 取最多 28 個：前段密、中後段抽樣
+            let sampled;
+            if (later.length <= 28) sampled = later;
+            else {
+              sampled = [];
+              const step = later.length / 28;
+              for (let k = 0; k < 28; k++) {
+                sampled.push(later[Math.min(later.length - 1, Math.floor(k * step))]);
+              }
+              // 去重
+              const seenS = new Set();
+              sampled = sampled.filter(s => {
+                if (seenS.has(s.sid)) return false;
+                seenS.add(s.sid);
+                return true;
+              });
+            }
             leg1.push({ key, co, info, route: routeName, board: a, alights: sampled });
           }
 
-          // 末程：終點落車前的上車點
-          for (const b of nearTo.slice(0, 3)) {
+          // 末程：終點附近落車站之前的上車點（涵蓋較長前段，方便轉 B9 等）
+          for (const b of nearTo.slice(0, 4)) {
             let count = 0;
+            const boards = [];
             for (let si = seq.length - 1; si >= 0; si--) {
               const s = seq[si];
               if (s.i >= b.i) continue;
-              if (b.i - s.i > 55) break;
+              boards.push(s);
+              if (boards.length >= 40) break;
+            }
+            // 抽樣最多 24 個上車點
+            const boardSamp = boards.length <= 24 ? boards :
+              boards.filter((_, idx) => idx % Math.ceil(boards.length / 24) === 0);
+            for (const s of boardSamp) {
               destGrid.add(s.lat, s.lng, {
                 key, co, info, route: routeName,
                 board: s, alight: b
               });
               count++;
-              if (count >= 18) break;
             }
           }
         }
@@ -7605,7 +7628,7 @@ const prefBtn = document.getElementById('planPrefBtn');
             const sig = '1|' + L.route + L.co + al.sid + m.route + m.co + m.board.sid;
             if (transfer1Seen.has(sig)) continue;
             transfer1Seen.add(sig);
-            if (transfer1Seen.size > 280) break;
+            if (transfer1Seen.size > 450) break;
 
             const d1 = haversineM(L.board.lat, L.board.lng, al.lat, al.lng);
             const d2 = haversineM(m.board.lat, m.board.lng, m.alight.lat, m.alight.lng);
@@ -7651,9 +7674,9 @@ const prefBtn = document.getElementById('planPrefBtn');
               ]
             });
           }
-          if (transfer1Seen.size > 280) break;
+          if (transfer1Seen.size > 450) break;
         }
-        if (transfer1Seen.size > 280) break;
+        if (transfer1Seen.size > 450) break;
       }
 
       // —— 兩次轉乘（起點線 → 中轉線 → 終點線）——
@@ -7661,7 +7684,7 @@ const prefBtn = document.getElementById('planPrefBtn');
       const leg1For2 = leg1.slice(0, 50);
       if (maxXfer >= 2) for (const L of leg1For2) {
         // 每條第一程只取少數落車點
-        const alights = L.alights.filter((_, i) => i % 2 === 0).slice(0, 5);
+        const alights = L.alights.filter((_, i) => i % 2 === 0).slice(0, 10);
         for (const al of alights) {
           // 在落車點附近找可轉的其他路線（中轉程）
           const midHits = passGrid.query(al.lat, al.lng, TRANSFER_M);
@@ -7690,7 +7713,7 @@ const prefBtn = document.getElementById('planPrefBtn');
               key: h.key, co: h.co, info: h.info, route: h.route,
               board: h.stop, walk1: h.d, alights: sampled
             });
-            if (midRoutes.length >= 8) break;
+            if (midRoutes.length >= 12) break;
           }
 
           for (const mid of midRoutes) {
@@ -7701,7 +7724,7 @@ const prefBtn = document.getElementById('planPrefBtn');
                 const sig = '2|' + L.route + mid.route + m.route + al.sid + midAl.sid + m.board.sid;
                 if (transfer2Seen.has(sig)) continue;
                 transfer2Seen.add(sig);
-                if (transfer2Seen.size > 120) break;
+                if (transfer2Seen.size > 200) break;
 
                 const d1 = haversineM(L.board.lat, L.board.lng, al.lat, al.lng);
                 const d2 = haversineM(mid.board.lat, mid.board.lng, midAl.lat, midAl.lng);
@@ -7755,13 +7778,13 @@ const prefBtn = document.getElementById('planPrefBtn');
                   ]
                 });
               }
-              if (transfer2Seen.size > 120) break;
+              if (transfer2Seen.size > 200) break;
             }
-            if (transfer2Seen.size > 120) break;
+            if (transfer2Seen.size > 200) break;
           }
-          if (transfer2Seen.size > 120) break;
+          if (transfer2Seen.size > 200) break;
         }
-        if (transfer2Seen.size > 120) break;
+        if (transfer2Seen.size > 200) break;
       }
 
       // 港鐵／輕鐵：不限轉乘次數
@@ -8136,9 +8159,9 @@ const prefBtn = document.getElementById('planPrefBtn');
       </div>
 
       <div class="plan-pref-row">
-        <label class="main"><span>最多轉乘次數（巴士）</span><span class="val" id="prefXferVal">1 次</span></label>
-        <input type="range" id="prefXferRange" min="0" max="2" step="1" value="1">
-        <div class="plan-pref-hint">巴士／小巴：0～2 次。港鐵、輕鐵轉乘不限次數。</div>
+        <label class="main"><span>最多轉乘次數（巴士）</span><span class="val" id="prefXferVal">2 次</span></label>
+        <input type="range" id="prefXferRange" min="0" max="2" step="1" value="2">
+        <div class="plan-pref-hint">巴士／小巴：0～2 次（跨區長途建議 2 次）。港鐵、輕鐵轉乘不限。</div>
       </div>
 
       <div class="plan-pref-row">
