@@ -2379,7 +2379,7 @@
     <div class="page active" id="pageSearch">
       <div class="header">香港巴士到站時間
         <div class="header-actions">
-          <button type="button" class="header-plan-entry" onclick="openPlanPage()" title="點對點搜尋">點對點</button>
+          <button type="button" class="header-plan-entry" onclick="openGoogleMapsSearch()" title="Google 地圖搜尋">地圖</button>
           <button type="button" class="header-fav-entry" onclick="openFavsPage()">★ 最愛</button>
           <button type="button" class="header-nearby-entry" onclick="openNearbyPage()">📍 鄰近</button>
         </div>
@@ -5868,7 +5868,7 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
       try {
         const o = JSON.parse(localStorage.getItem(LS_PLAN_PREFS) || '{}');
         if (typeof o.alightM === 'number') PLAN_PREFS.alightM = Math.max(0, Math.min(1000, o.alightM));
-        if (typeof o.maxTransfers === 'number') PLAN_PREFS.maxTransfers = Math.max(0, Math.min(4, o.maxTransfers));
+        if (typeof o.maxTransfers === 'number') PLAN_PREFS.maxTransfers = Math.max(0, Math.min(5, o.maxTransfers));
         if (typeof o.showNRoute === 'boolean') PLAN_PREFS.showNRoute = o.showNRoute;
         if (typeof o.hideNoService === 'boolean') PLAN_PREFS.hideNoService = o.hideNoService;
         if (o.theme === 'day' || o.theme === 'night' || o.theme === 'system') PLAN_PREFS.theme = o.theme;
@@ -6269,6 +6269,22 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
         _planFrom = { kind: 'place', id: 'gps', name: '我的位置', lat, lng, label: '定位' };
         const fi = document.getElementById('planFromInput');
         if (fi) fi.value = '我的位置';
+      }
+    }
+
+    function openGoogleMapsSearch() {
+      // 以公共交通模式開啟 Google 地圖路線搜尋
+      let url = 'https://www.google.com/maps/dir/?api=1&travelmode=transit';
+      try {
+        const o = (typeof state !== 'undefined' && state.userLat != null && state.userLng != null)
+          ? (Number(state.userLat) + ',' + Number(state.userLng))
+          : null;
+        if (o) url += '&origin=' + encodeURIComponent(o);
+      } catch (_) {}
+      try {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      } catch (_) {
+        location.href = url;
       }
     }
 
@@ -7813,6 +7829,171 @@ const prefBtn = document.getElementById('planPrefBtn');
         if (transfer2Seen.size > 200) break;
       }
 
+      // —— 3～5 次轉乘：在既有轉乘結果末站再接末程（限制候選以控制效能）——
+      if (maxXfer >= 3) {
+        const seed = options.filter(o => !o.railUnlimited && (o.transfers || 0) >= 1 && (o.transfers || 0) <= 2)
+          .sort((a, b) => a.scoreFast - b.scoreFast)
+          .slice(0, 40);
+        const multiSeen = new Set();
+        for (const base of seed) {
+          const last = base.legs[base.legs.length - 1];
+          if (!last || last.alightId == null) continue;
+          // 取末站座標
+          const alSc = stopCoord.get(String(last.alightId));
+          let alLat, alLng, alName;
+          if (alSc) {
+            alLat = alSc.lat; alLng = alSc.lng; alName = alSc.name;
+          } else {
+            continue;
+          }
+          const hits = destGrid.query(alLat, alLng, TRANSFER_M);
+          let nAdd = 0;
+          for (const m of hits) {
+            if (!m.board || !m.alight) continue;
+            if (String(m.route) === String(last.route) && String(m.co) === String(last.co)) continue;
+            if (m.board.i >= m.alight.i) continue;
+            const sig = base.legs.map(l => l.route + '/' + l.co).join('+') + '>' + m.route + '/' + m.co;
+            if (multiSeen.has(sig)) continue;
+            multiSeen.add(sig);
+            const walkX = m.d || haversineM(alLat, alLng, m.board.lat, m.board.lng);
+            const ride = haversineM(m.board.lat, m.board.lng, m.alight.lat, m.alight.lng);
+            const minsLeg = planEstimateMins(ride, m.alight.i - m.board.i);
+            const fareLeg = planFareGuess(m.info, m.board.i, m.alight.i);
+            const xfers = (base.transfers || base.legs.length - 1) + 1;
+            if (xfers > maxXfer) continue;
+            const totalMins = base.totalMins + planWalkMins(walkX) + minsLeg;
+            const totalFare = Math.round(((base.totalFare || 0) + fareLeg) * 10) / 10;
+            options.push({
+              type: 'transfer',
+              transfers: xfers,
+              scoreSmart: totalMins + totalFare * 0.7 + xfers * 3,
+              scoreFast: totalMins + xfers * 2,
+              scoreCheap: totalFare * 10 + totalMins * 0.04,
+              totalMins,
+              walkM: Math.round((base.walkM || 0) + walkX),
+              walkMins: (base.walkMins || 0) + planWalkMins(walkX),
+              boardWalkM: base.boardWalkM,
+              alightWalkM: Math.round(m.alight.d || 0),
+              totalFare,
+              legs: base.legs.concat([{
+                route: m.route, co: m.co, dest: planDestOf(m.info),
+                boardId: m.board.sid, boardName: m.board.name,
+                alightId: m.alight.sid, alightName: m.alight.name,
+                mins: minsLeg, fare: fareLeg,
+                service_type: String(m.info.serviceType || 1),
+                nlbId: m.info.nlbId || null,
+                walkFromPrevM: Math.round(walkX)
+              }])
+            });
+            nAdd++;
+            if (nAdd >= 6) break;
+            if (multiSeen.size > 180) break;
+          }
+          if (multiSeen.size > 180) break;
+        }
+        // 4～5 次：再在 3 次結果上延伸一層
+        if (maxXfer >= 4) {
+          const seed3 = options.filter(o => !o.railUnlimited && (o.transfers || 0) === 3)
+            .sort((a, b) => a.scoreFast - b.scoreFast)
+            .slice(0, 25);
+          for (const base of seed3) {
+            const last = base.legs[base.legs.length - 1];
+            const alSc = last && stopCoord.get(String(last.alightId));
+            if (!alSc) continue;
+            const hits = destGrid.query(alSc.lat, alSc.lng, TRANSFER_M);
+            let nAdd = 0;
+            for (const m of hits) {
+              if (!m.board || !m.alight) continue;
+              if (String(m.route) === String(last.route) && String(m.co) === String(last.co)) continue;
+              if (m.board.i >= m.alight.i) continue;
+              const sig = base.legs.map(l => l.route + '/' + l.co).join('+') + '>' + m.route + '/' + m.co;
+              if (multiSeen.has(sig)) continue;
+              multiSeen.add(sig);
+              const walkX = m.d || 0;
+              const ride = haversineM(m.board.lat, m.board.lng, m.alight.lat, m.alight.lng);
+              const minsLeg = planEstimateMins(ride, m.alight.i - m.board.i);
+              const fareLeg = planFareGuess(m.info, m.board.i, m.alight.i);
+              const xfers = 4;
+              if (xfers > maxXfer) continue;
+              const totalMins = base.totalMins + planWalkMins(walkX) + minsLeg;
+              const totalFare = Math.round(((base.totalFare || 0) + fareLeg) * 10) / 10;
+              options.push({
+                type: 'transfer',
+                transfers: xfers,
+                scoreSmart: totalMins + totalFare * 0.7 + xfers * 3,
+                scoreFast: totalMins + xfers * 2,
+                scoreCheap: totalFare * 10 + totalMins * 0.04,
+                totalMins,
+                walkM: Math.round((base.walkM || 0) + walkX),
+                totalFare,
+                legs: base.legs.concat([{
+                  route: m.route, co: m.co, dest: planDestOf(m.info),
+                  boardId: m.board.sid, boardName: m.board.name,
+                  alightId: m.alight.sid, alightName: m.alight.name,
+                  mins: minsLeg, fare: fareLeg,
+                  service_type: String(m.info.serviceType || 1),
+                  nlbId: m.info.nlbId || null,
+                  walkFromPrevM: Math.round(walkX)
+                }])
+              });
+              nAdd++;
+              if (nAdd >= 4) break;
+              if (multiSeen.size > 240) break;
+            }
+            if (multiSeen.size > 240) break;
+          }
+        }
+        if (maxXfer >= 5) {
+          const seed4 = options.filter(o => !o.railUnlimited && (o.transfers || 0) === 4)
+            .sort((a, b) => a.scoreFast - b.scoreFast)
+            .slice(0, 15);
+          for (const base of seed4) {
+            const last = base.legs[base.legs.length - 1];
+            const alSc = last && stopCoord.get(String(last.alightId));
+            if (!alSc) continue;
+            const hits = destGrid.query(alSc.lat, alSc.lng, TRANSFER_M);
+            let nAdd = 0;
+            for (const m of hits) {
+              if (!m.board || !m.alight) continue;
+              if (String(m.route) === String(last.route) && String(m.co) === String(last.co)) continue;
+              if (m.board.i >= m.alight.i) continue;
+              const sig = base.legs.map(l => l.route + '/' + l.co).join('+') + '>' + m.route + '/' + m.co;
+              if (multiSeen.has(sig)) continue;
+              multiSeen.add(sig);
+              const walkX = m.d || 0;
+              const ride = haversineM(m.board.lat, m.board.lng, m.alight.lat, m.alight.lng);
+              const minsLeg = planEstimateMins(ride, m.alight.i - m.board.i);
+              const fareLeg = planFareGuess(m.info, m.board.i, m.alight.i);
+              const totalMins = base.totalMins + planWalkMins(walkX) + minsLeg;
+              const totalFare = Math.round(((base.totalFare || 0) + fareLeg) * 10) / 10;
+              options.push({
+                type: 'transfer',
+                transfers: 5,
+                scoreSmart: totalMins + totalFare * 0.7 + 15,
+                scoreFast: totalMins + 10,
+                scoreCheap: totalFare * 10 + totalMins * 0.04,
+                totalMins,
+                walkM: Math.round((base.walkM || 0) + walkX),
+                totalFare,
+                legs: base.legs.concat([{
+                  route: m.route, co: m.co, dest: planDestOf(m.info),
+                  boardId: m.board.sid, boardName: m.board.name,
+                  alightId: m.alight.sid, alightName: m.alight.name,
+                  mins: minsLeg, fare: fareLeg,
+                  service_type: String(m.info.serviceType || 1),
+                  nlbId: m.info.nlbId || null,
+                  walkFromPrevM: Math.round(walkX)
+                }])
+              });
+              nAdd++;
+              if (nAdd >= 3) break;
+              if (multiSeen.size > 280) break;
+            }
+            if (multiSeen.size > 280) break;
+          }
+        }
+      }
+
       // 港鐵／輕鐵：不限轉乘次數
       try {
         const railOpts = planBuildRailUnlimitedOptions(fromLat, fromLng, toLat, toLng, stopCoord, routeList);
@@ -8143,6 +8324,7 @@ const prefBtn = document.getElementById('planPrefBtn');
     window.confirmPlanMapPick = confirmPlanMapPick;
     window.closePlanPlacePicker = closePlanPlacePicker;
     window.openPlanPlacePicker = openPlanPlacePicker;
+    window.openGoogleMapsSearch = openGoogleMapsSearch;
     initPlanPage();
     requestUserLocationOnLaunch();
     loadPlanPrefs();
@@ -8196,7 +8378,7 @@ const prefBtn = document.getElementById('planPrefBtn');
 
       <div class="plan-pref-row">
         <label class="main"><span>最多轉乘次數（巴士）</span><span class="val" id="prefXferVal">2 次</span></label>
-        <input type="range" id="prefXferRange" min="0" max="2" step="1" value="2">
+        <input type="range" id="prefXferRange" min="0" max="5" step="1" value="2">
         <div class="plan-pref-hint">巴士／小巴：0～2 次（跨區長途建議 2 次）。港鐵、輕鐵轉乘不限。</div>
       </div>
 
