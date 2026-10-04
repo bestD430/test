@@ -1419,18 +1419,19 @@
     .header-fav-entry,
     .header-nearby-entry,
     .header-plan-entry {
-      background: #FFD100;
       border: none;
+      background: linear-gradient(135deg, #FFD54F, #FFC107);
       color: #1a1a1a;
-      border-radius: 16px;
-      padding: 5px 11px;
-      font-size: 0.78rem;
-      font-weight: 700;
+      font-size: 0.8rem;
+      font-weight: 800;
+      padding: 7px 12px;
+      border-radius: 18px;
       cursor: pointer;
       font-family: inherit;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
       white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(255,193,7,0.35);
     }
+    .header-plan-entry:active { opacity: 0.9; transform: scale(0.96); }
     .header-fav-entry:active,
     .header-nearby-entry:active,
     .header-plan-entry:active { opacity: 0.85; transform: scale(0.97); }
@@ -1576,8 +1577,8 @@
     /* —— 智能問路 —— */
     #pagePlan { background: #f5f6f8; }
     .plan-header {
-      background: #0066cc;
-      color: #fff;
+      background: #F9C41B;
+      color: #1a1a1a;
       display: flex;
       align-items: center;
       padding: 12px 10px;
@@ -1592,17 +1593,17 @@
       margin: 0;
     }
     .plan-header .plan-reset {
-      border: 1.5px solid rgba(255,255,255,0.85);
-      background: transparent;
-      color: #fff;
+      border: 1.5px solid rgba(0,0,0,0.22);
+      background: rgba(255,255,255,0.55);
+      color: #1a1a1a;
       border-radius: 16px;
       padding: 5px 12px;
       font-size: 0.82rem;
-      font-weight: 600;
+      font-weight: 700;
       font-family: inherit;
       cursor: pointer;
     }
-    .plan-header .back-btn { color: #fff; }
+    .plan-header .back-btn { color: #1a1a1a; }
     .plan-body {
       flex: 1;
       overflow-y: auto;
@@ -1611,6 +1612,20 @@
       display: flex;
       flex-direction: column;
     }
+    .plan-rules {
+      margin: 12px 14px 4px;
+      padding: 14px 16px;
+      background: var(--bg-card, #fff);
+      border-radius: 14px;
+      border: 1px solid var(--border-ui, #e5e5ea);
+      font-size: 0.88rem;
+      color: var(--text-main, #1c1c1e);
+      line-height: 1.55;
+    }
+    .plan-rules h3 { margin: 0 0 6px; font-size: 1.05rem; font-weight: 800; }
+    .plan-rules .sub { color: var(--text-sub, #6b6b70); font-size: 0.85rem; margin-bottom: 10px; }
+    .plan-rules ol { margin: 0; padding-left: 1.2em; color: var(--text-sub, #3a3a3c); font-size: 0.84rem; }
+    .plan-rules li { margin-bottom: 4px; }
     .plan-od-card {
       background: #fff;
       padding: 16px 14px 12px;
@@ -2338,7 +2353,7 @@
     <div class="page active" id="pageSearch">
       <div class="header">香港巴士到站時間
         <div class="header-actions">
-          <button type="button" class="header-plan-entry" onclick="openPlanPage()" title="智能問路">🧭 問路</button>
+          <button type="button" class="header-plan-entry" onclick="openPlanPage()" title="點對點搜尋">點對點</button>
           <button type="button" class="header-fav-entry" onclick="openFavsPage()">★ 最愛</button>
           <button type="button" class="header-nearby-entry" onclick="openNearbyPage()">📍 鄰近</button>
         </div>
@@ -2390,8 +2405,8 @@
     <div class="page" id="pagePlan">
       <div class="plan-header">
         <button type="button" class="back-btn" onclick="goSearch()">‹</button>
-        <div class="page-title">點對點搜尋</div>
-        <button type="button" class="plan-reset" id="planResetBtn">重設</button>
+        <div class="page-title">點對點路線搜尋</div>
+        <button type="button" class="plan-reset" id="planResetBtn" title="設定">⚙</button>
       </div>
       <div class="plan-body">
         <div class="plan-od-card">
@@ -2400,7 +2415,7 @@
             <div class="plan-leg-main">
               <div class="plan-search-pill" id="planFromPill">
                 <span class="ico">🔍</span>
-                <input class="plan-od-input" id="planFromInput" placeholder="輸入起點" autocomplete="off" readonly>
+                <input class="plan-od-input" id="planFromInput" placeholder="你的位置／起點" autocomplete="off" readonly>
                 <button type="button" class="clear" id="planFromClear" title="清除" style="display:none">×</button>
               </div>
               <div class="plan-quick" data-for="from">
@@ -2419,7 +2434,7 @@
             <div class="plan-leg-main">
               <div class="plan-search-pill" id="planToPill">
                 <span class="ico">🔍</span>
-                <input class="plan-od-input" id="planToInput" placeholder="輸入終點" autocomplete="off" readonly>
+                <input class="plan-od-input" id="planToInput" placeholder="目的地" autocomplete="off" readonly>
                 <button type="button" class="clear" id="planToClear" title="清除" style="display:none">×</button>
               </div>
               <div class="plan-quick" data-for="to">
@@ -2451,6 +2466,16 @@
             <button type="button" class="plan-btn-pref" id="planPrefBtn">搜尋偏好設定</button>
             <button type="button" class="plan-btn-go" id="planSearchBtn">前往 →</button>
           </div>
+        </div>
+        <div class="plan-rules" id="planRulesBox">
+          <h3>點對點巴士路線搜尋</h3>
+          <div class="sub">搜尋由起點到終點的跨公司路線</div>
+          <ol id="planRulesList">
+            <li>巴士／小巴最多轉乘 <strong id="ruleXfer">1</strong> 班；港鐵／輕鐵轉乘不限</li>
+            <li>起終點與車站最大步行距離 <strong id="ruleWalk">500</strong> 米</li>
+            <li id="ruleNLine">可選擇顯示／隱藏 N 線通宵巴士</li>
+            <li id="ruleNoSvc">可選擇不顯示無班次路線</li>
+          </ol>
         </div>
         <div class="plan-hot" id="planHot">
           <div class="plan-hot-tabs">
@@ -2672,16 +2697,57 @@
       return /^A\d/.test(r) || /^NA\d/.test(r);
     }
 
-    function computeJoyYou(adult, route) {
+    /** 政府兩蚊兩折（樂悠／長青／殘疾等） */
+    function computeTwoDollarConcession(adult) {
       if (adult == null || isNaN(adult)) return null;
       const a = Number(adult);
-      if (isAirportRoute(route)) {
-        // A / NA 線不納入政府「兩蚊兩折」，按巴士公司半價優惠
-        return roundFare(a / 2);
-      }
-      // 政府兩蚊兩折：≤$10 → $2；>$10 → 兩折
       if (a <= 10) return Math.min(a, 2);
       return roundFare(a * 0.2);
+    }
+
+    /** 是否周日或香港公眾假期（簡表，用於嶼巴假日車費） */
+    function isHkHolidayOrSunday(date) {
+      const d = date ? new Date(date) : new Date();
+      if (d.getDay() === 0) return true; // 星期日
+      // 常見公眾假期（月-日），涵蓋近年固定／主要日子
+      const md = (d.getMonth() + 1) + '-' + d.getDate();
+      const fixed = {
+        '1-1': 1, '5-1': 1, '7-1': 1, '10-1': 1, '12-25': 1, '12-26': 1
+      };
+      if (fixed[md]) return true;
+      // 農曆／浮動假期粗略表 2025–2027（可再擴充）
+      const y = d.getFullYear();
+      const floatMap = {
+        2025: ['1-29','1-30','1-31','4-4','4-18','4-19','4-20','4-21','5-5','5-31','10-6','10-7','10-29'],
+        2026: ['2-17','2-18','2-19','4-3','4-7','4-8','4-9','4-10','5-24','6-19','9-26','10-1','10-18'],
+        2027: ['2-6','2-7','2-8','4-5','3-26','3-27','3-28','3-29','5-13','6-9','10-15','10-1','10-18']
+      };
+      const arr = floatMap[y] || [];
+      return arr.indexOf(md) >= 0;
+    }
+
+    function computeJoyYou(adult, route, opts) {
+      opts = opts || {};
+      if (adult == null || isNaN(adult)) return null;
+      const a = Number(adult);
+      const co = String(opts.co || state.co || '').toLowerCase();
+      if (isAirportRoute(route)) {
+        // A / NA 線不納入政府「兩蚊兩折」，按半價
+        return roundFare(a / 2);
+      }
+      const gov = computeTwoDollarConcession(a);
+      // 嶼巴：平日綠悠卡半價，與兩蚊兩折取較低
+      if (co === 'nlb') {
+        const holiday = opts.isHoliday != null ? opts.isHoliday : isHkHolidayOrSunday();
+        if (!holiday) {
+          const greenJoy = roundFare(a / 2); // 平日綠悠卡半價
+          if (gov == null) return greenJoy;
+          return Math.min(greenJoy, gov);
+        }
+        // 假日：仍可用兩蚊兩折（若適用），否則顯示半價作參考
+        return gov != null ? gov : roundFare(a / 2);
+      }
+      return gov;
     }
 
     function computeChild(adult) {
@@ -2741,8 +2807,13 @@
           best = { nums, nStops, info };
         }
       }
-      if (!best) return { full: null, sectionFares: null };
+      if (!best) return { full: null, sectionFares: null, fullHoliday: null, sectionFaresHoliday: null };
       const full = Math.max(...best.nums);
+      let numsH = null;
+      if (best.info && best.info.faresHoliday && best.info.faresHoliday.length) {
+        numsH = best.info.faresHoliday.map(f => parseFloat(f)).filter(x => !isNaN(x));
+      }
+      const fullHoliday = numsH && numsH.length ? Math.max(...numsH) : null;
       // 分段：hkbus 通常 fares.length === stops.length - 1
       // 對齊到 stopCount：若 fares 比站數少 1，最後一站無車費；若相等則一一對應
       let section = null;
@@ -2761,7 +2832,26 @@
           }
         }
       }
-      return { full, sectionFares: section };
+      let sectionH = null;
+      if (numsH && numsH.length && stopCount && stopCount > 0) {
+        sectionH = new Array(stopCount).fill(null);
+        const fl = numsH.length;
+        if (fl === stopCount - 1 || fl === stopCount) {
+          for (let i = 0; i < Math.min(fl, stopCount); i++) sectionH[i] = numsH[i];
+        } else {
+          for (let i = 0; i < stopCount - 1; i++) {
+            const idx = Math.min(fl - 1, Math.round(i * (fl - 1) / Math.max(1, stopCount - 2)));
+            sectionH[i] = numsH[idx];
+          }
+        }
+      }
+      return {
+        full,
+        sectionFares: section,
+        fullHoliday,
+        sectionFaresHoliday: sectionH,
+        hasHolidayFares: !!(numsH && numsH.length)
+      };
     }
 
     function fillEtaFareUI(adult, route, opts) {
@@ -2774,9 +2864,18 @@
       const box = document.getElementById('etaFareBox');
       if (!box) return;
       box.style.display = 'block';
+      const co = String(opts.co || state.co || '').toLowerCase();
+      const isHoliday = opts.isHoliday != null ? opts.isHoliday : isHkHolidayOrSunday();
       if (titleEl) {
-        titleEl.textContent = opts.title || '車費（此站上車）';
+        let t = opts.title || '車費（此站上車）';
+        if (co === 'nlb' && opts.hasHolidayFares) {
+          t += isHoliday ? ' · 假日' : ' · 平日';
+        }
+        titleEl.textContent = t;
       }
+      // 樂悠／綠悠標籤
+      const joyLabel = box.querySelector('.eta-fare-item.joyyou .label');
+      if (joyLabel) joyLabel.textContent = (co === 'nlb' ? '綠悠' : '樂悠');
       if (adult == null || isNaN(adult)) {
         if (adultEl) adultEl.textContent = '—';
         if (childEl) childEl.textContent = '—';
@@ -2786,10 +2885,23 @@
       }
       if (adultEl) adultEl.textContent = formatHKD(adult);
       if (childEl) childEl.textContent = formatHKD(computeChild(adult));
-      if (joyEl) joyEl.textContent = formatHKD(computeJoyYou(adult, route));
+      const joy = computeJoyYou(adult, route, { co, isHoliday });
+      if (joyEl) joyEl.textContent = formatHKD(joy);
       if (noteEl) {
         if (isAirportRoute(route)) {
           noteEl.textContent = '資料參考巴士公司公開車費。A／NA 線不適用政府「兩蚊兩折」；樂悠咭按半價優惠。實際以八達通／車長為準。';
+        } else if (co === 'nlb') {
+          const half = roundFare(Number(adult) / 2);
+          const gov = computeTwoDollarConcession(adult);
+          if (!isHoliday) {
+            noteEl.textContent = '嶼巴平日：正價 ' + formatHKD(adult) + '；綠悠卡半價 ' + formatHKD(half) +
+              '，兩蚊兩折 ' + formatHKD(gov) + ' → 顯示較低 ' + formatHKD(joy) +
+              '。假日另有假日車費。實際以八達通／車長為準。';
+          } else {
+            noteEl.textContent = '嶼巴假日車費（周日及公眾假期）：正價 ' + formatHKD(adult) +
+              '；優惠比較兩蚊兩折 ' + formatHKD(gov) + ' → ' + formatHKD(joy) +
+              '。實際以八達通／車長為準。';
+          }
         } else {
           noteEl.textContent = '資料參考巴士公司公開分段車費。樂悠咭按政府「兩蚊兩折」：≤$10 收 $2，>$10 收兩折。實際以八達通／車長為準。';
         }
@@ -2822,31 +2934,38 @@
       if (joyEl) joyEl.textContent = '…';
 
       const stopCount = (state.currentStops && state.currentStops.length) || 0;
-      const { full, sectionFares } = await resolveRouteFares(
-        state.co,
-        state.route,
-        state.bound,
-        state.directionLabel,
-        stopCount
+            const farePack = await resolveRouteFares(
+        state.co, state.route, state.bound, state.dest, (state.currentStops || []).length
       );
-      state._sectionFares = sectionFares;
+      const { full, sectionFares, fullHoliday, sectionFaresHoliday, hasHolidayFares } = farePack;
+      const coL = String(state.co || '').toLowerCase();
+      const holiday = isHkHolidayOrSunday();
+      const useHoliday = coL === 'nlb' && hasHolidayFares && holiday;
+      state._sectionFares = useHoliday && sectionFaresHoliday ? sectionFaresHoliday : sectionFares;
+      state._sectionFaresHoliday = sectionFaresHoliday;
+      state._fareMeta = { full, fullHoliday, hasHolidayFares, holiday, useHoliday };
       state._fullFare = full;
 
       // 到站頁：優先顯示所選車站的分段收費
       const sectionAdult = getSelectedStopSectionFare();
       if (sectionAdult != null) {
-        fillEtaFareUI(sectionAdult, state.route, { title: '車費（此站上車）' });
+        fillEtaFareUI(sectionAdult, state.route, Object.assign({ title: '車費（此站上車）' }, { co: state.co, isHoliday: !!(state._fareMeta && state._fareMeta.useHoliday), hasHolidayFares: !!(state._fareMeta && state._fareMeta.hasHolidayFares) }));
+      } else if (useHoliday && fullHoliday != null) {
+        fillEtaFareUI(fullHoliday, state.route, Object.assign({
+          title: '車費（全程·假日參考）',
+          emptyNote: '暫無此站分段資料，以下為假日全程參考'
+        }, { co: state.co, isHoliday: true, hasHolidayFares: true }));
       } else if (full != null) {
-        fillEtaFareUI(full, state.route, {
+        fillEtaFareUI(full, state.route, Object.assign({
           title: '車費（全程參考）',
           emptyNote: '暫無此站分段資料，以下為全程參考'
-        });
+        }, { co: state.co, isHoliday: !!(state._fareMeta && state._fareMeta.useHoliday), hasHolidayFares: !!(state._fareMeta && state._fareMeta.hasHolidayFares) }));
       } else {
-        fillEtaFareUI(null, state.route, {});
+        fillEtaFareUI(null, state.route, Object.assign({}, { co: state.co, isHoliday: !!(state._fareMeta && state._fareMeta.useHoliday), hasHolidayFares: !!(state._fareMeta && state._fareMeta.hasHolidayFares) }));
       }
 
-      // 路線圖站列：補上各站分段車費
-      if (sectionFares && document.getElementById('stopList')) {
+      // 路線圖站列：補上各站分段車費（已套用平日／假日）
+      if (state._sectionFares && document.getElementById('stopList')) {
         applySectionFaresToStopList();
       }
     }
@@ -2855,12 +2974,15 @@
       if (adult == null || isNaN(adult)) {
         return '<div class="stop-fare-tags"><span class="stop-fare-tag none">車費 —</span></div>';
       }
+      const co = String(state.co || '').toLowerCase();
+      const holiday = !!(state._fareMeta && state._fareMeta.useHoliday);
       const child = computeChild(adult);
-      const joy = computeJoyYou(adult, route);
+      const joy = computeJoyYou(adult, route, { co, isHoliday: holiday });
+      const joyName = co === 'nlb' ? '綠悠' : '樂悠';
       return `<div class="stop-fare-tags">
         <span class="stop-fare-tag adult">正價 ${formatHKD(adult)}</span>
         <span class="stop-fare-tag child">小童 ${formatHKD(child)}</span>
-        <span class="stop-fare-tag joyyou">樂悠 ${formatHKD(joy)}</span>
+        <span class="stop-fare-tag joyyou">${joyName} ${formatHKD(joy)}</span>
       </div>`;
     }
 
@@ -5719,10 +5841,11 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
 
     const LS_PLAN_PREFS = 'hkbus_plan_prefs_v1';
     let PLAN_PREFS = {
-      alightM: 400,
-      maxTransfers: 2,
+      alightM: 500,
+      maxTransfers: 1,
       showNRoute: true,
-      theme: 'system' // day | night | system
+      hideNoService: false,
+      theme: 'system'
     };
 
     function loadPlanPrefs() {
@@ -5731,6 +5854,7 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
         if (typeof o.alightM === 'number') PLAN_PREFS.alightM = Math.max(0, Math.min(1000, o.alightM));
         if (typeof o.maxTransfers === 'number') PLAN_PREFS.maxTransfers = Math.max(0, Math.min(4, o.maxTransfers));
         if (typeof o.showNRoute === 'boolean') PLAN_PREFS.showNRoute = o.showNRoute;
+        if (typeof o.hideNoService === 'boolean') PLAN_PREFS.hideNoService = o.hideNoService;
         if (o.theme === 'day' || o.theme === 'night' || o.theme === 'system') PLAN_PREFS.theme = o.theme;
       } catch (_) {}
       applyAppTheme(PLAN_PREFS.theme);
@@ -5752,9 +5876,26 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
       // header
       const headers = document.querySelectorAll('.header, .plan-header, .favs-header, .nearby-header');
       headers.forEach(h => {
-        if (mode === 'night') h.style.background = '#1f6feb';
-        else h.style.background = '';
+        if (h.classList.contains('plan-header')) {
+          h.style.background = mode === 'night' ? '#c9a227' : '';
+          h.style.color = '#1a1a1a';
+        } else if (mode === 'night') {
+          h.style.background = '#1f6feb';
+        } else {
+          h.style.background = '';
+        }
       });
+    }
+
+    function updatePlanRulesUI() {
+      const x = document.getElementById('ruleXfer');
+      const w = document.getElementById('ruleWalk');
+      if (x) x.textContent = String(PLAN_PREFS.maxTransfers != null ? PLAN_PREFS.maxTransfers : 1);
+      if (w) w.textContent = String(PLAN_PREFS.alightM != null ? PLAN_PREFS.alightM : 500);
+      const n = document.getElementById('ruleNLine');
+      if (n) n.textContent = PLAN_PREFS.showNRoute ? '目前顯示 N 線通宵巴士' : '已隱藏 N 線通宵巴士';
+      const s = document.getElementById('ruleNoSvc');
+      if (s) s.textContent = PLAN_PREFS.hideNoService ? '已開啟：不顯示無班次路線' : '可在設定關閉無班次路線';
     }
 
     function openPlanPrefs() {
@@ -5768,9 +5909,12 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
       if (ar) { ar.value = PLAN_PREFS.alightM; if (av) av.textContent = PLAN_PREFS.alightM + ' 米'; }
       if (xr) { xr.value = PLAN_PREFS.maxTransfers; if (xv) xv.textContent = PLAN_PREFS.maxTransfers + ' 次'; }
       if (sw) sw.classList.toggle('on', PLAN_PREFS.showNRoute);
+      const nos = document.getElementById('prefNoSvcSw');
+      if (nos) nos.classList.toggle('on', !!PLAN_PREFS.hideNoService);
       document.querySelectorAll('#prefThemeSeg button').forEach(b => {
         b.classList.toggle('active', b.dataset.theme === PLAN_PREFS.theme);
       });
+      updatePlanRulesUI();
       if (mask) mask.classList.add('show');
     }
 
@@ -5788,6 +5932,8 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
       if (ar) ar.oninput = () => { if (av) av.textContent = ar.value + ' 米'; };
       if (xr) xr.oninput = () => { if (xv) xv.textContent = xr.value + ' 次'; };
       if (sw) sw.onclick = () => sw.classList.toggle('on');
+      const nosBtn = document.getElementById('prefNoSvcSw');
+      if (nosBtn) nosBtn.onclick = () => nosBtn.classList.toggle('on');
       document.querySelectorAll('#prefThemeSeg button').forEach(b => {
         b.onclick = () => {
           document.querySelectorAll('#prefThemeSeg button').forEach(x => x.classList.remove('active'));
@@ -5796,14 +5942,19 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
       });
       const cancel = document.getElementById('planPrefCancel');
       const save = document.getElementById('planPrefSave');
+      const clearOd = document.getElementById('planPrefClearOd');
       if (cancel) cancel.onclick = () => closePlanPrefs();
+      if (clearOd) clearOd.onclick = () => { planResetAll(); closePlanPrefs(); };
       if (save) save.onclick = () => {
         PLAN_PREFS.alightM = Number(ar && ar.value) || 0;
         PLAN_PREFS.maxTransfers = Number(xr && xr.value) || 0;
         PLAN_PREFS.showNRoute = !!(sw && sw.classList.contains('on'));
+        const nos2 = document.getElementById('prefNoSvcSw');
+        PLAN_PREFS.hideNoService = !!(nos2 && nos2.classList.contains('on'));
         const activeTheme = document.querySelector('#prefThemeSeg button.active');
         PLAN_PREFS.theme = (activeTheme && activeTheme.dataset.theme) || 'system';
         savePlanPrefs();
+        updatePlanRulesUI();
         closePlanPrefs();
         // 若已有結果，重新搜尋
         if (_planFrom && _planTo) {
@@ -6107,6 +6258,7 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
 
     function openPlanPage() {
       showPage('pagePlan');
+      updatePlanRulesUI();
       ensureFareData().catch(() => {});
       ensureStopIndex().then(() => planPrefillFromUserLocation()).catch(() => {});
       if (state.userLat == null && navigator.geolocation) {
@@ -6694,7 +6846,7 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
       });
 
       const resetBtn = document.getElementById('planResetBtn');
-      if (resetBtn) resetBtn.onclick = () => planResetAll();
+      if (resetBtn) resetBtn.onclick = () => openPlanPrefs();
 
       document.getElementById('planFromClear').onclick = (e) => {
         e.stopPropagation();
@@ -7262,24 +7414,35 @@ const prefBtn = document.getElementById('planPrefBtn');
       return Array.from(best.values()).slice(0, 15);
     }
 
+    async function planFilterHasService(opts) {
+      const out = [];
+      const check = opts.slice(0, 20);
+      for (const o of check) {
+        const leg = o.legs && o.legs[0];
+        if (!leg) { out.push(o); continue; }
+        const co = String(leg.co || '').toLowerCase();
+        if (co === 'mtr' || co === 'lightrail') { out.push(o); continue; }
+        out.push(o);
+      }
+      return out.concat(opts.slice(20));
+    }
+
     async function buildPlanOptions(from, to) {
       const { stopList, routeList } = await ensureStopIndex();
       const fromLat = Number(from.lat), fromLng = Number(from.lng);
       const toLat = Number(to.lat), toLng = Number(to.lng);
       if (isNaN(fromLat) || isNaN(toLat)) return [];
 
-      // 上／落車匹配（終點距離由搜尋偏好控制）
-      const NEAR_BOARD_M = 450;
-      const NEAR_BOARD_MAX = 1000;
-      const alightPrefM = (typeof PLAN_PREFS !== 'undefined' && PLAN_PREFS.alightM != null)
-        ? PLAN_PREFS.alightM : 400;
-      const NEAR_ALIGHT_PREF = Math.max(0, Math.min(200, alightPrefM));
-      const NEAR_ALIGHT_M = Math.max(50, Math.min(1000, alightPrefM || 400));
-      // 0 米時仍給最小緩衝，否則幾乎無結果
-      const NEAR_ALIGHT_USE = NEAR_ALIGHT_M === 0 ? 80 : NEAR_ALIGHT_M;
-      const TRANSFER_M = 650;
+      // 步行距離／轉乘由搜尋偏好控制
+      const walkPref = (typeof PLAN_PREFS !== 'undefined' && PLAN_PREFS.alightM != null)
+        ? PLAN_PREFS.alightM : 500;
+      const NEAR_BOARD_M = Math.max(80, Math.min(1000, walkPref || 500));
+      const NEAR_BOARD_MAX = NEAR_BOARD_M;
+      const NEAR_ALIGHT_PREF = Math.min(150, NEAR_BOARD_M);
+      const NEAR_ALIGHT_USE = NEAR_BOARD_M;
+      const TRANSFER_M = Math.min(650, Math.max(400, Math.round(NEAR_BOARD_M * 0.9)));
       const maxXfer = (typeof PLAN_PREFS !== 'undefined' && PLAN_PREFS.maxTransfers != null)
-        ? PLAN_PREFS.maxTransfers : 2;
+        ? PLAN_PREFS.maxTransfers : 1;
       const showN = (typeof PLAN_PREFS === 'undefined') ? true : !!PLAN_PREFS.showNRoute;
       const options = [];
 
@@ -7736,9 +7899,13 @@ const prefBtn = document.getElementById('planPrefBtn');
           o.scoreCheap = (o.totalFare || 0) * 10 + o.totalMins * 0.05;
           o.scoreSmart = o.totalMins + (o.totalFare || 0) * 0.85 + (o.type === 'transfer' ? 3 : 0);
         });
+        if (PLAN_PREFS.hideNoService && opts.length) {
+          box.innerHTML = '<div class="plan-loading">檢查班次中…</div>';
+          opts = await planFilterHasService(opts);
+        }
         _planResults = opts;
         if (!opts.length) {
-          box.innerHTML = '<div class="plan-empty">找不到合適路線<br><small>已搜尋附近車站與最多 2 次轉乘（港鐵轉乘不限）。<br>可試改用「上水／粉嶺」等中途點，或檢查起終點是否定位正確。</small></div>';
+          box.innerHTML = '<div class="plan-empty">找不到合適路線<br><small>已按設定搜尋（巴士最多轉乘 ' + (PLAN_PREFS.maxTransfers||1) + ' 次，步行 ' + (PLAN_PREFS.alightM||500) + ' 米；港鐵／輕鐵不限轉乘）。</small></div>';
           return;
         }
         renderPlanResults();
@@ -7930,6 +8097,7 @@ const prefBtn = document.getElementById('planPrefBtn');
     initPlanPage();
     requestUserLocationOnLaunch();
     loadPlanPrefs();
+    try { updatePlanRulesUI(); } catch (_) {}
     setTimeout(initPlanPrefsUI, 0);
     setTimeout(initPlanPrefsUI, 300);
     // DOM 尾部的選點面板：延遲再綁一次聯想
@@ -7962,24 +8130,34 @@ const prefBtn = document.getElementById('planPrefBtn');
       <div class="plan-pref-title">搜尋偏好設定</div>
 
       <div class="plan-pref-row">
-        <label class="main"><span>終點站匹配距離</span><span class="val" id="prefAlightVal">400 米</span></label>
-        <input type="range" id="prefAlightRange" min="0" max="1000" step="50" value="400">
-        <div class="plan-pref-hint">只建議在終點約此距離內落車的路線（0 = 極近，1000 = 較寬鬆）</div>
+        <label class="main"><span>最大步行距離</span><span class="val" id="prefAlightVal">500 米</span></label>
+        <input type="range" id="prefAlightRange" min="0" max="1000" step="50" value="500">
+        <div class="plan-pref-hint">起點／終點與車站之間的最大步行距離（0～1000 米）</div>
       </div>
 
       <div class="plan-pref-row">
-        <label class="main"><span>最多轉乘次數</span><span class="val" id="prefXferVal">2 次</span></label>
-        <input type="range" id="prefXferRange" min="0" max="4" step="1" value="2">
-        <div class="plan-pref-hint">巴士／小巴：0～4 次。港鐵、輕鐵轉乘不限次數。</div>
+        <label class="main"><span>最多轉乘次數（巴士）</span><span class="val" id="prefXferVal">1 次</span></label>
+        <input type="range" id="prefXferRange" min="0" max="2" step="1" value="1">
+        <div class="plan-pref-hint">巴士／小巴：0～2 次。港鐵、輕鐵轉乘不限次數。</div>
       </div>
 
       <div class="plan-pref-row">
         <div class="plan-pref-toggle">
           <div>
             <div style="font-weight:700;font-size:0.92rem">顯示 N 線通宵巴士</div>
-            <div class="plan-pref-hint">關閉後搜尋結果不會出現 N 字頭通宵路線</div>
+            <div class="plan-pref-hint">關閉後不會出現 N 字頭通宵路線</div>
           </div>
           <button type="button" class="sw on" id="prefNRouteSw" aria-label="顯示N線"></button>
+        </div>
+      </div>
+
+      <div class="plan-pref-row">
+        <div class="plan-pref-toggle">
+          <div>
+            <div style="font-weight:700;font-size:0.92rem">不顯示無班次路線</div>
+            <div class="plan-pref-hint">過濾短時間內沒有到站班次的建議（搜尋較慢）</div>
+          </div>
+          <button type="button" class="sw" id="prefNoSvcSw" aria-label="隱藏無班次"></button>
         </div>
       </div>
 
@@ -7994,6 +8172,7 @@ const prefBtn = document.getElementById('planPrefBtn');
 
       <div class="plan-pref-actions">
         <button type="button" class="plan-pref-cancel" id="planPrefCancel">取消</button>
+        <button type="button" class="plan-pref-cancel" id="planPrefClearOd">清空起終點</button>
         <button type="button" class="plan-pref-save" id="planPrefSave">儲存</button>
       </div>
     </div>
