@@ -2198,6 +2198,32 @@
       background: var(--bg-app);
       color: var(--text-main);
     }
+
+    .plan-pref-summary {
+      background: #f2f4f7;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      font-size: 0.84rem;
+      color: #3a3a3c;
+      line-height: 1.45;
+    }
+    [data-theme="night"] .plan-pref-summary {
+      background: #21262d;
+      color: #c9d1d9;
+    }
+    .plan-pref-summary-title {
+      font-weight: 800;
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+      color: var(--text-main, #1c1c1e);
+    }
+    .plan-pref-summary ul {
+      margin: 0;
+      padding-left: 1.15em;
+    }
+    .plan-pref-summary li { margin-bottom: 3px; }
+
     .plan-pref-mask {
       display: none;
       position: fixed;
@@ -2466,16 +2492,6 @@
             <button type="button" class="plan-btn-pref" id="planPrefBtn">搜尋偏好設定</button>
             <button type="button" class="plan-btn-go" id="planSearchBtn">前往 →</button>
           </div>
-        </div>
-        <div class="plan-rules" id="planRulesBox">
-          <h3>點對點巴士路線搜尋</h3>
-          <div class="sub">搜尋由起點到終點的跨公司路線</div>
-          <ol id="planRulesList">
-            <li>巴士／小巴最多轉乘 <strong id="ruleXfer">2</strong> 班；港鐵／輕鐵轉乘不限</li>
-            <li>起終點與車站最大步行距離 <strong id="ruleWalk">600</strong> 米</li>
-            <li id="ruleNLine">可選擇顯示／隱藏 N 線通宵巴士</li>
-            <li id="ruleNoSvc">可選擇不顯示無班次路線</li>
-          </ol>
         </div>
         <div class="plan-hot" id="planHot">
           <div class="plan-hot-tabs">
@@ -7443,10 +7459,12 @@ const prefBtn = document.getElementById('planPrefBtn');
       const NEAR_BOARD_MAX = longHaul ? Math.min(1000, NEAR_BOARD_M + 200) : NEAR_BOARD_M;
       const NEAR_ALIGHT_PREF = Math.min(200, NEAR_BOARD_M);
       const NEAR_ALIGHT_USE = longHaul ? Math.min(1000, NEAR_BOARD_M + 150) : NEAR_BOARD_M;
-      // 轉車步行：至少 700m，長途可至 900m（例如 TM121→TM956）
-      const TRANSFER_M = Math.max(700, Math.min(900, Math.round((walkPref || 600) * 1.2)));
-      const maxXfer = (typeof PLAN_PREFS !== 'undefined' && PLAN_PREFS.maxTransfers != null)
-        ? PLAN_PREFS.maxTransfers : 2;
+      // 轉車步行：至少 550m（涵蓋 TM121→TM956 ≈506m），長途可至 900m
+      const TRANSFER_M = Math.max(550, Math.min(900, Math.round(Math.max(walkPref || 600, 550) * 1.15)));
+      let maxXfer = (typeof PLAN_PREFS !== 'undefined' && PLAN_PREFS.maxTransfers != null)
+        ? PLAN_PREFS.maxTransfers : 1;
+      // 長途（如東涌↔香園圍）自動允許最多 2 次巴士轉乘
+      if (longHaul && maxXfer < 2) maxXfer = 2;
       const showN = (typeof PLAN_PREFS === 'undefined') ? true : !!PLAN_PREFS.showNRoute;
       const options = [];
 
@@ -7471,17 +7489,23 @@ const prefBtn = document.getElementById('planPrefBtn');
           add(lat, lng, item) {
             const k = cellKey(lat, lng);
             if (!this.map.has(k)) this.map.set(k, []);
-            this.map.get(k).push(item);
+            // 確保頂層有 lat/lng，供 query 使用
+            this.map.get(k).push(Object.assign({ lat, lng }, item));
           },
           query(lat, lng, maxM) {
             const out = [];
             const ci = Math.floor(lat / cellSize), cj = Math.floor(lng / cellSize);
-            for (let di = -1; di <= 1; di++) {
-              for (let dj = -1; dj <= 1; dj++) {
+            // 700m+ 需掃更多格子（約 0.004° ≈ 445m）
+            const span = Math.max(2, Math.ceil(maxM / 400));
+            for (let di = -span; di <= span; di++) {
+              for (let dj = -span; dj <= span; dj++) {
                 const arr = this.map.get((ci + di) + ':' + (cj + dj));
                 if (!arr) continue;
                 for (const it of arr) {
-                  const d = haversineM(lat, lng, it.lat, it.lng);
+                  const ilat = it.lat != null ? it.lat : (it.stop && it.stop.lat) || (it.board && it.board.lat);
+                  const ilng = it.lng != null ? it.lng : (it.stop && it.stop.lng) || (it.board && it.board.lng);
+                  if (ilat == null || ilng == null) continue;
+                  const d = haversineM(lat, lng, ilat, ilng);
                   if (d <= maxM) out.push(Object.assign({ d }, it));
                 }
               }
@@ -7574,45 +7598,47 @@ const prefBtn = document.getElementById('planPrefBtn');
               if (s.i <= a.i) continue;
               later.push(s);
             }
-            // 取最多 28 個：前段密、中後段抽樣
             let sampled;
-            if (later.length <= 28) sampled = later;
+            if (later.length <= 32) sampled = later.slice();
             else {
               sampled = [];
               const step = later.length / 28;
               for (let k = 0; k < 28; k++) {
                 sampled.push(later[Math.min(later.length - 1, Math.floor(k * step))]);
               }
-              // 去重
-              const seenS = new Set();
-              sampled = sampled.filter(s => {
-                if (seenS.has(s.sid)) return false;
-                seenS.add(s.sid);
-                return true;
-              });
             }
+            // 強制加入名稱含 站/總站/轉車 的樞紐站
+            for (const s of later) {
+              const nm = s.name || '';
+              if (/總站|轉車站|轉車|巴士站|站$/.test(nm) || /TM956|TM121|屯門站|屯赤/.test(nm)) {
+                sampled.push(s);
+              }
+            }
+            const seenS = new Set();
+            sampled = sampled.filter(s => {
+              if (seenS.has(s.sid)) return false;
+              seenS.add(s.sid);
+              return true;
+            });
             leg1.push({ key, co, info, route: routeName, board: a, alights: sampled });
           }
 
-          // 末程：終點附近落車站之前的上車點（涵蓋較長前段，方便轉 B9 等）
-          for (const b of nearTo.slice(0, 4)) {
-            let count = 0;
+          // 末程：終點附近落車站之前的所有上車點（短線如 B9 全收）
+          for (const b of nearTo.slice(0, 6)) {
             const boards = [];
             for (let si = seq.length - 1; si >= 0; si--) {
               const s = seq[si];
               if (s.i >= b.i) continue;
               boards.push(s);
-              if (boards.length >= 40) break;
+              if (boards.length >= 50) break;
             }
-            // 抽樣最多 24 個上車點
-            const boardSamp = boards.length <= 24 ? boards :
-              boards.filter((_, idx) => idx % Math.ceil(boards.length / 24) === 0);
+            const boardSamp = boards.length <= 30 ? boards :
+              boards.filter((_, idx) => idx % Math.ceil(boards.length / 30) === 0);
             for (const s of boardSamp) {
               destGrid.add(s.lat, s.lng, {
                 key, co, info, route: routeName,
                 board: s, alight: b
               });
-              count++;
             }
           }
         }
@@ -8151,6 +8177,16 @@ const prefBtn = document.getElementById('planPrefBtn');
     <div class="plan-pref-sheet" role="dialog" aria-label="搜尋偏好設定">
       <div class="plan-pref-handle"></div>
       <div class="plan-pref-title">搜尋偏好設定</div>
+
+      <div class="plan-pref-summary" id="planPrefSummary">
+        <div class="plan-pref-summary-title">目前搜尋規則</div>
+        <ul>
+          <li>巴士／小巴最多轉乘 <strong id="ruleXfer">2</strong> 班；港鐵／輕鐵不限</li>
+          <li>起終點與車站最大步行 <strong id="ruleWalk">550</strong> 米</li>
+          <li id="ruleNLine">目前顯示 N 線通宵巴士</li>
+          <li id="ruleNoSvc">可選擇不顯示無班次路線</li>
+        </ul>
+      </div>
 
       <div class="plan-pref-row">
         <label class="main"><span>最大步行距離</span><span class="val" id="prefAlightVal">500 米</span></label>
