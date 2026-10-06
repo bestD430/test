@@ -54,7 +54,7 @@
       color: white;
       text-align: left;
       padding: 14px 16px 12px;
-      padding-right: 150px; /* 預留右側按鈕空間 */
+      padding-right: 220px; /* 預留右側按鈕空間 */
       font-size: 1.1rem;
       font-weight: 600;
       flex-shrink: 0;
@@ -81,6 +81,62 @@
     }
     .search-input:focus { border-color: var(--primary); background: white; }
     .search-input::placeholder { color: #c7c7cc; font-weight: 400; letter-spacing: 0; }
+    .when-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+      padding: 8px 10px;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+    }
+    .when-label {
+      flex-shrink: 0;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #3a3a3c;
+      white-space: nowrap;
+      margin-right: 2px;
+    }
+    .when-now {
+      flex-shrink: 0;
+      border: none;
+      background: #e8e8ed;
+      color: #3a3a3c;
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 7px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .when-now.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    .when-bar input[type="date"],
+    .when-bar input[type="time"] {
+      flex: 1;
+      min-width: 0;
+      border: 1.5px solid var(--border);
+      background: #fafafa;
+      border-radius: 8px;
+      padding: 7px 8px;
+      font-size: 0.82rem;
+      font-family: inherit;
+      color: var(--text);
+    }
+    .when-chip {
+      display: none;
+      flex-shrink: 0;
+      background: #fff7e6;
+      color: #8a5a00;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      text-align: center;
+      border-bottom: 1px solid #ffe0a3;
+    }
+    .when-chip.show { display: block; }
     .results {
       flex: 1;
       overflow-y: auto;
@@ -415,8 +471,8 @@
       flex-direction: column;
       gap: 5px;
     }
-    .page { display: none; flex-direction: column; height: 100%; }
-    .page.active { display: flex; }
+    .page { display: none; flex-direction: column; height: 100%; width: 100%; min-height: 0; }
+    .page.active { display: flex; flex: 1; min-height: 0; width: 100%; }
     .page-header {
       background: var(--primary);
       color: white;
@@ -1430,7 +1486,10 @@
       white-space: nowrap;
       box-shadow: 0 2px 8px rgba(255,193,7,0.35);
     }
-    .header-plan-entry:active { opacity: 0.9; transform: scale(0.96); }
+    .header-plan-entry {
+      font-size: 0.72rem;
+      padding: 7px 10px;
+    }
     .header-fav-entry:active,
     .header-nearby-entry:active,
     .header-plan-entry:active { opacity: 0.85; transform: scale(0.97); }
@@ -2378,7 +2437,7 @@
     <div class="page active" id="pageSearch">
       <div class="header">香港巴士到站時間
         <div class="header-actions">
-          <button type="button" class="header-plan-entry" onclick="openGoogleMapsSearch()" title="Google 地圖搜尋">地圖</button>
+          <button type="button" class="header-plan-entry" onclick="openGoogleMapsSearch()" title="行程規劃">行程規劃</button>
           <button type="button" class="header-fav-entry" onclick="openFavsPage()">★ 最愛</button>
           <button type="button" class="header-nearby-entry" onclick="openNearbyPage()">📍 鄰近</button>
         </div>
@@ -2426,6 +2485,7 @@
           <img alt="" class="bus-ticker-img" draggable="false">
         </div>
       </div>
+    </div>
 
     <div class="page" id="pagePlan">
       <div class="plan-header">
@@ -2554,6 +2614,13 @@
         <div class="page-title" id="stopsTitle">選擇車站</div>
         <button class="fav-btn" id="stopsFavBtn" onclick="toggleFavFromStops()" title="收藏此路線">☆</button>
       </div>
+      <div class="when-bar" id="stopsWhenBar">
+        <span class="when-label">出發時間</span>
+        <button type="button" class="when-now active" id="whenNowBtn">現在</button>
+        <input type="date" id="queryDate" aria-label="查詢日期">
+        <input type="time" id="queryTime" aria-label="查詢時間">
+      </div>
+      <div class="when-chip" id="stopsWhenChip"></div>
       <div class="stops-body">
         <div class="map-toggle-bar">
           <span id="mapStatusText">地圖 · GPS</span>
@@ -2589,6 +2656,7 @@
         <div class="page-title">預計到站</div>
         <button class="fav-btn" id="etaFavBtn" onclick="toggleFavFromStops()" title="收藏此路線">☆</button>
       </div>
+      <div class="when-chip" id="etaWhenChip"></div>
       <div class="eta-map-wrap" id="etaMapWrap">
         <div id="etaMap"></div>
         <div class="map-controls" style="bottom:8px;right:8px">
@@ -2722,7 +2790,7 @@
 
     /** 是否周日或香港公眾假期（簡表，用於嶼巴假日車費） */
     function isHkHolidayOrSunday(date) {
-      const d = date ? new Date(date) : new Date();
+      const d = date ? new Date(date) : (typeof getQueryDate === 'function' ? getQueryDate() : new Date());
       if (d.getDay() === 0) return true; // 星期日
       // 常見公眾假期（月-日），涵蓋近年固定／主要日子
       const md = (d.getMonth() + 1) + '-' + d.getDate();
@@ -3513,8 +3581,123 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
       service_type: '1', gmbRouteId: null, gmbRouteSeq: null,
       nlbRouteId: null,
       auto: false, timer: null,
-      userLat: null, userLng: null, currentStops: [], _sectionFares: null
+      userLat: null, userLng: null, currentStops: [], _sectionFares: null,
+      queryLive: true, queryAt: null
     };
+
+    function pad2(n) { return String(n).padStart(2, '0'); }
+    function formatQueryStamp(d) {
+      if (!(d instanceof Date) || isNaN(d.getTime())) d = new Date();
+      return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate())
+        + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+    }
+    function getQueryNow() {
+      if (state.queryLive !== false) return Date.now();
+      const t = state.queryAt instanceof Date ? state.queryAt.getTime() : Date.now();
+      return isNaN(t) ? Date.now() : t;
+    }
+    function getQueryDate() {
+      return new Date(getQueryNow());
+    }
+    function isQueryLive() {
+      if (state.queryLive !== false) return true;
+      return Math.abs(getQueryNow() - Date.now()) < 2 * 60000;
+    }
+    function remapEtasToQueryTime(etas) {
+      const list = Array.isArray(etas) ? etas.slice() : [];
+      if (isQueryLive()) return list;
+      const q = getQueryNow();
+      const realNow = Date.now();
+      const delta = q - realNow;
+      if (Math.abs(delta) <= 2 * 3600000 && list.length) {
+        return list.map(e => {
+          const t = new Date(e.eta).getTime();
+          if (isNaN(t)) return e;
+          return Object.assign({}, e, {
+            eta: new Date(t + delta).toISOString(),
+            rmk: ((e.rmk || '') + ' · 估計').replace(/^ · /, ''),
+            gmbDiff: (typeof e.gmbDiff === 'number')
+              ? e.gmbDiff + Math.round(delta / 60000) : e.gmbDiff
+          });
+        });
+      }
+      const gaps = [];
+      for (let i = 1; i < list.length; i++) {
+        const a = new Date(list[i - 1].eta).getTime();
+        const b = new Date(list[i].eta).getTime();
+        if (b > a && b - a < 40 * 60000) gaps.push(b - a);
+      }
+      const hw = gaps.length
+        ? Math.max(6 * 60000, Math.min(25 * 60000, gaps.reduce((s, x) => s + x, 0) / gaps.length))
+        : 12 * 60000;
+      const dest = (list[0] && list[0].dest) || '';
+      const out = [];
+      let t = q + 3 * 60000;
+      for (let i = 0; i < 4; i++) {
+        out.push({ eta: new Date(t).toISOString(), rmk: '估計班次', dest: dest });
+        t += hw;
+      }
+      return out;
+    }
+    function fillWhenInputs(d) {
+      const dateEl = document.getElementById('queryDate');
+      const timeEl = document.getElementById('queryTime');
+      if (!dateEl || !timeEl) return;
+      const x = d instanceof Date && !isNaN(d.getTime()) ? d : new Date();
+      dateEl.value = x.getFullYear() + '-' + pad2(x.getMonth() + 1) + '-' + pad2(x.getDate());
+      timeEl.value = pad2(x.getHours()) + ':' + pad2(x.getMinutes());
+    }
+    function readWhenInputs() {
+      const dateEl = document.getElementById('queryDate');
+      const timeEl = document.getElementById('queryTime');
+      const ds = dateEl && dateEl.value;
+      const ts = (timeEl && timeEl.value) || '00:00';
+      if (!ds) return new Date();
+      const d = new Date(ds + 'T' + ts + ':00');
+      return isNaN(d.getTime()) ? new Date() : d;
+    }
+    function setQueryLive(live) {
+      state.queryLive = !!live;
+      const btn = document.getElementById('whenNowBtn');
+      if (btn) btn.classList.toggle('active', state.queryLive);
+      if (state.queryLive) {
+        state.queryAt = new Date();
+        fillWhenInputs(state.queryAt);
+      } else {
+        state.queryAt = readWhenInputs();
+      }
+      updateWhenChips();
+    }
+    function updateWhenChips() {
+      const text = state.queryLive !== false
+        ? ''
+        : ('查詢時間：' + formatQueryStamp(state.queryAt) + '（估計班次）');
+      ['stopsWhenChip', 'etaWhenChip'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = text;
+        el.classList.toggle('show', !!text);
+      });
+    }
+    function initWhenBar() {
+      fillWhenInputs(new Date());
+      const btn = document.getElementById('whenNowBtn');
+      const dateEl = document.getElementById('queryDate');
+      const timeEl = document.getElementById('queryTime');
+      if (btn) btn.addEventListener('click', () => {
+        setQueryLive(true);
+        if (pageNeedsEtaAuto(getActivePageId())) refreshActivePageEta(false);
+      });
+      function onPick() {
+        setQueryLive(false);
+        if (pageNeedsEtaAuto(getActivePageId())) refreshActivePageEta(false);
+      }
+      if (dateEl) dateEl.addEventListener('change', onPick);
+      if (timeEl) timeEl.addEventListener('change', onPick);
+      setInterval(() => {
+        if (state.queryLive !== false) fillWhenInputs(new Date());
+      }, 30000);
+    }
 
     document.getElementById('keypad').addEventListener('click', e => {
       const btn = e.target.closest('button');
@@ -4540,7 +4723,7 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
           if (!etas.length) {
             box.innerHTML = '<div class="inline-eta-empty">暫時沒有到站資料</div>';
           } else {
-            const now = Date.now();
+            const now = getQueryNow();
             box.innerHTML = etas.slice(0, 4).map((e, idx) => {
               const d = formatEtaDisplay(e, now);
               // 第1班綠色，第2~4班藍色
@@ -4892,6 +5075,7 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
 
         etas.sort((a, b) => new Date(a.eta) - new Date(b.eta));
         etas = etas.slice(0, 4); // 最近 4 班
+        etas = remapEtasToQueryTime(etas);
         // silent：只回傳資料，不碰畫面；仍寫入 _lastEtas 供呼叫端讀取
         if (silent) {
           state._lastEtas = etas;
@@ -4913,7 +5097,7 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
               <button class="eta-btn" style="margin-top:12px;max-width:140px;display:inline-block" onclick="fetchETA()">再試一次</button>
             </div>`;
         } else {
-          const now = Date.now();
+          const now = getQueryNow();
           etas.forEach((e, idx) => {
             const d = formatEtaDisplay(e, now);
             const div = document.createElement('div');
@@ -4935,7 +5119,11 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
           });
         }
         const updatedStr = new Date().toTimeString().substring(0, 8);
-        if (infoEl) infoEl.textContent = `最後更新時間: ${updatedStr}`;
+        if (infoEl) {
+          infoEl.textContent = isQueryLive()
+            ? ('最後更新時間: ' + updatedStr)
+            : ('查詢時間 ' + formatQueryStamp(state.queryAt) + ' · 估計班次');
+        }
       } catch (e) {
         console.error('fetchETA error', e);
         if (silent) {
@@ -5754,7 +5942,7 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
       listEl.innerHTML = '<div class="journey-empty">計算車程中…</div>';
 
       // 取上車站首班 ETA 作為出發時間基準
-      let departAt = new Date(Date.now() + 3 * 60000); // 後備：約 3 分鐘後
+      let departAt = new Date(getQueryNow() + 3 * 60000); // 後備：約 3 分鐘後
       let etaLabel = '';
       try {
         await fetchETA({
@@ -5772,8 +5960,8 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
         const etas = state._lastEtas || [];
         if (etas.length && etas[0].eta) {
           departAt = new Date(etas[0].eta);
-          if (departAt.getTime() < Date.now() - 30000) {
-            departAt = new Date(Date.now() + 60000);
+          if (departAt.getTime() < getQueryNow() - 30000) {
+            departAt = new Date(getQueryNow() + 60000);
           }
           etaLabel = '（參考首班預計 ' + formatClock(departAt) + ' 開出）';
         }
@@ -5824,7 +6012,9 @@ const MTR_STOPS = {"K12_O": [{"s": 1, "i": "K12-U010", "n": "大埔墟站"}, {"s
 
     function showPage(pageId) {
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      document.getElementById(pageId).classList.add('active');
+      const pg = document.getElementById(pageId);
+      if (pg) pg.classList.add('active');
+      try { updateWhenChips(); } catch (_) {}
       // 所有有到站時間的頁面強制自動更新；其餘頁面停止
       if (pageNeedsEtaAuto(pageId)) {
         // 不在此立即抓取（各頁自己的首次載入會處理），只確保計時器在跑
@@ -8334,6 +8524,7 @@ const prefBtn = document.getElementById('planPrefBtn');
     setTimeout(bindPlanPickSuggest, 0);
     setTimeout(bindPlanPickSuggest, 500);
     loadWeather();
+    initWhenBar();
     // 每 10 分鐘自動更新天氣
     setInterval(loadWeather, 10 * 60 * 1000);
 
